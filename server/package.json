@@ -2,9 +2,9 @@
     "name": "pms-server",
     "version": "1.0.0",
     "description": "Backend for Pharmacy Management System",
-    "main": "server.ts",
+    "main": "src/server.ts",
     "scripts": {
-        "dev": "ts-node server.ts",
+        "dev": "ts-node src/server.ts",
         "build": "tsc",
         "start": "node dist/server.js",
         "prisma:generate": "prisma generate",

@@ -10,6 +10,7 @@ import CustomersPage from "./modules/customers/CustomersPage";
 import ReportsPage from "./modules/reports/ReportsPage";
 import AdminPage from "./modules/admin/AdminPage";
 import SuperAdminDashboard from "./modules/super-admin/SuperAdminDashboard";
+import ManagedPharmacies from "./modules/super-admin/ManagedPharmacies";
 import TerminalControl from "./modules/super-admin/TerminalControl";
 import LandingPage from "./modules/auth/LandingPage";
 import { Toaster } from "@/components/ui/toaster";
@@ -32,7 +33,7 @@ const RealTimeGuard = ({ children }: { children: React.ReactNode }) => {
           localStorage.clear();
           navigate("/login", { replace: true });
         }
-      } catch (err) {
+      } catch (err: any) {
         console.warn("Session check offline or failed:", err.message);
       }
     };
@@ -89,6 +90,7 @@ function App() {
               {/* Super Admin Specific Routes */}
               <Route element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]} />}>
                 <Route path="super-admin" element={<SuperAdminDashboard />} />
+                <Route path="super-pharmacies" element={<ManagedPharmacies />} />
                 <Route path="super-terminal" element={<TerminalControl />} />
               </Route>
             </Route>

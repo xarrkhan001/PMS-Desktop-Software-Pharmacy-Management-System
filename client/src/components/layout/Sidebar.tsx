@@ -33,6 +33,7 @@ export default function Sidebar({ isMobile }: SidebarProps) {
 
     const allNavItems = [
         { name: "Super Admin Control", icon: ShieldCheck, path: "/super-admin", roles: ["SUPER_ADMIN"] },
+        { name: "Managed Pharmacies", icon: Users, path: "/super-pharmacies", roles: ["SUPER_ADMIN"] },
         { name: "Terminal Purge", icon: ShieldAlert, path: "/super-terminal", roles: ["SUPER_ADMIN"] },
         { name: "Dashboard", icon: LayoutDashboard, path: "/", roles: ["ADMIN", "PHARMACIST", "STAFF"] },
         { name: "Inventory", icon: Pill, path: "/inventory", roles: ["ADMIN", "PHARMACIST"] },

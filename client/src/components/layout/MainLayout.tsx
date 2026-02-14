@@ -6,6 +6,8 @@ import { Outlet } from "react-router-dom";
 
 export default function MainLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const userRole = localStorage.getItem("userRole")?.toUpperCase();
+    const isSuperDashboard = userRole === "SUPER_ADMIN";
 
     return (
         <div className="flex h-screen bg-gray-50 dark:bg-slate-900 overflow-hidden">
@@ -15,8 +17,8 @@ export default function MainLayout() {
             </div>
 
             <div className="md:pl-64 flex flex-col flex-1 w-full h-full transition-all duration-300 ease-in-out">
-                <Navbar onMenuClick={() => setSidebarOpen(true)} />
-                <main className="flex-1 p-4 md:p-6 overflow-y-auto bg-muted/20">
+                {!isSuperDashboard && <Navbar onMenuClick={() => setSidebarOpen(true)} />}
+                <main className={`flex-1 overflow-y-auto bg-muted/20 ${isSuperDashboard ? 'p-0' : 'p-4 md:p-6'}`}>
                     <Outlet />
                 </main>
             </div>
