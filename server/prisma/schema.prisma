@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Pharmacy {
+  id               Int        @id @default(autoincrement())
+  name             String
+  location         String?
+  licenseNo        String?    @unique
+  contact          String?
+  licenseStartedAt DateTime?  @default(now())
+  licenseExpiresAt DateTime?  // When the license will expire
+  isActive         Boolean    @default(true) // For manual blocking if needed
+  subscriptionFee  Float      @default(0)   // Amount paid for the initial/latest license
+  totalPaid        Float      @default(0)   // Cumulative revenue from this pharmacy
+  createdAt        DateTime   @default(now())
+  
+  // Relationships
+  users     User[]
+  medicines Medicine[]
+  sales     Sale[]
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  name       String?
+  password   String
+  role       String   @default("STAFF") // SUPER_ADMIN, ADMIN, PHARMACIST, STAFF
+  createdAt  DateTime @default(now())
+  
+  // Link to Pharmacy
+  pharmacyId Int?     // Nullable for SUPER_ADMIN
+  pharmacy   Pharmacy? @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+}
+
+model Medicine {
+  id          Int      @id @default(autoincrement())
+  name        String
+  category    String
+  genericName String?
+  price       Float
+  stock       Int
+  expiryDate  DateTime
+  supplier    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Link to Pharmacy
+  pharmacyId Int
+  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+}
+
+model Sale {
+  id          Int      @id @default(autoincrement())
+  totalAmount Float
+  patientName String?
+  items       String   // Simplified JSON string
+  createdAt   DateTime @default(now())
+  
+  // Link to Pharmacy
+  pharmacyId Int
+  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+}

@@ -19,22 +19,44 @@ export default function LoginModal({ open, onOpenChange, trigger }: LoginModalPr
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
         setLoading(true);
 
-        // Mock Login Logic
-        setTimeout(() => {
-            if (email === "test@PharmPro.com" && password === "Ntl@0099") {
+        try {
+            const response = await fetch("http://localhost:5000/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("user", JSON.stringify(data.user));
                 localStorage.setItem("isAuthenticated", "true");
-                localStorage.setItem("userRole", "admin");
-                navigate("/");
+                localStorage.setItem("userRole", data.user.role.toLowerCase());
+
+                // Intelligent Redirection based on Role
+                if (data.user.role === "SUPER_ADMIN") {
+                    navigate("/super-admin");
+                } else if (data.user.role === "ADMIN") {
+                    navigate("/admin");
+                } else {
+                    navigate("/");
+                }
+
+                if (onOpenChange) onOpenChange(false);
             } else {
-                setError("Invalid credentials.");
+                setError(data.error || "Login failed. Please check your credentials.");
             }
+        } catch (err) {
+            setError("Cannot connect to server. Make sure backend is running.");
+        } finally {
             setLoading(false);
-        }, 1500);
+        }
     };
 
     return (
@@ -188,13 +210,13 @@ export default function LoginModal({ open, onOpenChange, trigger }: LoginModalPr
                                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Secure Access Point</p>
                                 <div className="flex gap-4">
                                     <div className="flex flex-col items-center">
-                                        <span className="text-[10px] text-slate-400 uppercase font-bold">Email</span>
-                                        <span className="text-xs font-mono font-bold text-blue-600">test@PharmPro.com</span>
+                                        <span className="text-[10px] text-slate-400 uppercase font-bold">Default Admin</span>
+                                        <span className="text-xs font-mono font-bold text-blue-600">admin@pharmpro.com</span>
                                     </div>
                                     <div className="w-[1px] h-8 bg-slate-100"></div>
                                     <div className="flex flex-col items-center">
                                         <span className="text-[10px] text-slate-400 uppercase font-bold">Pass</span>
-                                        <span className="text-xs font-mono font-bold text-blue-600">Ntl@0099</span>
+                                        <span className="text-xs font-mono font-bold text-blue-600">admin123</span>
                                     </div>
                                 </div>
                             </div>
