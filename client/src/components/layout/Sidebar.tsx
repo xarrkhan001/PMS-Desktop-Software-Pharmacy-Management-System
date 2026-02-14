@@ -11,6 +11,8 @@ import {
     Settings,
     Wallet,
     LogOut,
+    ShieldCheck,
+    ShieldAlert,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -27,16 +29,22 @@ export default function Sidebar({ isMobile }: SidebarProps) {
         navigate("/login");
     };
 
-    const navItems = [
-        { name: "Dashboard", icon: LayoutDashboard, path: "/" },
-        { name: "Inventory", icon: Pill, path: "/inventory" },
-        { name: "Billing / POS", icon: ShoppingCart, path: "/billing" },
-        { name: "Suppliers", icon: Truck, path: "/suppliers" },
-        { name: "Customers", icon: Users, path: "/customers" },
-        { name: "Finance & Accounts", icon: Wallet, path: "/finance" },
-        { name: "Reports", icon: FileBarChart, path: "/reports" },
-        { name: "Admin", icon: Settings, path: "/admin" },
+    const userRole = localStorage.getItem("userRole")?.toUpperCase();
+
+    const allNavItems = [
+        { name: "Super Admin Control", icon: ShieldCheck, path: "/super-admin", roles: ["SUPER_ADMIN"] },
+        { name: "Terminal Purge", icon: ShieldAlert, path: "/super-terminal", roles: ["SUPER_ADMIN"] },
+        { name: "Dashboard", icon: LayoutDashboard, path: "/", roles: ["ADMIN", "PHARMACIST", "STAFF"] },
+        { name: "Inventory", icon: Pill, path: "/inventory", roles: ["ADMIN", "PHARMACIST"] },
+        { name: "Billing / POS", icon: ShoppingCart, path: "/billing", roles: ["ADMIN", "PHARMACIST", "STAFF"] },
+        { name: "Suppliers", icon: Truck, path: "/suppliers", roles: ["ADMIN", "PHARMACIST"] },
+        { name: "Customers", icon: Users, path: "/customers", roles: ["ADMIN", "PHARMACIST", "STAFF"] },
+        { name: "Finance & Accounts", icon: Wallet, path: "/finance", roles: ["ADMIN"] },
+        { name: "Reports", icon: FileBarChart, path: "/reports", roles: ["ADMIN", "PHARMACIST"] },
+        { name: "Admin", icon: Settings, path: "/admin", roles: ["ADMIN"] },
     ];
+
+    const navItems = allNavItems.filter(item => item.roles.includes(userRole || ""));
 
     return (
         <div className={cn("flex flex-col h-full bg-white dark:bg-slate-900 border-r dark:border-slate-800", isMobile ? "w-full" : "w-64")}>

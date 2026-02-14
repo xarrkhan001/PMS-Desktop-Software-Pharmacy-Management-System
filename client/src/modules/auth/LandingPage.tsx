@@ -19,7 +19,7 @@ export default function LandingPage() {
             <LoginModal open={isLoginOpen} onOpenChange={setIsLoginOpen} />
 
             {/* Navigation */}
-            <nav className="fixed top-0 w-full z-40 border-b border-slate-200 bg-slate-100 px-6 lg:px-20 h-16 flex items-center justify-between transition-all duration-300">
+            <nav className="fixed top-0 w-full z-40 border-b border-slate-200 bg-white/80 backdrop-blur-lg px-6 lg:px-20 h-16 flex items-center justify-between transition-all duration-300">
                 <div className="flex items-center gap-2">
                     <div className="h-9 w-9 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm border border-primary/20">
                         <Pill className="h-5 w-5 text-primary" />
@@ -59,28 +59,28 @@ export default function LandingPage() {
                             alt="Professional Pharmacy Environment"
                             className="w-full h-full object-cover object-center"
                         />
-                        {/* Multi-layered Premium Overlays */}
-                        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-[2px]"></div>
-                        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/70 to-blue-900/20"></div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
+                        {/* Multi-layered Light Premium Overlays */}
+                        <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px]"></div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-blue-50/20"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
                     </div>
 
-                    {/* Animated Particles/Orbs */}
-                    <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse-slow"></div>
-                    <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+                    {/* Animated Particles/Orbs for Light Theme */}
+                    <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-blue-400/10 rounded-full blur-[120px] pointer-events-none animate-pulse-slow"></div>
+                    <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-400/10 rounded-full blur-[120px] pointer-events-none"></div>
 
                     <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16 relative z-10 w-full">
                         {/* Left Content */}
                         <div className="flex-1 text-center lg:text-left space-y-6 animate-fade-in-up">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 backdrop-blur-md text-blue-300 border border-white/10 text-xs font-bold uppercase tracking-[0.2em] shadow-2xl">
-                                <ShieldCheck className="h-4 w-4 text-blue-400" />
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600/5 backdrop-blur-md text-blue-600 border border-blue-200 text-xs font-bold uppercase tracking-[0.2em] shadow-sm">
+                                <ShieldCheck className="h-4 w-4 text-blue-600" />
                                 <span>#1 Professional Pharmacy Software in Pakistan</span>
                             </div>
-                            <h1 className="text-5xl lg:text-[5.5rem] font-black tracking-tight text-white leading-[0.95]">
+                            <h1 className="text-5xl lg:text-[5.5rem] font-black tracking-tight text-slate-900 leading-[0.95]">
                                 Manage Your <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-white italic">Pharmacy.</span>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-800 italic">Pharmacy.</span>
                             </h1>
-                            <p className="text-lg lg:text-xl text-slate-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium opacity-90">
+                            <p className="text-lg lg:text-xl text-slate-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium opacity-90">
                                 The ultimate desktop management system for modern healthcare.
                                 Secure local storage, high-speed billing, and zero internet dependency.
                             </p>
@@ -89,22 +89,22 @@ export default function LandingPage() {
                                 <Button size="lg" className="h-16 px-10 rounded-2xl text-lg shadow-[0_20px_50px_-10px_rgba(37,99,235,0.5)] bg-blue-600 hover:bg-blue-500 text-white transition-all hover:-translate-y-1 active:scale-95 font-black flex items-center gap-3 group border-none" onClick={() => setIsLoginOpen(true)}>
                                     Launch Software <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                                 </Button>
-                                <Button variant="outline" size="lg" className="h-16 px-10 rounded-2xl text-lg border-2 border-white/10 hover:border-white/30 bg-white/5 backdrop-blur-md font-bold text-white transition-all">
+                                <Button variant="outline" size="lg" className="h-16 px-10 rounded-2xl text-lg border-2 border-slate-200 hover:border-blue-600 hover:bg-white hover:text-blue-600 bg-white/50 backdrop-blur-md font-bold text-slate-900 transition-all">
                                     Product Demo
                                 </Button>
                             </div>
 
                             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-8 pt-2">
-                                <div className="flex items-center gap-3 text-sm font-bold text-slate-300">
-                                    <CheckCircle2 className="h-5 w-5 text-blue-400" />
+                                <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <CheckCircle2 className="h-5 w-5 text-blue-600" />
                                     <span className="uppercase tracking-widest">Offline Ready</span>
                                 </div>
-                                <div className="flex items-center gap-3 text-sm font-bold text-slate-300">
-                                    <CheckCircle2 className="h-5 w-5 text-blue-400" />
+                                <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <CheckCircle2 className="h-5 w-5 text-blue-600" />
                                     <span className="uppercase tracking-widest">AES-256 Auth</span>
                                 </div>
-                                <div className="flex items-center gap-3 text-sm font-bold text-slate-300">
-                                    <CheckCircle2 className="h-5 w-5 text-blue-400" />
+                                <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
+                                    <CheckCircle2 className="h-5 w-5 text-blue-600" />
                                     <span className="uppercase tracking-widest">Enterprise Support</span>
                                 </div>
                             </div>
@@ -112,8 +112,8 @@ export default function LandingPage() {
 
                         {/* Right Content: Dashboard Preview */}
                         <div className="w-full flex-1 relative animate-slide-up-fade lg:block hidden">
-                            <div className="relative z-10 bg-white/5 backdrop-blur-xl rounded-[2.5rem] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.5)] border border-white/10 p-4 transform lg:rotate-3 hover:rotate-0 transition-all duration-1000 ease-out group">
-                                <div className="bg-slate-950 rounded-[2rem] overflow-hidden border border-white/5 min-h-[460px] flex flex-col shadow-inner">
+                            <div className="relative z-10 bg-blue-600/5 backdrop-blur-3xl rounded-[2.5rem] shadow-[0_40px_80px_-15px_rgba(30,58,138,0.2)] border border-blue-100 p-4 transform lg:rotate-3 hover:rotate-0 transition-all duration-1000 ease-out group">
+                                <div className="bg-slate-900 rounded-[2rem] overflow-hidden border border-blue-900/10 min-h-[460px] flex flex-col shadow-inner">
                                     {/* Mock Header */}
                                     <div className="h-16 border-b border-white/5 bg-slate-900/50 flex items-center px-8 gap-3">
                                         <div className="flex gap-2">
