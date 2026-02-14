@@ -16,6 +16,8 @@ interface NavbarProps {
 }
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
+    const userRole = localStorage.getItem("userRole")?.toUpperCase();
+
     return (
         <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-6 shadow-sm">
             <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick}>
@@ -35,10 +37,12 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             </div>
 
             <div className="flex items-center gap-4 ml-auto">
-                <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
-                    <Cloud className="h-4 w-4" />
-                    <span className="text-xs font-medium">Cloud Synced</span>
-                </div>
+                {userRole !== "SUPER_ADMIN" && (
+                    <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
+                        <Cloud className="h-4 w-4" />
+                        <span className="text-xs font-medium">Cloud Synced</span>
+                    </div>
+                )}
 
                 <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground">
                     <Bell className="h-5 w-5" />
