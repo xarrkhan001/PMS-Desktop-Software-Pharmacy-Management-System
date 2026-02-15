@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Pill,
@@ -11,12 +11,26 @@ import {
 } from "lucide-react";
 import LoginModal from "./LoginModal";
 
+import { useLocation } from "react-router-dom";
+
 export default function LandingPage() {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
+    const location = useLocation();
+    const [loginMessage, setLoginMessage] = useState("");
+
+    useEffect(() => {
+        if (location.state?.message) {
+            setLoginMessage(location.state.message);
+            setIsLoginOpen(true);
+            // Clear state so it doesn't persist on refresh? 
+            // Better to keep it until they login or verify.
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
 
     return (
         <div className="min-h-screen bg-white dark:bg-slate-950 font-sans selection:bg-blue-100 dark:selection:bg-blue-900/30">
-            <LoginModal open={isLoginOpen} onOpenChange={setIsLoginOpen} />
+            <LoginModal open={isLoginOpen} onOpenChange={setIsLoginOpen} message={loginMessage} />
 
             {/* Navigation */}
             <nav className="fixed top-0 w-full z-40 border-b border-slate-200 bg-white/80 backdrop-blur-lg px-6 lg:px-20 h-16 flex items-center justify-between transition-all duration-300">

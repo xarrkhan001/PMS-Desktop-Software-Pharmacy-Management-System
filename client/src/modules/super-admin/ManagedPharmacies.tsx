@@ -10,6 +10,7 @@ import {
     Power,
     Search,
     RefreshCw,
+    FilePenLine,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -22,7 +23,110 @@ interface Pharmacy {
     isActive: boolean;
     subscriptionFee?: number;
     totalPaid?: number;
-    users: { email: string }[];
+    users: { id: number; name: string; email: string }[];
+}
+
+interface EditPharmacyModalProps {
+    pharmacy: Pharmacy;
+    onUpdate: () => void;
+}
+
+function EditPharmacyModal({ pharmacy, onUpdate }: EditPharmacyModalProps) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [name, setName] = useState(pharmacy.name);
+    // Assuming the first user is the ADMIN/Owner
+    const [ownerName, setOwnerName] = useState(pharmacy.users[0]?.name || "");
+    const [email, setEmail] = useState(pharmacy.users[0]?.email || "");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const handleUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const res = await fetch("http://localhost:5000/api/super/update-pharmacy-credentials", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                },
+                body: JSON.stringify({
+                    pharmacyId: pharmacy.id,
+                    pharmacyName: name,
+                    ownerName: ownerName,
+                    ownerEmail: email,
+                    ownerPassword: password
+                })
+            });
+
+            if (res.ok) {
+                setIsOpen(false);
+                onUpdate();
+            } else {
+                console.error("Failed to update");
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-indigo-600 rounded-lg">
+                    <FilePenLine className="h-4 w-4" />
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
+                <div className="bg-slate-900 p-6 text-white">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-black flex items-center gap-2">
+                            <FilePenLine className="h-5 w-5 text-indigo-400" />
+                            Update Credentials
+                        </DialogTitle>
+                        <CardDescription className="text-slate-400 font-medium text-xs">
+                            Modify account details for {pharmacy.name}
+                        </CardDescription>
+                    </DialogHeader>
+                </div>
+                <form onSubmit={handleUpdate} className="p-8 space-y-5 bg-white">
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Pharmacy Name</Label>
+                            <Input value={name} onChange={e => setName(e.target.value)} className="rounded-xl h-12 border-slate-100 font-bold text-slate-700" required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Owner Name</Label>
+                            <Input value={ownerName} onChange={e => setOwnerName(e.target.value)} className="rounded-xl h-12 border-slate-100" required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Login Email</Label>
+                            <Input type="email" value={email} onChange={e => setEmail(e.target.value)} className="rounded-xl h-12 border-slate-100" required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">New Password (Optional)</Label>
+                            <Input
+                                type="password"
+                                placeholder="Leave blank to keep current"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                className="rounded-xl h-12 border-slate-100 placeholder:text-slate-300"
+                            />
+                        </div>
+                    </div>
+                    <Button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 font-black text-sm rounded-2xl transition-all shadow-lg shadow-indigo-100 uppercase tracking-widest"
+                    >
+                        {loading ? "Updating..." : "Save Changes"}
+                    </Button>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
 }
 
 interface ManageLicenseModalProps {
@@ -433,7 +537,8 @@ export default function ManagedPharmacies() {
                                             </div>
                                         </TableCell>
                                         <TableCell className="pr-8 text-right">
-                                            <div className="flex justify-end gap-2 text-right">
+                                            <div className="flex justify-end gap-2 text-right items-center">
+                                                <EditPharmacyModal pharmacy={p} onUpdate={fetchPharmacies} />
                                                 <ManageLicenseModal pharmacy={p} onUpdate={fetchPharmacies} />
                                             </div>
                                         </TableCell>

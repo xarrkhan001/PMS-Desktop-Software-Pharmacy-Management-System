@@ -24,6 +24,9 @@ model Pharmacy {
   users     User[]
   medicines Medicine[]
   sales     Sale[]
+  suppliers Supplier[]
+  customers Customer[]
+  purchases Purchase[]
 }
 
 model User {
@@ -37,6 +40,34 @@ model User {
   // Link to Pharmacy
   pharmacyId Int?     // Nullable for SUPER_ADMIN
   pharmacy   Pharmacy? @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  
+  tokenVersion Int @default(0) // Used to invalidate sessions on password change
+}
+
+model Supplier {
+  id          Int      @id @default(autoincrement())
+  name        String
+  contact     String?
+  email       String?
+  address     String?
+  createdAt   DateTime @default(now())
+  
+  pharmacyId  Int
+  pharmacy    Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  purchases   Purchase[]
+}
+
+model Customer {
+  id          Int      @id @default(autoincrement())
+  name        String
+  phone       String?
+  address     String?
+  totalDue    Float    @default(0)
+  createdAt   DateTime @default(now())
+  
+  pharmacyId  Int
+  pharmacy    Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  sales       Sale[]
 }
 
 model Medicine {
@@ -44,26 +75,101 @@ model Medicine {
   name        String
   category    String
   genericName String?
+  manufacturer String?
   price       Float
-  stock       Int
-  expiryDate  DateTime
-  supplier    String?
+  salePrice   Float    // Retail price
+  stock       Int      @default(0)
+  reorderLevel Int     @default(10) // Alert when stock goes below this
+  unitPerPack Int      @default(1)  // e.g., 20 tablets in 1 pack
+  unitType    String   @default("Tablet") // Tablet, Capsule, Syrup, etc.
+  rackNo      String?  // Shelf/rack location
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   // Link to Pharmacy
-  pharmacyId Int
-  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  pharmacyId  Int
+  pharmacy    Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  
+  // Relationships
+  batches     StockBatch[]
+  saleItems   SaleItem[]
+  purchaseItems PurchaseItem[]
+}
+
+model StockBatch {
+  id          Int      @id @default(autoincrement())
+  batchNo     String
+  quantity    Int
+  purchasePrice Float
+  expiryDate  DateTime
+  receivedDate DateTime @default(now())
+  
+  medicineId  Int
+  medicine    Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
+}
+
+model Purchase {
+  id          Int      @id @default(autoincrement())
+  invoiceNo   String?
+  totalAmount Float
+  paidAmount  Float    @default(0)
+  status      String   @default("PENDING") // PENDING, COMPLETED
+  createdAt   DateTime @default(now())
+  
+  supplierId  Int
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+  
+  pharmacyId  Int
+  pharmacy    Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  
+  items       PurchaseItem[]
+}
+
+model PurchaseItem {
+  id          Int      @id @default(autoincrement())
+  quantity    Int
+  price       Float
+  batchNo     String?
+  expiryDate  DateTime?
+  
+  purchaseId  Int
+  purchase    Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  
+  medicineId  Int
+  medicine    Medicine @relation(fields: [medicineId], references: [id])
 }
 
 model Sale {
   id          Int      @id @default(autoincrement())
+  invoiceNo   String?
   totalAmount Float
-  patientName String?
-  items       String   // Simplified JSON string
+  discount    Float    @default(0)
+  netAmount   Float
+  paidAmount  Float
+  dueAmount   Float    @default(0)
+  paymentMethod String @default("CASH") // CASH, CARD, ONLINE
+  manualCustomerName String?
+  manualCustomerAddress String?
   createdAt   DateTime @default(now())
   
-  // Link to Pharmacy
-  pharmacyId Int
-  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  customerId  Int?
+  customer    Customer? @relation(fields: [customerId], references: [id])
+  
+  pharmacyId  Int
+  pharmacy    Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  
+  items       SaleItem[]
+}
+
+model SaleItem {
+  id          Int      @id @default(autoincrement())
+  quantity    Int
+  price       Float
+  total       Float
+  
+  saleId      Int
+  sale        Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  
+  medicineId  Int
+  medicine    Medicine @relation(fields: [medicineId], references: [id])
 }

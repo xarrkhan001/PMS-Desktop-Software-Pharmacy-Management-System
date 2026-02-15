@@ -22,6 +22,10 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
                 return res.status(401).json({ error: 'Account has been removed' });
             }
 
+            if (decoded.tokenVersion !== userExists.tokenVersion) {
+                return res.status(401).json({ error: 'Session expired. Credentials changed.' });
+            }
+
             req.user = decoded;
             next();
         } catch (dbErr) {

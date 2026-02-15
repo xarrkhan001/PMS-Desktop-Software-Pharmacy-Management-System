@@ -10,9 +10,10 @@ interface LoginModalProps {
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
     trigger?: React.ReactNode;
+    message?: string;
 }
 
-export default function LoginModal({ open, onOpenChange, trigger }: LoginModalProps) {
+export default function LoginModal({ open, onOpenChange, trigger, message }: LoginModalProps) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -37,7 +38,8 @@ export default function LoginModal({ open, onOpenChange, trigger }: LoginModalPr
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("user", JSON.stringify(data.user));
                 localStorage.setItem("isAuthenticated", "true");
-                localStorage.setItem("userRole", data.user.role.toLowerCase());
+                localStorage.setItem("userRole", data.user.role.toUpperCase());
+                localStorage.setItem("userName", data.user.name);
 
                 // Intelligent Redirection based on Role
                 if (data.user.role === "SUPER_ADMIN") {
@@ -194,6 +196,13 @@ export default function LoginModal({ open, onOpenChange, trigger }: LoginModalPr
                                     <div className="p-4 rounded-2xl bg-red-50 text-red-600 text-xs font-bold flex items-center gap-3 animate-shake">
                                         <ShieldCheck className="h-4 w-4 text-red-600" />
                                         {error}
+                                    </div>
+                                )}
+
+                                {message && !error && (
+                                    <div className="p-4 rounded-2xl bg-amber-50 text-amber-600 text-xs font-bold flex items-center gap-3 animate-fade-in border border-amber-100">
+                                        <Zap className="h-4 w-4 text-amber-500 fill-amber-500" />
+                                        {message}
                                     </div>
                                 )}
 

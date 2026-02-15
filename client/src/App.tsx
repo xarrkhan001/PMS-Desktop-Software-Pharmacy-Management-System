@@ -5,6 +5,7 @@ import DashboardPage from "./modules/dashboard/DashboardPage";
 import InventoryPage from "./modules/inventory/InventoryPage";
 import FinancePage from "./modules/finance/FinancePage";
 import BillingPage from "./modules/billing/BillingPage";
+import SalesHistoryPage from "./modules/billing/SalesHistoryPage";
 import SuppliersPage from "./modules/suppliers/SuppliersPage";
 import CustomersPage from "./modules/customers/CustomersPage";
 import ReportsPage from "./modules/reports/ReportsPage";
@@ -13,6 +14,8 @@ import SuperAdminDashboard from "./modules/super-admin/SuperAdminDashboard";
 import ManagedPharmacies from "./modules/super-admin/ManagedPharmacies";
 import TerminalControl from "./modules/super-admin/TerminalControl";
 import LandingPage from "./modules/auth/LandingPage";
+import ProfilePage from "./modules/profile/ProfilePage";
+import SystemLogsPage from "./modules/logs/SystemLogsPage";
 import { Toaster } from "@/components/ui/toaster";
 
 // Real-time Session Guard (Redirects if account is deleted)
@@ -31,7 +34,10 @@ const RealTimeGuard = ({ children }: { children: React.ReactNode }) => {
 
         if (response.status === 401 || response.status === 403) {
           localStorage.clear();
-          navigate("/login", { replace: true });
+          navigate("/login", {
+            replace: true,
+            state: { message: "Security Update: Your credentials have been changed. Please login with new details." }
+          });
         }
       } catch (err: any) {
         console.warn("Session check offline or failed:", err.message);
@@ -80,11 +86,14 @@ function App() {
               <Route element={<ProtectedRoute allowedRoles={["ADMIN", "PHARMACIST", "STAFF"]} />}>
                 <Route path="inventory" element={<InventoryPage />} />
                 <Route path="billing" element={<BillingPage />} />
+                <Route path="sales-history" element={<SalesHistoryPage />} />
                 <Route path="suppliers" element={<SuppliersPage />} />
                 <Route path="customers" element={<CustomersPage />} />
                 <Route path="finance" element={<FinancePage />} />
                 <Route path="reports" element={<ReportsPage />} />
                 <Route path="admin" element={<AdminPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="logs" element={<SystemLogsPage />} />
               </Route>
 
               {/* Super Admin Specific Routes */}

@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
     DollarSign,
@@ -8,7 +10,8 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     Activity,
-    Package
+    Package,
+    Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,31 +19,69 @@ import {
     AreaChart, Area, CartesianGrid
 } from "recharts";
 
-const salesData = [
-    { name: '01 Feb', sales: 42000, profit: 12000 },
-    { name: '02 Feb', sales: 38000, profit: 10500 },
-    { name: '03 Feb', sales: 52000, profit: 15600 },
-    { name: '04 Feb', sales: 48000, profit: 13200 },
-    { name: '05 Feb', sales: 61000, profit: 18400 },
-    { name: '06 Feb', sales: 75000, profit: 22800 },
-    { name: '07 Feb', sales: 55000, profit: 16200 },
-];
-
-const topProducts = [
-    { name: 'Panadol 500mg', sales: 1240, status: 'High' },
-    { name: 'Amoxicillin 250mg', sales: 850, status: 'Stable' },
-    { name: 'Ibuprofen 400mg', sales: 620, status: 'Rising' },
-];
-
-const recentSales = [
-    { name: 'Ahmed Ali', email: 'ahmed.ali@email.pk', amount: 1999, status: 'Paid', time: '2 mins ago' },
-    { name: 'Fatima Zahra', email: 'fatima@gmail.com', amount: 450, status: 'Paid', time: '15 mins ago' },
-    { name: 'Zeeshan Khan', email: 'zkhan@outlook.pk', amount: 3200, status: 'Paid', time: '1 hour ago' },
-    { name: 'Ayesha Siddiqui', email: 'ayesha.s@email.pk', amount: 120, status: 'Paid', time: '3 hours ago' },
-    { name: 'Kamran Akmal', email: 'kamran.a@gmail.com', amount: 890, status: 'Pending', time: '5 hours ago' },
-];
+interface DashboardData {
+    stats: {
+        totalRevenue: number;
+        ordersToday: number;
+        activeSkus: number;
+        alerts: number;
+        lowStockCount: number;
+        nearExpiryCount: number;
+        expiredCount: number;
+    };
+    revenueTrend: Array<{ name: string; sales: number; profit: number }>;
+    topProducts: Array<{ name: string; sales: number; status: string }>;
+    recentActivity: Array<{ name: string; email: string; amount: number; status: string; time: string }>;
+}
 
 export default function DashboardPage() {
+    const [data, setData] = useState<DashboardData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchDashboard = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const response = await fetch("http://localhost:5000/api/dashboard/stats", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.clear();
+                    navigate("/login", { replace: true });
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch data");
+                }
+
+                const result = await response.json();
+                setData(result);
+            } catch (error) {
+                console.error("Failed to fetch dashboard data", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboard();
+    }, [navigate]);
+
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[600px] gap-4">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                <p className="font-black text-slate-400 uppercase tracking-widest text-xs">Initializing Terminal Control...</p>
+            </div>
+        );
+    }
+
+    if (!data || !data.stats) return <div className="p-8 text-center text-slate-500 font-bold">Failed to load dashboard intelligence. Please refresh.</div>;
+
+    const { stats, revenueTrend, topProducts, recentActivity } = data;
+
     return (
         <div className="flex flex-col gap-8 pb-10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -58,7 +99,7 @@ export default function DashboardPage() {
 
             {/* Quick Stats Grid */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="border-none shadow-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white overflow-hidden relative group">
+                <Card className="border-none shadow-xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white overflow-hidden relative group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
                         <DollarSign className="h-24 w-24" />
                     </div>
@@ -66,9 +107,9 @@ export default function DashboardPage() {
                         <CardTitle className="text-sm font-bold uppercase tracking-widest opacity-80">Total Revenue</CardTitle>
                     </CardHeader>
                     <CardContent className="relative z-10">
-                        <div className="text-3xl font-black italic tracking-tighter">PKR 1.24M</div>
-                        <div className="flex items-center gap-1 mt-2 text-xs font-bold text-blue-100">
-                            <ArrowUpRight className="h-3 w-3" /> +12.5% from last week
+                        <div className="text-3xl font-black italic tracking-tighter">Rs. {stats.totalRevenue.toLocaleString()}</div>
+                        <div className="flex items-center gap-1 mt-2 text-xs font-bold text-indigo-100/60 uppercase tracking-tighter">
+                            Enterprise Volume Status: Optimal
                         </div>
                     </CardContent>
                 </Card>
@@ -80,9 +121,9 @@ export default function DashboardPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-black italic tracking-tighter">842</div>
+                        <div className="text-3xl font-black italic tracking-tighter text-slate-900 dark:text-white">{stats.ordersToday}</div>
                         <div className="flex items-center gap-1 mt-2 text-xs font-bold text-emerald-600">
-                            <ArrowUpRight className="h-3 w-3" /> +18.2% vs yesterday
+                            <Activity className="h-3 w-3" /> Live Transaction Stream
                         </div>
                     </CardContent>
                 </Card>
@@ -90,27 +131,27 @@ export default function DashboardPage() {
                 <Card className="border-none shadow-xl bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex justify-between">
-                            Active SKUs <Package className="h-4 w-4 text-blue-500" />
+                            Active SKUs <Package className="h-4 w-4 text-indigo-500" />
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-black italic tracking-tighter">12,450</div>
-                        <div className="flex items-center gap-1 mt-2 text-xs font-bold text-blue-600">
-                            <Activity className="h-3 w-3" /> 98% in-stock rate
+                        <div className="text-3xl font-black italic tracking-tighter text-slate-900 dark:text-white">{stats.activeSkus.toLocaleString()}</div>
+                        <div className="flex items-center gap-1 mt-2 text-xs font-bold text-indigo-600">
+                            <Activity className="h-3 w-3" /> Catalog Synchronized
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-xl bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800">
-                    <CardHeader className="pb-2 text-rose-600">
+                <Card className={`border-none shadow-xl bg-white dark:bg-slate-900 ring-1 ${stats.alerts > 0 ? 'ring-rose-500/50' : 'ring-slate-200 dark:ring-slate-800'}`}>
+                    <CardHeader className={`pb-2 ${stats.alerts > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
                         <CardTitle className="text-sm font-bold uppercase tracking-widest flex justify-between">
-                            Alerts <AlertTriangle className="h-4 w-4" />
+                            Active Alerts <AlertTriangle className="h-4 w-4" />
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-black italic tracking-tighter text-rose-600">24</div>
+                        <div className={`text-3xl font-black italic tracking-tighter ${stats.alerts > 0 ? 'text-rose-600' : 'text-slate-900 dark:text-white'}`}>{stats.alerts}</div>
                         <div className="flex items-center gap-1 mt-2 text-xs font-bold text-rose-600/70">
-                            <ArrowDownRight className="h-3 w-3" /> 8 Expiring soon
+                            {stats.lowStockCount > 0 ? `${stats.lowStockCount} Low Stock` : 'Stock Levels Healthy'}
                         </div>
                     </CardContent>
                 </Card>
@@ -123,10 +164,10 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <CardTitle className="text-xl font-bold italic tracking-tight">Revenue Analytics</CardTitle>
-                                <CardDescription>Sales vs Net Profit (Weekly Trend)</CardDescription>
+                                <CardDescription>Business growth trend (Last 7 Days)</CardDescription>
                             </div>
                             <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold">
-                                <div className="flex items-center gap-1.5"><div className="h-2 w-2 rounded-full bg-primary" /> Sales</div>
+                                <div className="flex items-center gap-1.5"><div className="h-2 w-2 rounded-full bg-indigo-500" /> Sales</div>
                                 <div className="flex items-center gap-1.5"><div className="h-2 w-2 rounded-full bg-emerald-500" /> Profit</div>
                             </div>
                         </div>
@@ -134,11 +175,11 @@ export default function DashboardPage() {
                     <CardContent className="p-6">
                         <div className="h-[400px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={salesData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                <AreaChart data={revenueTrend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.2} />
-                                            <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                                         </linearGradient>
                                         <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
@@ -157,7 +198,7 @@ export default function DashboardPage() {
                                         axisLine={false}
                                         tickLine={false}
                                         tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 600 }}
-                                        tickFormatter={(val) => `${val / 1000}k`}
+                                        tickFormatter={(val) => `Rs.${val / 1000}k`}
                                     />
                                     <Tooltip
                                         contentStyle={{
@@ -167,7 +208,7 @@ export default function DashboardPage() {
                                             padding: '12px'
                                         }}
                                     />
-                                    <Area type="monotone" dataKey="sales" stroke="#2563eb" strokeWidth={4} fillOpacity={1} fill="url(#colorSales)" />
+                                    <Area type="monotone" dataKey="sales" stroke="#6366f1" strokeWidth={4} fillOpacity={1} fill="url(#colorSales)" />
                                     <Area type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={4} fillOpacity={1} fill="url(#colorProfit)" />
                                 </AreaChart>
                             </ResponsiveContainer>
@@ -179,29 +220,32 @@ export default function DashboardPage() {
                 <Card className="lg:col-span-4 border-none shadow-2xl bg-white dark:bg-slate-900 border dark:border-slate-800">
                     <CardHeader className="border-b dark:border-slate-800 pb-6 pt-8">
                         <CardTitle className="text-xl font-bold italic tracking-tight">Top Movers</CardTitle>
-                        <CardDescription>Most selling products today.</CardDescription>
+                        <CardDescription>Most selling products identify.</CardDescription>
                     </CardHeader>
                     <CardContent className="p-6">
                         <div className="space-y-6">
                             {topProducts.map((product, idx) => (
                                 <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:scale-[1.02] transition-transform cursor-pointer group">
                                     <div className="flex items-center gap-4">
-                                        <div className="h-12 w-12 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center text-primary shadow-sm group-hover:bg-primary group-hover:text-white transition-colors">
+                                        <div className="h-12 w-12 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center text-indigo-500 shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                                             <Pill className="h-6 w-6" />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold">{product.name}</p>
+                                            <p className="text-sm font-black text-slate-900 dark:text-white">{product.name}</p>
                                             <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">{product.status} Demand</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-sm font-black italic">{product.sales}</p>
-                                        <p className="text-[10px] text-muted-foreground uppercase">Units</p>
+                                        <p className="text-sm font-black italic text-slate-900 dark:text-white">{product.sales}</p>
+                                        <p className="text-[10px] text-muted-foreground uppercase font-black">Units</p>
                                     </div>
                                 </div>
                             ))}
+                            {topProducts.length === 0 && (
+                                <p className="text-center text-slate-400 font-bold py-10 italic">No sales data yet.</p>
+                            )}
                         </div>
-                        <Button variant="outline" className="w-full mt-6 h-12 rounded-xl text-xs font-bold uppercase tracking-widest border-2">View Inventory Report</Button>
+                        <Button variant="outline" className="w-full mt-6 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 border-slate-100 hover:bg-slate-50">View Full Inventory</Button>
                     </CardContent>
                 </Card>
             </div>
@@ -213,39 +257,45 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <CardTitle className="text-xl font-bold italic tracking-tight">Recent Activity Ledger</CardTitle>
-                                <CardDescription>Real-time transaction log for all branches.</CardDescription>
+                                <CardDescription>Real-time transaction log for this terminal.</CardDescription>
                             </div>
-                            <Button variant="ghost" className="text-xs font-bold text-primary flex items-center gap-2">
-                                <Users className="h-4 w-4" /> View Customer Profiles
+                            <Button variant="ghost" className="text-[10px] font-black uppercase tracking-widest text-indigo-600 flex items-center gap-2 hover:bg-indigo-50 py-1 px-4 rounded-xl">
+                                <Users className="h-4 w-4" /> Global Accounts
                             </Button>
                         </div>
                     </CardHeader>
-                    <CardContent className="p-6">
-                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                            {recentSales.map((sale, idx) => (
-                                <div key={idx} className="p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/40 relative overflow-hidden group border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="h-10 w-10 rounded-full bg-white dark:bg-slate-900 border dark:border-slate-700 flex items-center justify-center font-bold text-xs text-primary">
-                                            {sale.name.charAt(0)}
+                    <CardContent className="p-8">
+                        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                            {recentActivity.map((activity, idx) => (
+                                <div key={idx} className="p-6 rounded-[2rem] bg-slate-50 dark:bg-slate-800/40 relative overflow-hidden group border border-transparent hover:border-indigo-100 dark:hover:border-slate-700 transition-all shadow-sm hover:shadow-xl">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div className="h-12 w-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 flex items-center justify-center font-black text-xs text-indigo-600 shadow-sm">
+                                            {activity.name.charAt(0).toUpperCase()}
                                         </div>
-                                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${sale.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                                        <span className={`px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider ${activity.status === 'Paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
                                             }`}>
-                                            {sale.status}
+                                            {activity.status}
                                         </span>
                                     </div>
-                                    <div className="mb-4">
-                                        <p className="text-sm font-bold truncate">{sale.name}</p>
-                                        <p className="text-[10px] text-muted-foreground truncate">{sale.email}</p>
+                                    <div className="mb-6">
+                                        <p className="text-sm font-black text-slate-900 dark:text-white truncate tracking-tight">{activity.name}</p>
+                                        <p className="text-[10px] font-bold text-slate-400 truncate mt-1">{activity.email}</p>
                                     </div>
-                                    <div className="flex items-end justify-between border-t dark:border-slate-700 pt-4">
+                                    <div className="flex items-end justify-between border-t border-slate-100 dark:border-slate-700 pt-6">
                                         <div>
-                                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Amount</p>
-                                            <p className="text-md font-black italic tracking-tighter">PKR {sale.amount}</p>
+                                            <p className="text-[9px] text-slate-400 uppercase font-black tracking-[0.2em] mb-1">Transaction</p>
+                                            <p className="text-lg font-black italic tracking-tighter text-slate-900 dark:text-white">Rs. {activity.amount.toLocaleString()}</p>
                                         </div>
-                                        <p className="text-[10px] font-bold text-muted-foreground">{sale.time}</p>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{activity.time}</p>
                                     </div>
                                 </div>
                             ))}
+                            {recentActivity.length === 0 && (
+                                <div className="col-span-full py-16 text-center">
+                                    <Activity className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+                                    <p className="text-slate-400 font-bold italic">Waiting for terminal activity...</p>
+                                </div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
