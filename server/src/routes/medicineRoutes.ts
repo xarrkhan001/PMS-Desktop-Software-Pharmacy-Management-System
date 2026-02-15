@@ -24,15 +24,19 @@ router.get('/', async (req: any, res) => {
 router.post('/', async (req: any, res) => {
     if (req.user.role === 'STAFF') return res.status(403).json({ error: 'Sales staff cannot add medicines' });
 
-    const { name, category, price, stock, expiryDate } = req.body;
+    const { name, category, genericName, manufacturer, price, salePrice, stock, reorderLevel, rackNo } = req.body;
     try {
         const medicine = await prisma.medicine.create({
             data: {
                 name,
                 category,
+                genericName,
+                manufacturer,
                 price,
-                stock,
-                expiryDate: new Date(expiryDate),
+                salePrice: salePrice || price,
+                stock: stock || 0,
+                reorderLevel: reorderLevel || 10,
+                rackNo,
                 pharmacyId: req.user.pharmacyId
             },
         });

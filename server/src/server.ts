@@ -6,6 +6,10 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import superAdminRoutes from './routes/superAdminRoutes';
 import medicineRoutes from './routes/medicineRoutes';
+import inventoryRoutes from './routes/inventoryRoutes';
+import pharmacyRoutes from './routes/pharmacyRoutes';
+import dashboardRoutes from './routes/dashboardRoutes';
+import saleRoutes from './routes/saleRoutes';
 import { seedSystem } from './utils/seed';
 
 dotenv.config();
@@ -24,6 +28,10 @@ seedSystem();
 app.use('/api/auth', authRoutes);
 app.use('/api/super', superAdminRoutes);
 app.use('/api/medicines', medicineRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/pharmacy', pharmacyRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/sales', saleRoutes);
 
 // Health Check
 app.get('/', (req, res) => {

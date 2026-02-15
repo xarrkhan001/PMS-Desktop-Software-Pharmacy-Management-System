@@ -20,7 +20,7 @@ router.use(isSuperAdmin);
 router.get('/pharmacies', async (req, res) => {
     try {
         const pharmacies = await prisma.pharmacy.findMany({
-            include: { users: { where: { role: 'ADMIN' }, select: { email: true } } }
+            include: { users: { where: { role: 'ADMIN' }, select: { id: true, name: true, email: true } } }
         });
         res.json(pharmacies);
     } catch (error) {
@@ -104,6 +104,49 @@ router.post('/renew-license', async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ error: 'Failed to update license' });
+    }
+});
+
+// Update Pharmacy Credentials (Name, Email, Password)
+router.put('/update-pharmacy-credentials', async (req, res) => {
+    const { pharmacyId, pharmacyName, ownerEmail, ownerPassword, ownerName } = req.body;
+
+    try {
+        // 1. Update Pharmacy Details
+        await prisma.pharmacy.update({
+            where: { id: pharmacyId },
+            data: { name: pharmacyName }
+        });
+
+        // 2. Update Admin User Credentials
+        const adminUser = await prisma.user.findFirst({
+            where: { pharmacyId: pharmacyId, role: 'ADMIN' }
+        });
+
+        if (adminUser) {
+            const dataToUpdate: any = {
+                email: ownerEmail,
+                name: ownerName
+            };
+
+            if (ownerPassword && ownerPassword.trim().length > 0) {
+                const hashedPassword = await bcrypt.hash(ownerPassword, 10);
+                dataToUpdate.password = hashedPassword;
+            }
+
+            await prisma.user.update({
+                where: { id: adminUser.id },
+                data: {
+                    ...dataToUpdate,
+                    tokenVersion: { increment: 1 }
+                }
+            });
+        }
+
+        res.json({ message: 'Pharmacy credentials updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to update credentials. Email might be in use.' });
     }
 });
 
