@@ -5,11 +5,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
     FileText, Printer, Search, Filter,
     Calendar, History, Receipt,
-    ChevronRight, Download, Eye, XCircle
+    ChevronRight, Download, Eye, XCircle, Trash2, CheckCircle, Trash
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function SalesHistoryPage() {
     const [sales, setSales] = useState<any[]>([]);
@@ -18,6 +19,8 @@ export default function SalesHistoryPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedSale, setSelectedSale] = useState<any>(null);
     const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const { toast } = useToast();
 
     // Get Pharmacy Name
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -56,6 +59,55 @@ export default function SalesHistoryPage() {
         setIsReceiptOpen(true);
     };
 
+    const handleDelete = async (id: number) => {
+        if (!confirm("Are you sure you want to delete this invoice?")) return;
+        try {
+            const token = localStorage.getItem("token");
+            await fetch(`http://localhost:5000/api/sales/${id}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            toast({ title: "Deleted", description: "Invoice deleted successfully" });
+            fetchHistory();
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (!confirm(`Are you sure you want to delete ${selectedIds.length} invoices?`)) return;
+        try {
+            const token = localStorage.getItem("token");
+            await fetch("http://localhost:5000/api/sales/bulk-delete", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ ids: selectedIds })
+            });
+            toast({ title: "Deleted", description: "Invoices deleted successfully" });
+            setSelectedIds([]);
+            fetchHistory();
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.length === filteredSales.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(filteredSales.map(s => s.id));
+        }
+    };
+
+    const toggleSelect = (id: number) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
     const handlePrint = () => {
         const originalTitle = document.title;
         document.title = `${pharmacyName} - Invoice ${selectedSale?.invoiceNo || 'Copy'}`;
@@ -83,7 +135,19 @@ export default function SalesHistoryPage() {
                     <p className="text-slate-500 font-bold text-sm mt-1 uppercase tracking-widest">Archived Invoices & Digital Receipts</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" className="rounded-xl font-bold h-11"><Download className="mr-2 h-4 w-4" /> Export Excel</Button>
+                    {selectedIds.length > 0 && (
+                        <button
+                            className="flex items-center rounded-xl font-bold px-4 h-11 bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-100 transition-all border-none"
+                            onClick={handleBulkDelete}
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete ({selectedIds.length})
+                        </button>
+                    )}
+                    <button
+                        className="flex items-center rounded-xl font-bold px-4 h-11 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-all"
+                    >
+                        <Download className="mr-2 h-4 w-4" /> Export Excel
+                    </button>
                 </div>
             </div>
 
@@ -99,32 +163,77 @@ export default function SalesHistoryPage() {
                     />
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
-                    <Button variant="ghost" className="h-12 rounded-xl border border-slate-100 px-4 font-bold text-slate-500">
+                    <button className="flex items-center h-12 rounded-xl border border-slate-100 px-4 font-bold text-slate-500 bg-white hover:bg-slate-50">
                         <Calendar className="mr-2 h-4 w-4" /> Date Range
-                    </Button>
-                    <Button variant="ghost" className="h-12 rounded-xl border border-slate-100 px-4 font-bold text-slate-500">
+                    </button>
+                    <button className="flex items-center h-12 rounded-xl border border-slate-100 px-4 font-bold text-slate-500 bg-white hover:bg-slate-50">
                         <Filter className="mr-2 h-4 w-4" /> Filter
-                    </Button>
+                    </button>
                 </div>
             </div>
+
+            {/* Bulk Action Bar */}
+            {selectedIds.length > 0 && (
+                <div className="bg-indigo-600 text-white p-5 rounded-[2rem] shadow-2xl shadow-indigo-200 flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in zoom-in duration-300">
+                    <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                            <CheckCircle className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-black tracking-tight">{selectedIds.length} Invoices Selected</h3>
+                            <p className="text-xs text-indigo-100 uppercase tracking-[0.2em] font-bold">Bulk management mode active</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                        <button
+                            className="flex-1 md:flex-none text-white hover:bg-white/10 font-bold h-12 px-6 rounded-xl border border-white/20 bg-transparent transition-all"
+                            onClick={() => setSelectedIds([])}
+                        >
+                            Cancel Selection
+                        </button>
+                        <button
+                            className="flex-1 md:flex-none bg-rose-500 hover:bg-rose-600 text-white font-black h-12 px-8 rounded-xl shadow-xl shadow-rose-900/20 gap-2 border-none transition-all flex items-center justify-center"
+                            onClick={handleBulkDelete}
+                        >
+                            <Trash2 className="h-5 w-5" /> Delete Permanently
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* History Table */}
             <Card className="border-none shadow-xl rounded-[2rem] overflow-hidden">
                 <Table>
                     <TableHeader className="bg-slate-50">
                         <TableRow className="hover:bg-transparent border-none">
-                            <TableHead className="font-black py-5 pl-8 uppercase text-[10px] tracking-widest text-slate-400">Invoice No</TableHead>
+                            <TableHead className="w-12 pl-8">
+                                <input
+                                    type="checkbox"
+                                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 cursor-pointer"
+                                    checked={selectedIds.length === filteredSales.length && filteredSales.length > 0}
+                                    onChange={toggleSelectAll}
+                                />
+                            </TableHead>
+                            <TableHead className="font-black py-5 uppercase text-[10px] tracking-widest text-slate-400">Invoice No</TableHead>
                             <TableHead className="font-black py-5 uppercase text-[10px] tracking-widest text-slate-400">Customer</TableHead>
                             <TableHead className="font-black py-5 uppercase text-[10px] tracking-widest text-slate-400">Date & Time</TableHead>
                             <TableHead className="font-black py-5 uppercase text-[10px] tracking-widest text-slate-400">Payment</TableHead>
                             <TableHead className="text-right font-black py-5 uppercase text-[10px] tracking-widest text-slate-400">Net Amount</TableHead>
-                            <TableHead className="text-right font-black py-5 pr-8 uppercase text-[10px] tracking-widest text-slate-400">Action</TableHead>
+                            <TableHead className="text-center font-black py-5 uppercase text-[10px] tracking-widest text-slate-400 w-40">Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filteredSales.map((sale) => (
-                            <TableRow key={sale.id} className="group hover:bg-slate-50/50 transition-all border-slate-50">
-                                <TableCell className="font-black py-6 pl-8">
+                            <TableRow key={sale.id} className={`group transition-all border-slate-50 ${selectedIds.includes(sale.id) ? 'bg-indigo-50/30' : 'hover:bg-slate-50/50'}`}>
+                                <TableCell className="pl-8">
+                                    <input
+                                        type="checkbox"
+                                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 cursor-pointer"
+                                        checked={selectedIds.includes(sale.id)}
+                                        onChange={() => toggleSelect(sale.id)}
+                                    />
+                                </TableCell>
+                                <TableCell className="font-black py-6">
                                     <span className="text-slate-900 tracking-tight">{sale.invoiceNo}</span>
                                 </TableCell>
                                 <TableCell>
@@ -151,15 +260,23 @@ export default function SalesHistoryPage() {
                                 <TableCell className="text-right font-black text-slate-900 text-md">
                                     Rs. {sale.netAmount.toLocaleString()}
                                 </TableCell>
-                                <TableCell className="text-right pr-8">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="rounded-xl h-10 font-black gap-2 hover:bg-indigo-50 hover:text-indigo-600 border border-transparent hover:border-indigo-100"
-                                        onClick={() => handleViewInvoice(sale)}
-                                    >
-                                        <Eye className="h-4 w-4" /> View Invoice
-                                    </Button>
+                                <TableCell className="text-center py-4">
+                                    <div className="flex items-center justify-center gap-2">
+                                        <button
+                                            className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-[11px] font-bold flex items-center gap-1 hover:bg-indigo-700 transition-colors shadow-sm"
+                                            onClick={() => handleViewInvoice(sale)}
+                                        >
+                                            <Eye size={14} />
+                                            <span>SHOW</span>
+                                        </button>
+                                        <button
+                                            className="p-1.5 rounded-lg bg-rose-100 text-rose-600 hover:bg-rose-600 hover:text-white transition-colors"
+                                            onClick={() => handleDelete(sale.id)}
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -356,25 +473,20 @@ export default function SalesHistoryPage() {
                     .text-rose-600 { color: #e11d48 !important; }
                     .text-indigo-700 { color: #4338ca !important; }
                     .text-indigo-500 { color: #6366f1 !important; }
-                        visibility: visible !important;
-                        position: fixed !important;
-                        left: 0 !important;
-                        top: 0 !important;
-                        width: 100% !important;
-                        height: 100% !important;
-                        background: white !important;
-                        z-index: 99999 !important;
-                        display: block !important;
-                    }
-                    
-                    #print-overlay * {
-                        visibility: visible !important;
-                        color: black !important;
+
+                    .print-color-exact {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
                     }
 
-                    /* Hide everything else */
-                    #receipt-content { display: none !important; }
-                    .print\\:hidden, button, [role="separator"] { display: none !important; }
+                    /* Hide UI elements during print */
+                    .print\:hidden, 
+                    nav, 
+                    header, 
+                    aside,
+                    .no-print { 
+                        display: none !important; 
+                    }
                 }
             ` }} />
         </div>

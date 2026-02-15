@@ -177,4 +177,46 @@ router.get("/history", authenticateToken, async (req: any, res) => {
     }
 });
 
+// 5. Delete Single Sale
+router.delete("/:id", authenticateToken, async (req: any, res) => {
+    try {
+        const pharmacyId = req.user.pharmacyId;
+        const saleId = parseInt(req.params.id);
+
+        await prisma.sale.delete({
+            where: {
+                id: saleId,
+                pharmacyId // Security: ensure it belongs to the pharmacy
+            }
+        });
+
+        res.json({ message: "Sale deleted successfully" });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 6. Bulk Delete Sales
+router.post("/bulk-delete", authenticateToken, async (req: any, res) => {
+    try {
+        const pharmacyId = req.user.pharmacyId;
+        const { ids } = req.body;
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ error: "No IDs provided" });
+        }
+
+        await prisma.sale.deleteMany({
+            where: {
+                id: { in: ids },
+                pharmacyId
+            }
+        });
+
+        res.json({ message: `${ids.length} sales deleted successfully` });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 export default router;
