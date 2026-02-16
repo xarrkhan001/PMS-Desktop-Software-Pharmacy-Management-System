@@ -72,11 +72,34 @@ router.post("/process", authenticateToken, async (req: any, res) => {
 
         // Start Transaction
         const sale = await prisma.$transaction(async (tx) => {
+            let finalCustomerId = customerId;
+
+            // AUTO-REGISTER CUSTOMER if a name is provided but no ID is selected
+            if (!finalCustomerId && manualCustomerName && manualCustomerName !== "Walk-in Customer") {
+                // Try to find existing customer by name for this pharmacy to avoid duplicates
+                const existing = await tx.customer.findFirst({
+                    where: { name: manualCustomerName, pharmacyId }
+                });
+
+                if (existing) {
+                    finalCustomerId = existing.id;
+                } else {
+                    const newCust = await tx.customer.create({
+                        data: {
+                            name: manualCustomerName,
+                            address: manualCustomerAddress || null,
+                            pharmacyId
+                        }
+                    });
+                    finalCustomerId = newCust.id;
+                }
+            }
+
             // 1. Create Sale Record
             const newSale = await tx.sale.create({
                 data: {
                     pharmacy: { connect: { id: pharmacyId } },
-                    customer: customerId ? { connect: { id: customerId } } : undefined,
+                    customer: finalCustomerId ? { connect: { id: finalCustomerId } } : undefined,
                     totalAmount: totalAmount || 0,
                     discount: discount || 0,
                     netAmount: netAmount || 0,
@@ -121,12 +144,16 @@ router.post("/process", authenticateToken, async (req: any, res) => {
                 });
             }
 
-            // 3. Update Customer Due if applicable
-            if (customerId && netAmount > paidAmount) {
+            // 3. Update Customer Analytics, Due, and Loyalty if applicable
+            if (finalCustomerId) {
+                const pointsToEarn = Math.floor(netAmount / 100);
                 await tx.customer.update({
-                    where: { id: customerId },
+                    where: { id: finalCustomerId },
                     data: {
-                        totalDue: { increment: netAmount - paidAmount }
+                        totalDue: { increment: netAmount > paidAmount ? netAmount - paidAmount : 0 },
+                        loyaltyPoints: { increment: pointsToEarn },
+                        totalSpent: { increment: netAmount },
+                        visits: { increment: 1 }
                     }
                 });
             }

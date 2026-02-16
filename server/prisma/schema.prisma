@@ -59,12 +59,15 @@ model Supplier {
 }
 
 model Customer {
-  id          Int      @id @default(autoincrement())
-  name        String
-  phone       String?
-  address     String?
-  totalDue    Float    @default(0)
-  createdAt   DateTime @default(now())
+  id            Int      @id @default(autoincrement())
+  name          String
+  phone         String?
+  address       String?
+  totalDue      Float    @default(0)
+  loyaltyPoints Int      @default(0)
+  totalSpent    Float    @default(0)
+  visits        Int      @default(0)
+  createdAt     DateTime @default(now())
   
   pharmacyId  Int
   pharmacy    Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
