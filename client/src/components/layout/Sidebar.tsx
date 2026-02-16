@@ -17,6 +17,7 @@ import {
     PackagePlus,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 interface SidebarProps {
     isMobile?: boolean;
@@ -25,6 +26,7 @@ interface SidebarProps {
 export default function Sidebar({ isMobile }: SidebarProps) {
     const location = useLocation();
     const navigate = useNavigate();
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const handleLogout = () => {
         localStorage.removeItem("isAuthenticated");
@@ -52,14 +54,27 @@ export default function Sidebar({ isMobile }: SidebarProps) {
     const navItems = allNavItems.filter(item => item.roles.includes(userRole || ""));
 
     return (
-        <div className={cn("flex flex-col h-full bg-white dark:bg-slate-900 border-r dark:border-slate-800", isMobile ? "w-full" : "w-64")}>
-            <div className="h-16 flex items-center px-6 border-b dark:border-slate-800">
-                <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3">
+        <div
+            className={cn(
+                "flex flex-col h-full bg-white dark:bg-slate-900 border-r dark:border-slate-800 transition-all duration-300 ease-in-out",
+                isMobile ? "w-full" : isExpanded ? "w-64" : "w-20"
+            )}
+            onMouseEnter={() => !isMobile && setIsExpanded(true)}
+            onMouseLeave={() => !isMobile && setIsExpanded(false)}
+        >
+            {/* Logo Section */}
+            <div className="h-16 flex items-center px-4 border-b dark:border-slate-800">
+                <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Pill className="h-5 w-5 text-primary" />
                 </div>
-                <span className="text-xl font-bold text-slate-900 dark:text-white">Pharm<span className="text-blue-600">Pro</span></span>
+                {(isExpanded || isMobile) && (
+                    <span className="ml-3 text-xl font-bold text-slate-900 dark:text-white whitespace-nowrap overflow-hidden">
+                        Pharm<span className="text-blue-600">Pro</span>
+                    </span>
+                )}
             </div>
 
+            {/* Navigation Items */}
             <nav className="flex-1 overflow-y-auto py-4">
                 <ul className="space-y-1 px-3">
                     {navItems.map((item) => {
@@ -69,14 +84,25 @@ export default function Sidebar({ isMobile }: SidebarProps) {
                                 <Link
                                     to={item.path}
                                     className={cn(
-                                        "flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+                                        "flex items-center px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative",
                                         isActive
                                             ? "bg-primary/10 text-primary dark:bg-primary/20"
                                             : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
                                     )}
+                                    title={!isExpanded && !isMobile ? item.name : undefined}
                                 >
-                                    <item.icon className="h-5 w-5 mr-3" />
-                                    {item.name}
+                                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                                    {(isExpanded || isMobile) && (
+                                        <span className="ml-3 whitespace-nowrap">{item.name}</span>
+                                    )}
+
+                                    {/* Tooltip for collapsed state */}
+                                    {!isExpanded && !isMobile && (
+                                        <div className="absolute left-full ml-6 px-3 py-2 bg-slate-900 text-white text-xs font-semibold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-xl">
+                                            {item.name}
+                                            <div className="absolute right-full top-1/2 -translate-y-1/2 mr-1 border-4 border-transparent border-r-slate-900"></div>
+                                        </div>
+                                    )}
                                 </Link>
                             </li>
                         );
@@ -84,19 +110,20 @@ export default function Sidebar({ isMobile }: SidebarProps) {
                 </ul>
             </nav>
 
+            {/* Bottom Section */}
             <div className="p-4 border-t dark:border-slate-800">
-                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 border dark:border-slate-700">
-                    <h4 className="text-sm font-semibold mb-1 dark:text-slate-200">Need Help?</h4>
-                    <p className="text-xs text-muted-foreground mb-3">Check docs or contact support</p>
-                    <button className="text-xs bg-white dark:bg-slate-700 border dark:border-slate-600 shadow-sm px-3 py-1.5 rounded-md w-full hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">Documentation</button>
-                </div>
+
                 <Button
                     variant="ghost"
-                    className="w-full mt-4 justify-start text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    className={cn(
+                        "w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive rounded-xl",
+                        !isExpanded && !isMobile && "justify-center px-2"
+                    )}
                     onClick={handleLogout}
+                    title={!isExpanded && !isMobile ? "Logout" : undefined}
                 >
-                    <LogOut className="h-5 w-5 mr-3" />
-                    Logout
+                    <LogOut className="h-5 w-5 flex-shrink-0" />
+                    {(isExpanded || isMobile) && <span className="ml-3">Logout</span>}
                 </Button>
             </div>
         </div>

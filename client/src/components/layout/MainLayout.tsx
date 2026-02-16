@@ -12,11 +12,11 @@ export default function MainLayout() {
     return (
         <div className="flex h-screen bg-gray-50 dark:bg-slate-900 overflow-hidden">
             {/* Desktop Sidebar */}
-            <div className="hidden md:flex w-64 flex-col fixed inset-y-0 z-50">
+            <div className="hidden md:flex flex-col transition-all duration-300 ease-in-out">
                 <Sidebar />
             </div>
 
-            <div className="md:pl-64 flex flex-col flex-1 w-full h-full transition-all duration-300 ease-in-out">
+            <div className="flex flex-col flex-1 w-full h-full transition-all duration-300 ease-in-out overflow-hidden">
                 {!isSuperDashboard && <Navbar onMenuClick={() => setSidebarOpen(true)} />}
                 <main className={`flex-1 overflow-y-auto bg-muted/20 ${isSuperDashboard ? 'p-0' : 'p-4 md:p-6'}`}>
                     <Outlet />
