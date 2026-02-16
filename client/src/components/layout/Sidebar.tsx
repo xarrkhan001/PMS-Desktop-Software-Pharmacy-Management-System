@@ -14,6 +14,7 @@ import {
     ShieldCheck,
     ShieldAlert,
     FileText,
+    PackagePlus,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -41,6 +42,7 @@ export default function Sidebar({ isMobile }: SidebarProps) {
         { name: "Billing", icon: ShoppingCart, path: "/billing", roles: ["ADMIN", "PHARMACIST", "STAFF"] },
         { name: "Invoice Archive", icon: FileText, path: "/sales-history", roles: ["ADMIN", "PHARMACIST", "STAFF"] },
         { name: "Suppliers", icon: Truck, path: "/suppliers", roles: ["ADMIN", "PHARMACIST"] },
+        { name: "Stock Inward", icon: PackagePlus, path: "/purchases", roles: ["ADMIN", "PHARMACIST"] },
         { name: "Customers", icon: Users, path: "/customers", roles: ["ADMIN", "PHARMACIST", "STAFF"] },
         { name: "Finance & Accounts", icon: Wallet, path: "/finance", roles: ["ADMIN"] },
         { name: "Reports", icon: FileBarChart, path: "/reports", roles: ["ADMIN", "PHARMACIST"] },

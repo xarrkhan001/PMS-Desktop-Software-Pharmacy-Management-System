@@ -10,6 +10,8 @@ import inventoryRoutes from './routes/inventoryRoutes';
 import pharmacyRoutes from './routes/pharmacyRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import saleRoutes from './routes/saleRoutes';
+import supplierRoutes from './routes/supplierRoutes';
+import purchaseRoutes from './routes/purchaseRoutes';
 import { seedSystem } from './utils/seed';
 
 dotenv.config();
@@ -32,6 +34,8 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/pharmacy', pharmacyRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/sales', saleRoutes);
+app.use('/api/suppliers', supplierRoutes);
+app.use('/api/purchases', purchaseRoutes);
 
 // Health Check
 app.get('/', (req, res) => {

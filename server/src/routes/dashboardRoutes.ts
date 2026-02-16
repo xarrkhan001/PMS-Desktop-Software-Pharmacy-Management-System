@@ -105,12 +105,13 @@ router.get("/stats", authenticateToken, async (req: any, res) => {
         // 5. Recent Activity Mock-up/Fetch
         const recentTrans = await prisma.sale.findMany({
             where: { pharmacyId },
-            take: 5,
+            take: 15,
             orderBy: { createdAt: 'desc' },
             include: { customer: true }
         });
 
         const formattedActivity = recentTrans.map(t => ({
+            id: t.id,
             name: t.manualCustomerName || t.customer?.name || "Walk-in Customer",
             email: "N/A",
             amount: t.netAmount,
