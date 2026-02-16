@@ -7,6 +7,7 @@ import FinancePage from "./modules/finance/FinancePage";
 import BillingPage from "./modules/billing/BillingPage";
 import SalesHistoryPage from "./modules/billing/SalesHistoryPage";
 import SuppliersPage from "./modules/suppliers/SuppliersPage";
+import PurchasesPage from "./modules/purchases/PurchasesPage";
 import CustomersPage from "./modules/customers/CustomersPage";
 import ReportsPage from "./modules/reports/ReportsPage";
 import AdminPage from "./modules/admin/AdminPage";
@@ -88,6 +89,7 @@ function App() {
                 <Route path="billing" element={<BillingPage />} />
                 <Route path="sales-history" element={<SalesHistoryPage />} />
                 <Route path="suppliers" element={<SuppliersPage />} />
+                <Route path="purchases" element={<PurchasesPage />} />
                 <Route path="customers" element={<CustomersPage />} />
                 <Route path="finance" element={<FinancePage />} />
                 <Route path="reports" element={<ReportsPage />} />

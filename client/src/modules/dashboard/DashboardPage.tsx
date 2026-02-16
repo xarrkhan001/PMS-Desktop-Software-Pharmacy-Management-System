@@ -11,7 +11,10 @@ import {
     ArrowDownRight,
     Activity,
     Package,
-    Loader2
+    Loader2,
+    ChevronLeft,
+    ChevronRight,
+    ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,12 +34,14 @@ interface DashboardData {
     };
     revenueTrend: Array<{ name: string; sales: number; profit: number }>;
     topProducts: Array<{ name: string; sales: number; status: string }>;
-    recentActivity: Array<{ name: string; email: string; amount: number; status: string; time: string }>;
+    recentActivity: Array<{ id: string; name: string; email: string; amount: number; status: string; time: string }>;
 }
 
 export default function DashboardPage() {
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -225,7 +230,11 @@ export default function DashboardPage() {
                     <CardContent className="p-6">
                         <div className="space-y-6">
                             {topProducts.map((product, idx) => (
-                                <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:scale-[1.02] transition-transform cursor-pointer group">
+                                <div
+                                    key={idx}
+                                    onClick={() => navigate("/inventory")}
+                                    className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:scale-[1.02] transition-transform cursor-pointer group"
+                                >
                                     <div className="flex items-center gap-4">
                                         <div className="h-12 w-12 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center text-indigo-500 shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                                             <Pill className="h-6 w-6" />
@@ -245,7 +254,13 @@ export default function DashboardPage() {
                                 <p className="text-center text-slate-400 font-bold py-10 italic">No sales data yet.</p>
                             )}
                         </div>
-                        <Button variant="outline" className="w-full mt-6 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 border-slate-100 hover:bg-slate-50">View Full Inventory</Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => navigate("/inventory")}
+                            className="w-full mt-6 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 border-slate-100 hover:bg-slate-50"
+                        >
+                            View Full Inventory
+                        </Button>
                     </CardContent>
                 </Card>
             </div>
@@ -254,42 +269,80 @@ export default function DashboardPage() {
             <div className="grid gap-6 lg:grid-cols-12">
                 <Card className="lg:col-span-12 border-none shadow-2xl bg-white dark:bg-slate-900">
                     <CardHeader className="border-b dark:border-slate-800 pb-6 pt-8">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div>
                                 <CardTitle className="text-xl font-bold italic tracking-tight">Recent Activity Ledger</CardTitle>
                                 <CardDescription>Real-time transaction log for this terminal.</CardDescription>
                             </div>
-                            <Button variant="ghost" className="text-[10px] font-black uppercase tracking-widest text-indigo-600 flex items-center gap-2 hover:bg-indigo-50 py-1 px-4 rounded-xl">
-                                <Users className="h-4 w-4" /> Global Accounts
-                            </Button>
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-100 dark:border-slate-700">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                        disabled={currentPage === 1}
+                                        className="h-8 w-8 rounded-lg hover:bg-white dark:hover:bg-slate-900 shadow-sm disabled:opacity-30"
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </Button>
+                                    <span className="text-[10px] font-black uppercase tracking-widest px-2 min-w-[60px] text-center">
+                                        Page {currentPage} of {recentActivity.length > 0 ? Math.ceil(recentActivity.length / itemsPerPage) : 1}
+                                    </span>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => setCurrentPage(prev => Math.min(Math.ceil(recentActivity.length / itemsPerPage), prev + 1))}
+                                        disabled={currentPage >= Math.ceil(recentActivity.length / itemsPerPage)}
+                                        className="h-8 w-8 rounded-lg hover:bg-white dark:hover:bg-slate-900 shadow-sm disabled:opacity-30"
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => navigate("/sales-history")}
+                                    className="text-[10px] font-black uppercase tracking-widest text-indigo-600 flex items-center gap-2 hover:bg-indigo-50 py-1 px-4 rounded-xl"
+                                >
+                                    <Users className="h-4 w-4" /> Global Accounts
+                                </Button>
+                            </div>
                         </div>
                     </CardHeader>
                     <CardContent className="p-8">
                         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-                            {recentActivity.map((activity, idx) => (
-                                <div key={idx} className="p-6 rounded-[2rem] bg-slate-50 dark:bg-slate-800/40 relative overflow-hidden group border border-transparent hover:border-indigo-100 dark:hover:border-slate-700 transition-all shadow-sm hover:shadow-xl">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <div className="h-12 w-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 flex items-center justify-center font-black text-xs text-indigo-600 shadow-sm">
-                                            {activity.name.charAt(0).toUpperCase()}
+                            {recentActivity
+                                .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                                .map((activity, idx) => (
+                                    <div
+                                        key={idx}
+                                        onClick={() => navigate("/sales-history")}
+                                        className="p-6 rounded-[2rem] bg-slate-50 dark:bg-slate-800/40 relative overflow-hidden group border border-transparent hover:border-indigo-100 dark:hover:border-slate-700 transition-all shadow-sm hover:shadow-xl cursor-pointer"
+                                    >
+                                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <ExternalLink className="h-4 w-4 text-indigo-500" />
                                         </div>
-                                        <span className={`px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider ${activity.status === 'Paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
-                                            }`}>
-                                            {activity.status}
-                                        </span>
-                                    </div>
-                                    <div className="mb-6">
-                                        <p className="text-sm font-black text-slate-900 dark:text-white truncate tracking-tight">{activity.name}</p>
-                                        <p className="text-[10px] font-bold text-slate-400 truncate mt-1">{activity.email}</p>
-                                    </div>
-                                    <div className="flex items-end justify-between border-t border-slate-100 dark:border-slate-700 pt-6">
-                                        <div>
-                                            <p className="text-[9px] text-slate-400 uppercase font-black tracking-[0.2em] mb-1">Transaction</p>
-                                            <p className="text-lg font-black italic tracking-tighter text-slate-900 dark:text-white">Rs. {activity.amount.toLocaleString()}</p>
+                                        <div className="flex items-center justify-between mb-6">
+                                            <div className="h-12 w-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 flex items-center justify-center font-black text-xs text-indigo-600 shadow-sm">
+                                                {activity.name.charAt(0).toUpperCase()}
+                                            </div>
+                                            <span className={`px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider ${activity.status === 'Paid' || activity.status === 'Completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                                                }`}>
+                                                {activity.status}
+                                            </span>
                                         </div>
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{activity.time}</p>
+                                        <div className="mb-6">
+                                            <p className="text-sm font-black text-slate-900 dark:text-white truncate tracking-tight">{activity.name}</p>
+                                            <p className="text-[10px] font-bold text-slate-400 truncate mt-1">{activity.email}</p>
+                                        </div>
+                                        <div className="flex items-end justify-between border-t border-slate-100 dark:border-slate-700 pt-6">
+                                            <div>
+                                                <p className="text-[9px] text-slate-400 uppercase font-black tracking-[0.2em] mb-1">Transaction</p>
+                                                <p className="text-lg font-black italic tracking-tighter text-slate-900 dark:text-white">Rs. {activity.amount.toLocaleString()}</p>
+                                            </div>
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{activity.time}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
                             {recentActivity.length === 0 && (
                                 <div className="col-span-full py-16 text-center">
                                     <Activity className="h-12 w-12 text-slate-200 mx-auto mb-4" />

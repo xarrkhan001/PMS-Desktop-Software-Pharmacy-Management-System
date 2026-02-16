@@ -45,12 +45,13 @@ model User {
 }
 
 model Supplier {
-  id          Int      @id @default(autoincrement())
-  name        String
-  contact     String?
-  email       String?
-  address     String?
-  createdAt   DateTime @default(now())
+  id            Int      @id @default(autoincrement())
+  name          String
+  contactPerson String?
+  contact       String?
+  email         String?
+  address       String?
+  createdAt     DateTime @default(now())
   
   pharmacyId  Int
   pharmacy    Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)

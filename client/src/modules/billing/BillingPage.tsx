@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -6,8 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
     Trash, Search, Printer,
     CreditCard, Receipt, HandCoins,
-    Loader2, User as UserIcon, Activity, Package,
-    Save, ChevronRight, UserPlus, Calculator, History, XCircle
+    Loader2, User as UserIcon, Activity, Package, TrendingUp,
+    Save, ChevronLeft, ChevronRight, UserPlus, Calculator, History, XCircle, Trash2, ExternalLink
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -60,7 +60,13 @@ export default function BillingPage() {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [totalDiscount, setTotalDiscount] = useState(0);
     const [isSearching, setIsSearching] = useState(false);
+    const searchRef = useRef<HTMLInputElement>(null);
     const [recentInvoices, setRecentInvoices] = useState<any[]>([]);
+    const [recentPage, setRecentPage] = useState(1);
+    const recentLimit = 3;
+
+    // Use a stable session ID that only changes on page refresh/mount
+    const sessionId = useMemo(() => Date.now().toString().slice(-6), []);
 
     // Get Pharmacy Name from Local Storage
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -69,6 +75,7 @@ export default function BillingPage() {
     const [customerName, setCustomerName] = useState("Walk-in Customer");
     const [customerAddress, setCustomerAddress] = useState("");
     const [customerId, setCustomerId] = useState<number | null>(null);
+    const [cashReceived, setCashReceived] = useState<number | "">(0);
     const [isReceiptOpen, setIsReceiptOpen] = useState(false);
     const [lastSale, setLastSale] = useState<any>(null);
     const { toast } = useToast();
@@ -77,6 +84,26 @@ export default function BillingPage() {
     useEffect(() => {
         fetchRecentInvoices();
     }, []);
+
+    // Keyboard Shortcuts Logic
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'F1') {
+                e.preventDefault();
+                searchRef.current?.focus();
+            }
+            if (e.key === 'F12') {
+                e.preventDefault();
+                handleCheckout();
+            }
+            if (e.key === 'Escape') {
+                setSearchResults([]);
+                setSearchTerm("");
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [cart, totalDiscount]);
 
     // Handle Search
     useEffect(() => {
@@ -103,6 +130,23 @@ export default function BillingPage() {
         }
     };
 
+    const handleDeleteInvoice = async (id: number) => {
+        if (!confirm("Are you sure you want to delete this invoice?")) return;
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`http://localhost:5000/api/sales/${id}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (res.ok) {
+                toast({ title: "Deleted", description: "Invoice removed from system" });
+                fetchRecentInvoices();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     const searchMedicines = async () => {
         setIsSearching(true);
         try {
@@ -121,37 +165,41 @@ export default function BillingPage() {
 
     const addToCart = (med: Medicine, batch: Batch, isLoose: boolean = false) => {
         const cartId = `${med.id}-${batch.id}`;
-        const existing = cart.find(item => item.id === cartId);
-
         const unitsToAdd = isLoose ? 1 : (med.unitPerPack || 1);
         const unitPrice = med.salePrice / (med.unitPerPack || 1);
 
-        if (existing) {
-            if (existing.qty + unitsToAdd > batch.quantity) {
-                toast({ title: "Out of Stock", description: "Not enough units available", variant: "destructive" });
-                return;
+        setCart(prev => {
+            const existing = prev.find(item => item.id === cartId);
+            if (existing) {
+                if (existing.qty + unitsToAdd > batch.quantity) {
+                    toast({ title: "Out of Stock", description: "Not enough units available", variant: "destructive" });
+                    return prev;
+                }
+                return prev.map(c => c.id === cartId ? { ...c, qty: c.qty + unitsToAdd } : c);
+            } else {
+                return [...prev, {
+                    id: cartId,
+                    medicineId: med.id,
+                    name: med.name,
+                    batchId: batch.id,
+                    batchNo: batch.batchNo,
+                    packPrice: med.salePrice || 0,
+                    unitPrice: unitPrice || 0,
+                    qty: unitsToAdd,
+                    maxQty: batch.quantity,
+                    isLoose: isLoose,
+                    unitPerPack: med.unitPerPack || 1,
+                    unitType: med.unitType || "Unit",
+                    itemDiscount: 0,
+                    purchasePrice: batch.purchasePrice || 0
+                }];
             }
-            setCart(cart.map(c => c.id === cartId ? { ...c, qty: c.qty + unitsToAdd } : c));
-        } else {
-            setCart([...cart, {
-                id: cartId,
-                medicineId: med.id,
-                name: med.name,
-                batchId: batch.id,
-                batchNo: batch.batchNo,
-                packPrice: med.salePrice || 0,
-                unitPrice: unitPrice || 0,
-                qty: unitsToAdd,
-                maxQty: batch.quantity,
-                isLoose: isLoose,
-                unitPerPack: med.unitPerPack || 1,
-                unitType: med.unitType || "Unit",
-                itemDiscount: 0,
-                purchasePrice: batch.purchasePrice || 0
-            }]);
-        }
+        });
+
+        // Clear search UI states
         setSearchTerm("");
         setSearchResults([]);
+        setIsSearching(false);
     };
 
     const updateQty = (id: string, delta: number) => {
@@ -181,6 +229,7 @@ export default function BillingPage() {
 
     const subtotal = cart.reduce((acc, item) => acc + calculateItemTotal(item), 0);
     const total = subtotal - totalDiscount;
+    const changeDue = cashReceived !== "" ? Math.max(0, Number(cashReceived) - total) : 0;
 
     const handleCheckout = async () => {
         if (cart.length === 0) {
@@ -251,192 +300,377 @@ export default function BillingPage() {
             {/* Left Panel: Terminal & Ledger */}
             <div className="flex-1 flex flex-col gap-4 overflow-hidden relative">
 
-                {/* Search Bar */}
-                <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3 relative z-10">
+                {/* Search Bar (Fixed at Top) */}
+                <div className="bg-white/80 backdrop-blur-md p-1.5 rounded-xl shadow-lg shadow-slate-200/50 border border-slate-200 flex items-center gap-2 relative z-30 mx-1 flex-shrink-0">
                     <div className="flex-1 relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                            <Search className="h-4 w-4 text-indigo-500" />
+                            <div className="h-4 w-[1px] bg-slate-200" />
+                        </div>
                         <Input
-                            placeholder="Type Brand (Panadol, Augmentin...) or Generic..."
-                            className="h-14 pl-12 border-none bg-transparent text-lg font-bold placeholder:text-slate-300 focus-visible:ring-0"
+                            ref={searchRef}
+                            placeholder="Search Brand or Generic... (F1)"
+                            className="h-11 pl-12 border-none bg-transparent text-sm font-black uppercase tracking-tight placeholder:text-slate-300 placeholder:font-bold focus-visible:ring-0"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    {isSearching && <Loader2 className="h-5 w-5 animate-spin text-indigo-500 mr-4" />}
-                    <div className="h-10 w-[1px] bg-slate-100 mx-2" />
-                    <Button variant="ghost" className="h-12 w-12 rounded-xl text-slate-400 hover:text-indigo-600">
-                        <Calculator className="h-5 w-5" />
+                    {isSearching && <Loader2 className="h-4 w-4 animate-spin text-indigo-500 mr-2" />}
+                    <div className="h-8 w-[1px] bg-slate-200 mx-1" />
+                    <Button variant="ghost" className="h-10 w-10 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+                        <Calculator className="h-4 w-4" />
                     </Button>
                 </div>
 
-                {/* Search Results Dropdown */}
-                {searchResults.length > 0 && (
-                    <Card className="absolute top-20 left-0 right-0 z-20 shadow-2xl rounded-2xl border-none overflow-hidden bg-white/95 backdrop-blur-md">
-                        <div className="max-h-[400px] overflow-y-auto">
-                            {searchResults.map((med) => (
-                                <div key={med.id} className="p-5 hover:bg-slate-50 border-b border-slate-50 last:border-0 flex items-center justify-between">
-                                    <div className="flex-1">
-                                        <h3 className="font-black text-slate-900 text-lg tracking-tight uppercase">{med.name}</h3>
-                                        <div className="flex gap-4 mt-1">
-                                            <p className="text-[11px] font-bold text-slate-400">Pack Cost: <span className="text-slate-700">Rs. {med.salePrice}</span></p>
-                                            <p className="text-[11px] font-bold text-slate-400">{med.unitType} Cost: <span className="text-indigo-600 font-black">Rs. {(med.salePrice / (med.unitPerPack || 1)).toFixed(2)}</span></p>
+                {/* Scrollable Content Area */}
+                <div className="flex-1 overflow-y-auto pr-1 pb-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-50 scrollbar-track-transparent hover:scrollbar-thumb-slate-100 transition-colors z-10 scrollbar-w-1 mt-3">
+
+                    {/* Search Results Dropdown Overlay */}
+                    {searchResults.length > 0 && (
+                        <div className="absolute top-0 left-0 right-0 z-[100] px-1 pointer-events-none">
+                            <Card className="shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[2rem] border-none overflow-hidden bg-white/98 backdrop-blur-xl ring-1 ring-slate-100 pointer-events-auto max-w-4xl mx-auto">
+                                <div className="bg-slate-900/95 px-6 py-2 flex items-center justify-between border-b border-white/5">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                                        <div className="flex items-center gap-2">
+                                            <h2 className="text-[9px] font-black uppercase tracking-[0.3em] text-white">Match Engine</h2>
+                                            <Badge className="bg-white/10 text-white/50 border-none text-[7px] font-black px-1 py-0 rounded-md uppercase tracking-widest">{searchResults.length}</Badge>
                                         </div>
                                     </div>
-                                    <div className="flex gap-3">
-                                        {med.batches.map(batch => (
-                                            <div key={batch.id} className="flex gap-2 p-1 bg-slate-100 rounded-2xl">
-                                                <Button
-                                                    size="sm"
-                                                    variant="secondary"
-                                                    className="bg-white hover:bg-indigo-50 text-indigo-700 font-bold rounded-xl h-12 px-5 flex flex-col items-center gap-0 shadow-sm"
-                                                    onClick={() => addToCart(med, batch, false)}
-                                                >
-                                                    <span className="text-[10px] uppercase opacity-60">Full Pack</span>
-                                                    <span className="text-xs">{batch.batchNo}</span>
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="secondary"
-                                                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl h-12 px-4 flex flex-col items-center gap-0 shadow-md"
-                                                    onClick={() => addToCart(med, batch, true)}
-                                                >
-                                                    <span className="text-[10px] uppercase opacity-80">Loose ({med.unitType})</span>
-                                                    <span className="text-xs">Single</span>
-                                                </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setSearchResults([])}
+                                        className="h-6 rounded-md text-[8px] font-black uppercase tracking-widest text-white/40 hover:text-rose-400 transition-all px-2"
+                                    >
+                                        Dismiss
+                                    </Button>
+                                </div>
+                                <div className="max-h-[500px] overflow-y-auto p-2 space-y-1.5 custom-scrollbar">
+                                    {searchResults.map((med) => (
+                                        <div key={med.id} className="p-3 bg-slate-50/40 hover:bg-white rounded-[1.2rem] border border-slate-100/50 hover:border-indigo-100 hover:shadow-lg hover:shadow-indigo-500/5 transition-all duration-300 group">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-1.5">
+                                                        <div className="h-6 w-6 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                                            <Activity className="h-3 w-3" />
+                                                        </div>
+                                                        <h3 className="font-black text-slate-900 text-sm tracking-tighter uppercase">{med.name}</h3>
+                                                        <Badge className="bg-indigo-600 text-white border-none text-[7px] font-black px-1.5 py-0 rounded-md uppercase tracking-widest">{med.category}</Badge>
+                                                        {med.batches.reduce((sum, b) => sum + b.quantity, 0) <= (med.reorderLevel || 10) && (
+                                                            <Badge variant="outline" className="text-rose-600 border-rose-200 bg-rose-50 text-[7px] font-black animate-pulse flex items-center gap-1 px-1.5">
+                                                                <TrendingDown className="h-2 w-2" /> SHORTAGE
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 ml-8">
+                                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pack: <span className="text-slate-900">Rs. {med.salePrice}</span></p>
+                                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Rate: <span className="text-emerald-600">Rs. {(med.salePrice / (med.unitPerPack || 1)).toFixed(2)}</span></p>
+                                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Units: <span className="text-indigo-600">{med.unitPerPack}</span></p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-col gap-1.5">
+                                                    {med.batches.filter(b => b.quantity > 0)
+                                                        .sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime())
+                                                        .slice(0, 2)
+                                                        .map(batch => (
+                                                            <div key={batch.id} className="flex items-center gap-4 p-2.5 bg-white rounded-[1rem] border border-slate-100 shadow-sm hover:border-indigo-200 transition-colors group/batch relative overflow-hidden">
+                                                                {Math.ceil((new Date(batch.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) <= 90 && (
+                                                                    <div className="absolute top-0 left-0 w-1 h-full bg-rose-500" />
+                                                                )}
+                                                                <div className="flex flex-col min-w-[80px]">
+                                                                    <div className="flex items-center justify-between gap-2 mb-0.5">
+                                                                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.1em]">{batch.batchNo}</span>
+                                                                        {Math.ceil((new Date(batch.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) <= 90 && (
+                                                                            <span className="text-rose-500 text-[7px] font-black uppercase animate-pulse leading-none italic">Expiring</span>
+                                                                        )}
+                                                                    </div>
+                                                                    <span className={`text-[10px] font-black uppercase tracking-tight ${batch.quantity < (med.reorderLevel || 10) ? 'text-amber-500' : 'text-slate-900'}`}>
+                                                                        {batch.quantity} Left
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex gap-1.5">
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="default"
+                                                                        className="h-8 w-20 rounded-lg bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 text-slate-800 font-black text-[8px] uppercase transition-all flex flex-col items-center justify-center gap-0"
+                                                                        onClick={() => addToCart(med, batch, false)}
+                                                                    >
+                                                                        <span className="opacity-40 text-[6px]">PK</span>
+                                                                        <span>WHOLE</span>
+                                                                    </Button>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="default"
+                                                                        className="h-8 w-20 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[8px] uppercase shadow-md transition-all flex flex-col items-center justify-center gap-0"
+                                                                        onClick={() => addToCart(med, batch, true)}
+                                                                    >
+                                                                        <span className="opacity-60 text-[6px]">UT</span>
+                                                                        <span>SINGLE</span>
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    {med.batches.filter(b => b.quantity > 0).length === 0 && (
+                                                        <p className="text-[10px] font-black text-rose-500 uppercase italic pr-4">Insufficient Stock</p>
+                                                    )}
+                                                </div>
                                             </div>
-                                        ))}
+                                        </div>
+                                    ))}
+                                </div>
+                            </Card>
+                        </div>
+                    )}
+
+                    {/* Main Billing Table (TERMINAL ACTIVE) */}
+                    <div className="flex-[2.5] min-h-[420px] flex flex-col bg-white rounded-none shadow-xl ring-1 ring-slate-100 overflow-hidden relative">
+                        <div className="flex flex-row items-center justify-between border-b pb-4 px-8 pt-6 bg-white z-20">
+                            <div className="flex items-center gap-4">
+                                <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-indigo-200 ring-4 ring-indigo-50">
+                                    <Receipt className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-xl font-black italic tracking-tighter uppercase">Terminal <span className="text-indigo-600">Active</span></CardTitle>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID: {sessionId}</p>
+                                        <span className="h-1 w-1 rounded-full bg-slate-200" />
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                            <p className="text-[10px] font-black text-slate-600 uppercase tracking-tight">Operator: {user.name || "Admin"}</p>
+                                        </div>
                                     </div>
                                 </div>
-                            ))}
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setCart([])}
+                                    className="h-10 px-4 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all text-[10px] font-black uppercase tracking-widest gap-2"
+                                >
+                                    <Trash2 className="h-4 w-4" /> Clear
+                                </Button>
+                                <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+                                    <UserIcon className="h-4 w-4 text-slate-400" />
+                                    <span className="text-xs font-black text-slate-600 uppercase tracking-tight">{customerName}</span>
+                                </div>
+                                <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-slate-100">
+                                    <UserPlus className="h-4 w-4" />
+                                </Button>
+                            </div>
                         </div>
-                    </Card>
-                )}
 
-                {/* Main Billing Table */}
-                <Card className="flex-1 overflow-hidden flex flex-col rounded-[2.5rem] border-none shadow-xl bg-white ring-1 ring-slate-100">
-                    <CardHeader className="flex flex-row items-center justify-between border-b pb-4 px-8 pt-8">
-                        <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                <Receipt className="h-6 w-6" />
-                            </div>
-                            <div>
-                                <CardTitle className="text-xl font-black italic tracking-tighter uppercase">Terminal <span className="text-indigo-600">Active</span></CardTitle>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Session ID: {Date.now().toString().slice(-6)}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
-                                <UserIcon className="h-4 w-4 text-slate-400" />
-                                <span className="text-xs font-black text-slate-600 uppercase tracking-tight">{customerName}</span>
-                            </div>
-                            <Button variant="outline" size="icon" className="h-10 w-10 h-10 rounded-xl border-slate-100">
-                                <UserPlus className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="flex-1 overflow-auto p-0 scrollbar-hide">
-                        <Table>
-                            <TableHeader className="bg-slate-50/50 sticky top-0 z-10">
-                                <TableRow className="hover:bg-transparent border-none">
-                                    <TableHead className="font-black py-6 pl-8 uppercase text-[10px] tracking-widest text-slate-400">Medicine & Batch</TableHead>
-                                    <TableHead className="w-[120px] text-right font-black py-6 uppercase text-[10px] tracking-widest text-slate-400">Base Unit Rate</TableHead>
-                                    <TableHead className="w-[180px] text-center font-black py-6 uppercase text-[10px] tracking-widest text-slate-400">Quantity (Units)</TableHead>
-                                    <TableHead className="w-[140px] text-center font-black py-6 uppercase text-[10px] tracking-widest text-slate-400">Discount</TableHead>
-                                    <TableHead className="w-[120px] text-right font-black py-6 uppercase text-[10px] tracking-widest text-slate-400">Net Total</TableHead>
-                                    <TableHead className="w-[80px]"></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {cart.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="h-[350px] text-center">
-                                            <div className="flex flex-col items-center gap-6 opacity-20">
-                                                <div className="h-28 w-28 bg-slate-200 rounded-[3rem] flex items-center justify-center">
-                                                    <Package className="h-14 w-14 text-slate-500" />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <p className="text-2xl font-black uppercase italic tracking-tighter">Enter Bill Items</p>
-                                                    <p className="text-[11px] font-bold uppercase tracking-widest">Awaiting drug search or barcode input...</p>
-                                                </div>
-                                            </div>
-                                        </TableCell>
+                        <div className="flex-1 px-0 pb-2">
+                            <Table>
+                                <TableHeader className="bg-slate-50/50 sticky top-0 z-10">
+                                    <TableRow className="hover:bg-transparent border-none">
+                                        <TableHead className="font-black py-6 pl-8 uppercase text-[10px] tracking-widest text-slate-400">Medicine & Batch</TableHead>
+                                        <TableHead className="w-[120px] text-right font-black py-6 uppercase text-[10px] tracking-widest text-slate-400">Base Unit Rate</TableHead>
+                                        <TableHead className="w-[180px] text-center font-black py-6 uppercase text-[10px] tracking-widest text-slate-400">Quantity (Units)</TableHead>
+                                        <TableHead className="w-[140px] text-center font-black py-6 uppercase text-[10px] tracking-widest text-slate-400">Discount</TableHead>
+                                        <TableHead className="w-[120px] text-right font-black py-6 uppercase text-[10px] tracking-widest text-slate-400">Net Total</TableHead>
+                                        <TableHead className="w-[80px]"></TableHead>
                                     </TableRow>
-                                ) : (
-                                    cart.map((item) => (
-                                        <TableRow key={item.id} className="group hover:bg-slate-50/50 border-slate-50">
-                                            <TableCell className="font-black py-7 pl-8">
-                                                <div className="flex flex-col gap-0.5">
-                                                    <span className="text-slate-900 tracking-tight text-md">{item.name}</span>
-                                                    <div className="flex items-center gap-2">
-                                                        <Badge className="bg-slate-100 text-slate-600 border-none rounded-lg text-[9px] px-2 py-0">BATCH: {item.batchNo}</Badge>
-                                                        <span className="text-[10px] text-slate-400 font-bold uppercase">({item.unitType})</span>
+                                </TableHeader>
+                                <TableBody>
+                                    {cart.length === 0 ? (
+                                        <TableRow className="hover:bg-transparent">
+                                            <TableCell colSpan={6} className="h-[320px] p-0">
+                                                <div className="h-full w-full flex flex-col items-center justify-center gap-8 pb-16">
+                                                    <div className="h-32 w-32 bg-indigo-50/50 rounded-[3.5rem] flex items-center justify-center relative group">
+                                                        <div className="absolute inset-0 bg-indigo-100 rounded-[3.5rem] scale-90 group-hover:scale-100 transition-transform duration-500 opacity-50" />
+                                                        <Package className="h-14 w-14 text-indigo-400 relative z-10" />
+                                                    </div>
+                                                    <div className="space-y-3 text-center">
+                                                        <p className="text-3xl font-black uppercase italic tracking-tighter text-slate-300">Enter Bill Items</p>
+                                                        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300 flex items-center justify-center gap-3">
+                                                            <span className="h-px w-8 bg-slate-100" />
+                                                            Awaiting Input
+                                                            <span className="h-px w-8 bg-slate-100" />
+                                                        </p>
                                                     </div>
                                                 </div>
-                                            </TableCell>
-                                            <TableCell className="text-right font-bold text-slate-500">
-                                                Rs. {item.unitPrice.toLocaleString()}
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <div className="flex items-center justify-center gap-4 bg-slate-50 p-1.5 rounded-2xl border border-slate-100 shadow-inner">
-                                                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-white hover:shadow-sm" onClick={() => updateQty(item.id, -1)}>-</Button>
-                                                        <span className="w-8 text-center font-black text-md">{item.qty}</span>
-                                                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-white hover:shadow-sm" onClick={() => updateQty(item.id, 1)}>+</Button>
-                                                    </div>
-                                                    <span className="text-[9px] font-black text-indigo-500 uppercase">Available: {item.maxQty}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <div className="flex gap-1 justify-center">
-                                                    {[0, 5, 10].map(p => (
-                                                        <button
-                                                            key={p}
-                                                            onClick={() => updateItemDiscount(item.id, p)}
-                                                            className={`px-2 py-1 rounded-md text-[9px] font-black uppercase border transition-all ${item.itemDiscount === p ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100' : 'bg-white border-slate-200 text-slate-400'}`}
-                                                        >
-                                                            {p}%
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-right font-black text-indigo-700 text-lg tracking-tighter">
-                                                Rs. {calculateItemTotal(item).toLocaleString()}
-                                            </TableCell>
-                                            <TableCell className="pr-8">
-                                                <Button variant="ghost" size="icon" className="h-10 w-10 text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeItem(item.id)}>
-                                                    <Trash className="h-4 w-4" />
-                                                </Button>
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
+                                    ) : (
+                                        cart.map((item) => (
+                                            <TableRow key={item.id} className="group hover:bg-slate-50/50 border-slate-50">
+                                                <TableCell className="font-black py-4 pl-8">
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <span className="text-slate-900 tracking-tight text-md">{item.name}</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge className="bg-slate-100 text-slate-600 border-none rounded-lg text-[9px] px-2 py-0">BATCH: {item.batchNo}</Badge>
+                                                            <span className="text-[10px] text-slate-400 font-bold uppercase">({item.unitType})</span>
+                                                            <div className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-1.5 py-0 rounded-md border border-emerald-100/50" title="Estimated Profit per item">
+                                                                <TrendingUp className="h-2.5 w-2.5" />
+                                                                <span className="text-[8px] font-black uppercase">P: Rs. {(item.qty * (item.unitPrice - (item.purchasePrice / item.unitPerPack))).toFixed(1)}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-right font-bold text-slate-500">
+                                                    Rs. {item.unitPrice.toLocaleString()}
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <div className="flex items-center justify-center gap-4 bg-slate-50 p-1.5 rounded-2xl border border-slate-100 shadow-inner">
+                                                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-white hover:shadow-sm" onClick={() => updateQty(item.id, -1)}>-</Button>
+                                                            <span className="w-8 text-center font-black text-md">{item.qty}</span>
+                                                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-white hover:shadow-sm" onClick={() => updateQty(item.id, 1)}>+</Button>
+                                                        </div>
+                                                        <span className="text-[9px] font-black text-indigo-500 uppercase">Available: {item.maxQty}</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <div className="flex gap-1 justify-center">
+                                                        {[0, 5, 10].map(p => (
+                                                            <button
+                                                                key={p}
+                                                                onClick={() => updateItemDiscount(item.id, p)}
+                                                                className={`px-2 py-1 rounded-md text-[9px] font-black uppercase border transition-all ${item.itemDiscount === p ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100' : 'bg-white border-slate-200 text-slate-400'}`}
+                                                            >
+                                                                {p}%
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-right font-black text-indigo-700 text-lg tracking-tighter">
+                                                    Rs. {calculateItemTotal(item).toLocaleString()}
+                                                </TableCell>
+                                                <TableCell className="pr-8">
+                                                    <Button variant="ghost" size="icon" className="h-10 w-10 text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeItem(item.id)}>
+                                                        <Trash className="h-4 w-4" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </div>
 
-                {/* Recent Activity Mini-Ledger */}
-                <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide pt-2">
-                    {recentInvoices.slice(0, 5).map((inv) => (
-                        <div key={inv.id} className="bg-white px-5 py-4 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center gap-4 min-w-[220px]">
-                            <div className="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-                                <History className="h-5 w-5" />
+                    {/* Session Log / Recent Activity */}
+                    <div className="flex-shrink-0 bg-slate-50/40 rounded-[2.5rem] border border-slate-100 p-3 pb-8 shadow-sm mt-0">
+                        <div className="flex items-center justify-between mb-4 px-2">
+                            <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-indigo-600">
+                                    <History className="h-4 w-4" />
+                                </div>
+                                <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">Session Activity Log</h3>
                             </div>
-                            <div>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{inv.invoiceNo.split('-').pop()}</p>
-                                <p className="text-md font-black text-slate-800 tracking-tight">Rs. {inv.netAmount.toLocaleString()}</p>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setRecentPage(p => Math.max(1, p - 1))}
+                                    disabled={recentPage === 1}
+                                    className="h-8 w-8 rounded-lg bg-white border border-slate-100 shadow-sm disabled:opacity-30"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Button>
+                                <span className="text-[9px] font-black uppercase tracking-tighter text-slate-400 min-w-[60px] text-center">
+                                    Page {recentPage} of {Math.ceil(recentInvoices.length / recentLimit) || 1}
+                                </span>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setRecentPage(p => Math.min(Math.ceil(recentInvoices.length / recentLimit), p + 1))}
+                                    disabled={recentPage >= Math.ceil(recentInvoices.length / recentLimit)}
+                                    className="h-8 w-8 rounded-lg bg-white border border-slate-100 shadow-sm disabled:opacity-30"
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
                             </div>
                         </div>
-                    ))}
-                    {recentInvoices.length === 0 && (
-                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] pl-4 pt-4">No recent sales detected</p>
-                    )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {recentInvoices
+                                .slice((recentPage - 1) * recentLimit, recentPage * recentLimit)
+                                .map((inv, idx) => {
+                                    const cardColors = [
+                                        "border-t-indigo-500 text-indigo-600 bg-indigo-50/10",
+                                        "border-t-emerald-500 text-emerald-600 bg-emerald-50/10",
+                                        "border-t-amber-500 text-amber-600 bg-amber-50/10"
+                                    ];
+                                    const colorIndex = idx % cardColors.length;
+                                    const currentStyle = cardColors[colorIndex];
+
+                                    return (
+                                        <div key={inv.id} className={`group bg-white p-5 rounded-[1.8rem] border-t-4 border-l border-r border-b border-slate-100 shadow-sm hover:shadow-xl transition-all relative overflow-hidden ${currentStyle.split(' ')[0]}`}>
+                                            <div className={`absolute top-0 right-0 w-20 h-20 blur-3xl -mr-10 -mt-10 opacity-20 pointer-events-none ${currentStyle.split(' ')[2]}`} />
+
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="flex flex-col">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className={`text-[9px] font-black uppercase tracking-widest ${currentStyle.split(' ')[1]}`}>
+                                                            {inv.invoiceNo.split('-').pop()}
+                                                        </span>
+                                                        <span className="h-1 w-1 rounded-full bg-slate-200" />
+                                                        <span className="text-[9px] font-bold text-slate-400">
+                                                            {new Date(inv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handleDeleteInvoice(inv.id)}
+                                                        className="h-7 w-7 rounded-lg text-rose-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                                                        title="Delete permanently"
+                                                    >
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Customer Identity</p>
+                                                    <p className="text-sm font-black text-slate-900 leading-tight tracking-tight break-words line-clamp-1">
+                                                        {inv.manualCustomerName || inv.customer?.name || "Walk-in Customer"}
+                                                    </p>
+                                                </div>
+
+                                                <div className="flex items-end justify-between pt-3 border-t border-slate-50/50">
+                                                    <div>
+                                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0">Processed Amount</p>
+                                                        <p className="text-xl font-black italic tracking-tighter text-slate-900 leading-none mt-1">
+                                                            <span className="text-xs mr-0.5 not-italic opacity-50 font-bold">Rs.</span>
+                                                            {inv.netAmount.toLocaleString()}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex flex-col items-end gap-1.5">
+                                                        <Badge className="bg-slate-900 text-white border-none text-[7px] font-black uppercase rounded-md px-1.5 py-0 tracking-tighter">
+                                                            {inv.paymentMethod}
+                                                        </Badge>
+                                                        <div className="flex items-center gap-1 text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                                                            <Printer className="h-2.5 w-2.5" />
+                                                            <span className="text-[7px] font-black uppercase">Verified</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            {recentInvoices.length === 0 && (
+                                <div className="col-span-full py-12 text-center border-2 border-dashed border-slate-100 rounded-[2rem] bg-white/50">
+                                    <Activity className="h-10 w-10 text-slate-200 mx-auto mb-3" />
+                                    <p className="text-[11px] font-black text-slate-300 uppercase tracking-[0.3em]">Waiting for terminal transactions...</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 
             {/* Right Panel: Check-out Summary */}
-            <div className="w-full lg:w-[440px] flex flex-col gap-6">
-                <Card className="flex flex-col rounded-[2.5rem] border-none shadow-2xl bg-slate-950 text-white relative overflow-hidden h-full">
+            <div className="flex-shrink-0 w-full lg:w-[360px] flex flex-col gap-6">
+                <Card className="flex-1 flex flex-col rounded-[2.5rem] border-none shadow-2xl bg-slate-950 text-white relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
 
                     <CardHeader className="bg-slate-900/40 pb-6 pt-8 px-8 border-b border-white/5">
@@ -447,10 +681,13 @@ export default function BillingPage() {
                                 </div>
                                 Checkout
                             </CardTitle>
+                            <Badge className="bg-white/10 text-white/40 border-none text-[10px] font-black px-2 py-0.5 rounded-lg uppercase tracking-tight">
+                                {cart.reduce((sum, item) => sum + item.qty, 0)} Units
+                            </Badge>
                         </div>
                     </CardHeader>
 
-                    <CardContent className="space-y-6 pt-8 px-8 overflow-y-auto flex-1 max-h-[400px]">
+                    <CardContent className="space-y-6 pt-8 px-8 overflow-y-auto flex-1">
                         <div className="space-y-5">
                             <div className="flex justify-between items-end border-b border-white/5 pb-3">
                                 <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Gross Total</span>
@@ -472,6 +709,28 @@ export default function BillingPage() {
                                 <div className="flex items-end gap-4">
                                     <span className="text-5xl font-black text-white leading-none tracking-tighter italic">Rs. {(total || 0).toLocaleString()}</span>
                                     <Badge className="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-lg text-[9px] font-black uppercase">Final</Badge>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 pt-2">
+                                <div className="space-y-2">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-1">Cash Given</p>
+                                    <Input
+                                        type="number"
+                                        placeholder="0"
+                                        className="h-12 bg-white/5 border-white/10 text-white font-black text-xl placeholder:text-slate-700 rounded-xl"
+                                        value={cashReceived}
+                                        onChange={(e) => setCashReceived(e.target.value === "" ? "" : Number(e.target.value))}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-indigo-400 ml-1">Baqiya / Return</p>
+                                    <div className="h-12 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-center justify-center">
+                                        <span className="text-2xl font-black text-emerald-400 tracking-tighter italic">
+                                            <span className="text-xs not-italic mr-1 opacity-50">Rs.</span>
+                                            {changeDue.toLocaleString()}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -538,9 +797,9 @@ export default function BillingPage() {
                         </div>
                     </CardFooter>
                 </Card>
-            </div>
+            </div >
             {/* Receipt Print Modal */}
-            <Dialog open={isReceiptOpen} onOpenChange={setIsReceiptOpen}>
+            < Dialog open={isReceiptOpen} onOpenChange={setIsReceiptOpen} >
                 <DialogContent className="sm:max-w-[450px] p-0 border-none bg-white rounded-3xl flex flex-col max-h-[85vh] overflow-hidden">
                     <div className="flex-1 overflow-y-auto p-8 print:p-0 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-track-transparent" id="receipt-content">
                         {/* Receipt Header */}

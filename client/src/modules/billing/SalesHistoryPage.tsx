@@ -33,7 +33,7 @@ export default function SalesHistoryPage() {
     useEffect(() => {
         const results = sales.filter(s =>
             s.invoiceNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            s.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+            (s.customer?.name || s.manualCustomerName || "Walk-in")?.toLowerCase().includes(searchTerm.toLowerCase())
         );
         setFilteredSales(results);
     }, [searchTerm, sales]);
@@ -239,9 +239,9 @@ export default function SalesHistoryPage() {
                                 <TableCell>
                                     <div className="flex items-center gap-2">
                                         <div className="h-8 w-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-xs">
-                                            {sale.customer?.name?.charAt(0) || "W"}
+                                            {(sale.manualCustomerName || sale.customer?.name || "W").charAt(0).toUpperCase()}
                                         </div>
-                                        <span className="font-bold text-slate-700">{sale.customer?.name || "Walk-in Customer"}</span>
+                                        <span className="font-bold text-slate-700">{sale.manualCustomerName || sale.customer?.name || "Walk-in Customer"}</span>
                                     </div>
                                 </TableCell>
                                 <TableCell className="font-bold text-slate-500 text-sm">
