@@ -29,7 +29,7 @@ export default function LoginModal({ open, onOpenChange, trigger, message }: Log
             const response = await fetch("http://localhost:5000/api/auth/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ email: `${email}@pharmacy.com`, password }),
             });
 
             const data = await response.json();
@@ -45,7 +45,7 @@ export default function LoginModal({ open, onOpenChange, trigger, message }: Log
                 if (data.user.role === "SUPER_ADMIN") {
                     navigate("/super-admin");
                 } else if (data.user.role === "ADMIN") {
-                    navigate("/admin");
+                    navigate("/");
                 } else {
                     navigate("/");
                 }
@@ -154,13 +154,16 @@ export default function LoginModal({ open, onOpenChange, trigger, message }: Log
                                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                                             <Input
                                                 id="email"
-                                                type="email"
-                                                placeholder="test@PharmPro.com"
-                                                className="pl-12 h-12 bg-slate-50/50 border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 transition-all rounded-xl font-medium"
+                                                type="text"
+                                                placeholder="username"
+                                                className="pl-12 pr-32 h-12 bg-slate-50/50 border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 transition-all rounded-xl font-medium"
                                                 value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
+                                                onChange={(e) => setEmail(e.target.value.toLowerCase().replace(/\s/g, ""))}
                                                 required
                                             />
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400 pointer-events-none bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700">
+                                                @pharmacy.com
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="space-y-2">

@@ -17,11 +17,11 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
+    DialogDescription,
 } from "@/components/ui/dialog";
 
 interface Batch {
     id: number;
-
     batchNo: string;
     quantity: number;
     expiryDate: string;
@@ -35,6 +35,8 @@ interface Medicine {
     unitPerPack: number;
     unitType: string;
     batches: Batch[];
+    reorderLevel?: number;
+    category?: string;
 }
 
 interface CartItem {
@@ -75,6 +77,9 @@ export default function BillingPage() {
     const [customerName, setCustomerName] = useState("Walk-in Customer");
     const [customerAddress, setCustomerAddress] = useState("");
     const [customerId, setCustomerId] = useState<number | null>(null);
+    const [customers, setCustomers] = useState<any[]>([]);
+    const [isSelectingCustomer, setIsSelectingCustomer] = useState(false);
+    const [customerSearch, setCustomerSearch] = useState("");
     const [cashReceived, setCashReceived] = useState<number | "">(0);
     const [isReceiptOpen, setIsReceiptOpen] = useState(false);
     const [lastSale, setLastSale] = useState<any>(null);
@@ -83,7 +88,34 @@ export default function BillingPage() {
     // Fetch initial data
     useEffect(() => {
         fetchRecentInvoices();
+        fetchCustomers();
     }, []);
+
+    const fetchCustomers = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch("http://localhost:5000/api/customers", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await res.json();
+            setCustomers(data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const fetchRecentInvoices = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch("http://localhost:5000/api/sales/recent", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (Array.isArray(data)) setRecentInvoices(data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     // Keyboard Shortcuts Logic
     useEffect(() => {
@@ -103,49 +135,18 @@ export default function BillingPage() {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [cart, totalDiscount]);
+    }, [cart, totalDiscount, customerId, paymentMethod]);
 
-    // Handle Search
     useEffect(() => {
-        const timer = setTimeout(() => {
-            if (searchTerm.length > 1) {
+        const delayDebounceFn = setTimeout(() => {
+            if (searchTerm.trim().length >= 2) {
                 searchMedicines();
             } else {
                 setSearchResults([]);
             }
         }, 300);
-        return () => clearTimeout(timer);
+        return () => clearTimeout(delayDebounceFn);
     }, [searchTerm]);
-
-    const fetchRecentInvoices = async () => {
-        try {
-            const token = localStorage.getItem("token");
-            const res = await fetch("http://localhost:5000/api/sales/recent", {
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-            const data = await res.json();
-            setRecentInvoices(data);
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    const handleDeleteInvoice = async (id: number) => {
-        if (!confirm("Are you sure you want to delete this invoice?")) return;
-        try {
-            const token = localStorage.getItem("token");
-            const res = await fetch(`http://localhost:5000/api/sales/${id}`, {
-                method: "DELETE",
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-            if (res.ok) {
-                toast({ title: "Deleted", description: "Invoice removed from system" });
-                fetchRecentInvoices();
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
 
     const searchMedicines = async () => {
         setIsSearching(true);
@@ -281,8 +282,6 @@ export default function BillingPage() {
 
                 setCart([]);
                 setTotalDiscount(0);
-                setCart([]);
-                setTotalDiscount(0);
                 setCustomerName("Walk-in Customer");
                 setCustomerAddress("");
                 setCustomerId(null);
@@ -357,7 +356,7 @@ export default function BillingPage() {
                                                         </div>
                                                         <h3 className="font-black text-slate-900 text-sm tracking-tighter uppercase">{med.name}</h3>
                                                         <Badge className="bg-indigo-600 text-white border-none text-[7px] font-black px-1.5 py-0 rounded-md uppercase tracking-widest">{med.category}</Badge>
-                                                        {med.batches.reduce((sum, b) => sum + b.quantity, 0) <= (med.reorderLevel || 10) && (
+                                                        {med.batches && med.batches.reduce((sum, b) => sum + b.quantity, 0) <= (med.reorderLevel || 10) && (
                                                             <Badge variant="outline" className="text-rose-600 border-rose-200 bg-rose-50 text-[7px] font-black animate-pulse flex items-center gap-1 px-1.5">
                                                                 <TrendingDown className="h-2 w-2" /> SHORTAGE
                                                             </Badge>
@@ -371,7 +370,7 @@ export default function BillingPage() {
                                                 </div>
 
                                                 <div className="flex flex-col gap-1.5">
-                                                    {med.batches.filter(b => b.quantity > 0)
+                                                    {med.batches && med.batches.filter(b => b.quantity > 0)
                                                         .sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime())
                                                         .slice(0, 2)
                                                         .map(batch => (
@@ -412,7 +411,7 @@ export default function BillingPage() {
                                                                 </div>
                                                             </div>
                                                         ))}
-                                                    {med.batches.filter(b => b.quantity > 0).length === 0 && (
+                                                    {(!med.batches || med.batches.filter(b => b.quantity > 0).length === 0) && (
                                                         <p className="text-[10px] font-black text-rose-500 uppercase italic pr-4">Insufficient Stock</p>
                                                     )}
                                                 </div>
@@ -453,12 +452,93 @@ export default function BillingPage() {
                                     <Trash2 className="h-4 w-4" /> Clear
                                 </Button>
                                 <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
-                                    <UserIcon className="h-4 w-4 text-slate-400" />
-                                    <span className="text-xs font-black text-slate-600 uppercase tracking-tight">{customerName}</span>
+                                    <UserIcon className={`h-4 w-4 ${customerId ? 'text-emerald-500' : 'text-slate-400'}`} />
+                                    <div className="flex flex-col items-start leading-none">
+                                        <span className="text-xs font-black text-slate-600 uppercase tracking-tight">{customerName}</span>
+                                        {customerId && <span className="text-[8px] font-black text-emerald-500 uppercase">Linked Profile</span>}
+                                    </div>
                                 </div>
-                                <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-slate-100">
-                                    <UserPlus className="h-4 w-4" />
-                                </Button>
+                                <Dialog open={isSelectingCustomer} onOpenChange={setIsSelectingCustomer}>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-slate-100 hover:bg-slate-50 active:scale-95 transition-all">
+                                            <UserPlus className="h-4 w-4" />
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none shadow-4xl">
+                                        <div className="bg-slate-900 p-8 text-white">
+                                            <DialogHeader>
+                                                <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter">Select Customer</DialogTitle>
+                                                <DialogDescription className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.3em] opacity-80 mt-1">Link sale to regular profile</DialogDescription>
+                                            </DialogHeader>
+                                        </div>
+                                        <div className="p-6 space-y-4 bg-white">
+                                            <div className="relative">
+                                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                                <Input
+                                                    placeholder="Search database..."
+                                                    className="pl-11 h-12 bg-slate-50 border-none rounded-2xl font-bold"
+                                                    value={customerSearch}
+                                                    onChange={(e) => setCustomerSearch(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                                                <div
+                                                    className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-indigo-50 hover:border-indigo-100 transition-all group"
+                                                    onClick={() => {
+                                                        setCustomerId(null);
+                                                        setCustomerName("Walk-in Customer");
+                                                        setCustomerAddress("");
+                                                        setCustomerSearch("");
+                                                        setIsSelectingCustomer(false);
+                                                    }}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-indigo-600 transition-colors">
+                                                            <XCircle className="h-5 w-5" />
+                                                        </div>
+                                                        <span className="font-black text-sm uppercase italic tracking-tight">Walk-in Customer</span>
+                                                    </div>
+                                                    <Badge className="bg-slate-200 text-slate-500 border-none rounded-lg text-[10px] font-black uppercase">Default</Badge>
+                                                </div>
+
+                                                {customers
+                                                    .filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()) || (c.phone && c.phone.includes(customerSearch)))
+                                                    .map(c => (
+                                                        <div
+                                                            key={c.id}
+                                                            className="p-4 rounded-2xl bg-white border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-indigo-50 hover:border-indigo-100 transition-all group"
+                                                            onClick={() => {
+                                                                setCustomerId(c.id);
+                                                                setCustomerName(c.name);
+                                                                setCustomerAddress(c.phone || c.address || "");
+                                                                setCustomerSearch("");
+                                                                setIsSelectingCustomer(false);
+                                                                toast({ title: "Customer Linked", description: `${c.name} selected for this terminal.` });
+                                                            }}
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600 group-hover:bg-white group-hover:text-indigo-600 transition-all font-black uppercase italic">
+                                                                    {c.name.charAt(0)}
+                                                                </div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-black text-sm uppercase italic tracking-tight">{c.name}</span>
+                                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{c.phone || 'No Contact'}</span>
+                                                                </div>
+                                                            </div>
+                                                            {c.totalDue > 0 && <Badge className="bg-rose-50 text-rose-600 border-none rounded-lg text-[9px] font-black uppercase">Due: {c.totalDue}</Badge>}
+                                                        </div>
+                                                    ))}
+                                            </div>
+                                            <Button
+                                                variant="ghost"
+                                                className="w-full h-12 rounded-2xl text-indigo-600 font-black uppercase italic tracking-tighter gap-2"
+                                                onClick={() => setIsSelectingCustomer(false)}
+                                            >
+                                                <ExternalLink className="h-4 w-4" /> Manage Customer Database
+                                            </Button>
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
                         </div>
 
@@ -599,58 +679,26 @@ export default function BillingPage() {
                                     const currentStyle = cardColors[colorIndex];
 
                                     return (
-                                        <div key={inv.id} className={`group bg-white p-5 rounded-[1.8rem] border-t-4 border-l border-r border-b border-slate-100 shadow-sm hover:shadow-xl transition-all relative overflow-hidden ${currentStyle.split(' ')[0]}`}>
-                                            <div className={`absolute top-0 right-0 w-20 h-20 blur-3xl -mr-10 -mt-10 opacity-20 pointer-events-none ${currentStyle.split(' ')[2]}`} />
-
-                                            <div className="flex items-start justify-between mb-3">
+                                        <div key={inv.id} className={`p-4 rounded-[1.8rem] border-t-2 ${currentStyle} transition-all hover:shadow-lg hover:-translate-y-1 group`}>
+                                            <div className="flex justify-between items-start mb-3">
                                                 <div className="flex flex-col">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <span className={`text-[9px] font-black uppercase tracking-widest ${currentStyle.split(' ')[1]}`}>
-                                                            {inv.invoiceNo.split('-').pop()}
-                                                        </span>
-                                                        <span className="h-1 w-1 rounded-full bg-slate-200" />
-                                                        <span className="text-[9px] font-bold text-slate-400">
-                                                            {new Date(inv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                        </span>
-                                                    </div>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">INV: {inv.invoiceNo}</span>
+                                                    <span className="text-sm font-black italic tracking-tighter uppercase whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">
+                                                        {inv.manualCustomerName || inv.customer?.name || "Walk-in"}
+                                                    </span>
                                                 </div>
-                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => handleDeleteInvoice(inv.id)}
-                                                        className="h-7 w-7 rounded-lg text-rose-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
-                                                        title="Delete permanently"
-                                                    >
-                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                    </Button>
-                                                </div>
+                                                <Badge className="bg-white/50 text-slate-900 border-none rounded-lg text-[9px] font-black">
+                                                    Rs. {inv.netAmount.toLocaleString()}
+                                                </Badge>
                                             </div>
-
-                                            <div className="space-y-3">
-                                                <div>
-                                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Customer Identity</p>
-                                                    <p className="text-sm font-black text-slate-900 leading-tight tracking-tight break-words line-clamp-1">
-                                                        {inv.manualCustomerName || inv.customer?.name || "Walk-in Customer"}
-                                                    </p>
+                                            <div className="flex justify-between items-center bg-white/40 p-2 rounded-xl border border-white/20">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[7px] font-black uppercase tracking-widest opacity-40">Payment</span>
+                                                    <span className="text-[9px] font-black uppercase">{inv.paymentMethod}</span>
                                                 </div>
-
-                                                <div className="flex items-end justify-between pt-3 border-t border-slate-50/50">
-                                                    <div>
-                                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0">Processed Amount</p>
-                                                        <p className="text-xl font-black italic tracking-tighter text-slate-900 leading-none mt-1">
-                                                            <span className="text-xs mr-0.5 not-italic opacity-50 font-bold">Rs.</span>
-                                                            {inv.netAmount.toLocaleString()}
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex flex-col items-end gap-1.5">
-                                                        <Badge className="bg-slate-900 text-white border-none text-[7px] font-black uppercase rounded-md px-1.5 py-0 tracking-tighter">
-                                                            {inv.paymentMethod}
-                                                        </Badge>
-                                                        <div className="flex items-center gap-1 text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded-md">
-                                                            <Printer className="h-2.5 w-2.5" />
-                                                            <span className="text-[7px] font-black uppercase">Verified</span>
-                                                        </div>
+                                                <div className="flex -space-x-1">
+                                                    <div className="h-5 w-5 rounded-md bg-white border border-slate-100 flex items-center justify-center text-emerald-500 shadow-sm">
+                                                        <CheckCircle2 className="h-3 w-3" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -750,63 +798,32 @@ export default function BillingPage() {
                                 />
                             </div>
                         </div>
-
-                        <div className="space-y-4 pt-2">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-1">Payment Method</p>
-                            <div className="grid grid-cols-1 gap-3">
-                                <Button
-                                    variant="outline"
-                                    className="h-16 flex items-center justify-center gap-3 border-indigo-500 bg-indigo-600 text-white shadow-xl scale-105 transition-all rounded-xl"
-                                >
-                                    <span className="font-black uppercase tracking-[0.2em] text-[10px]">CASH ONLY</span>
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Profit Display (Admin/Owner View) */}
-                        <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 mt-4">
-                            <div className="flex justify-between items-center">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Estimated Net Profit</span>
-                                <span className="text-xl font-black text-emerald-700">
-                                    Rs. {cart.reduce((acc, item) => {
-                                        const unitCost = item.purchasePrice / item.unitPerPack;
-                                        const unitSale = item.unitPrice;
-                                        const profitPerUnit = unitSale - unitCost;
-                                        return acc + (profitPerUnit * item.qty);
-                                    }, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                </span>
-                            </div>
-                        </div>
                     </CardContent>
 
-                    <CardFooter className="flex-col gap-3 p-8 bg-slate-900/50 backdrop-blur-sm">
+                    <CardFooter className="px-8 pb-8 pt-4">
                         <Button
-                            size="lg"
-                            className="w-full h-16 text-xl font-black bg-indigo-600 hover:bg-indigo-500 text-white shadow-xl rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all uppercase italic tracking-tighter gap-3"
+                            className="w-full h-16 bg-indigo-600 hover:bg-indigo-700 text-white rounded-3xl font-black uppercase italic tracking-tighter shadow-2xl shadow-indigo-500/20 flex items-center justify-center gap-4 group transition-all active:scale-95"
                             onClick={handleCheckout}
                         >
-                            Checkout & Print <Printer className="h-5 w-5" />
+                            <div className="h-10 w-10 bg-white/20 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform">
+                                <Printer className="h-5 w-5" />
+                            </div>
+                            Generate Invoice (F12)
                         </Button>
-                        <div className="flex w-full gap-2 opacity-50">
-                            <Button variant="ghost" className="flex-1 rounded-xl text-slate-500 text-[9px] font-black uppercase h-10">
-                                <Save className="h-3 w-3 mr-2" /> Hold
-                            </Button>
-                            <Button variant="ghost" className="flex-1 rounded-xl text-slate-500 text-[9px] font-black uppercase h-10">
-                                Return
-                            </Button>
-                        </div>
                     </CardFooter>
                 </Card>
-            </div >
-            {/* Receipt Print Modal */}
-            < Dialog open={isReceiptOpen} onOpenChange={setIsReceiptOpen} >
-                <DialogContent className="sm:max-w-[450px] p-0 border-none bg-white rounded-3xl flex flex-col max-h-[85vh] overflow-hidden">
-                    <div className="flex-1 overflow-y-auto p-8 print:p-0 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-track-transparent" id="receipt-content">
-                        {/* Receipt Header */}
-                        <div className="text-center space-y-2 mb-6">
-                            <h2 className="text-2xl font-black uppercase tracking-tighter">{pharmacyName}</h2>
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Pakistan Official Drug License #4492-PK</p>
-                            <p className="text-[10px] font-bold text-slate-400">Main Road, Commercial Area, Terminal 01</p>
+            </div>
+
+            {/* Receipt Modal (Elite Design) */}
+            <Dialog open={isReceiptOpen} onOpenChange={setIsReceiptOpen}>
+                <DialogContent className="max-w-sm rounded-[3rem] p-0 border-none shadow-5xl overflow-hidden bg-white">
+                    <div id="receipt-content" className="p-8">
+                        <div className="text-center space-y-2 mb-8">
+                            <div className="h-12 w-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mx-auto mb-4">
+                                <Receipt className="h-6 w-6" />
+                            </div>
+                            <h2 className="text-2xl font-black italic tracking-tighter uppercase text-slate-900">{pharmacyName}</h2>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Medical Complex, Main Road</p>
                             <p className="text-[10px] font-bold text-slate-400">PH: +92 300 1234567</p>
                         </div>
 
@@ -826,7 +843,6 @@ export default function BillingPage() {
                             )}
                         </div>
 
-                        {/* Receipt Items */}
                         <div className="space-y-4 mb-6">
                             <div className="flex justify-between border-b pb-2 text-[9px] font-black text-slate-400 uppercase">
                                 <span className="flex-[2]">Item Description</span>
@@ -835,27 +851,26 @@ export default function BillingPage() {
                                 <span className="flex-1 text-right">Total</span>
                             </div>
                             {lastSale?.items?.map((item: any, idx: number) => (
-                                <div key={idx} className="flex justify-between text-[11px] font-bold">
+                                <div key={idx} className="flex justify-between text-[11px] font-bold text-slate-700">
                                     <span className="flex-[2] uppercase">{item.name} <br /><span className="text-[8px] text-slate-400 opacity-60">Batch: {item.batchNo}</span></span>
-                                    <span className="flex-1 text-center">{item.qty}</span>
+                                    <span className="flex-1 text-center text-slate-500">{item.qty}</span>
                                     <span className="flex-1 text-right">{item.unitPrice.toFixed(2)}</span>
-                                    <span className="flex-1 text-right">{(item.qty * item.unitPrice).toFixed(2)}</span>
+                                    <span className="flex-1 text-right text-slate-900">{(item.qty * item.unitPrice).toFixed(2)}</span>
                                 </div>
                             ))}
                         </div>
 
-                        {/* Totals */}
                         <div className="space-y-2 border-t border-dashed border-slate-200 pt-4">
-                            <div className="flex justify-between text-[11px] font-bold">
+                            <div className="flex justify-between text-[11px] font-bold text-slate-500">
                                 <span>Subtotal</span>
                                 <span>Rs. {lastSale?.subtotal?.toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between text-[11px] font-bold text-rose-500">
+                            <div className="flex justify-between text-[11px] font-bold text-rose-600 print-color-exact">
                                 <span>Discount</span>
                                 <span>- Rs. {lastSale?.discount?.toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between text-lg font-black italic pt-2 border-t border-slate-100">
-                                <span className="uppercase tracking-tighter text-indigo-600">Net Total</span>
+                            <div className="flex justify-between text-lg font-black italic pt-2 border-t border-slate-100 text-indigo-700 print-color-exact">
+                                <span className="uppercase tracking-tighter">Net Total</span>
                                 <span>Rs. {lastSale?.total?.toLocaleString()}</span>
                             </div>
                         </div>
@@ -863,98 +878,14 @@ export default function BillingPage() {
                         <div className="mt-8 text-center space-y-2">
                             <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Terminal: 01-PK-ADMIN</p>
                             <p className="text-[10px] font-black uppercase tracking-tight text-slate-500">**** Non-Refundable if Seal Broken ****</p>
-                            <p className="text-[12px] font-black italic tracking-tighter text-indigo-500">Thank You for Choosing PharmPro</p>
+                            <p className="text-[12px] font-black italic tracking-tighter text-indigo-500 print-color-exact">Thank You for Choosing PharmPro</p>
                         </div>
-                    </div>
-
-                    <div className="bg-slate-50 p-6 flex gap-3 print:hidden">
-                        <Button
-                            className="flex-1 h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-700 font-black gap-2 text-lg shadow-lg shadow-indigo-100"
-                            onClick={() => {
-                                const originalTitle = document.title;
-                                document.title = `${pharmacyName} - Invoice ${lastSale?.invoiceNo || 'New'}`;
-                                window.print();
-                                document.title = originalTitle;
-                            }}
-                        >
-                            <Printer className="h-5 w-5" /> Print Now
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            className="h-14 w-14 rounded-2xl hover:bg-slate-200 border border-slate-200"
-                            onClick={() => setIsReceiptOpen(false)}
-                        >
-                            <XCircle className="h-6 w-6 text-slate-400" />
+                        <Button className="w-full mt-6 h-12 rounded-2xl bg-slate-900 text-white font-black uppercase italic tracking-tighter" onClick={() => window.print()}>
+                            <Printer className="h-4 w-4 mr-2" /> Print Receipt
                         </Button>
                     </div>
                 </DialogContent>
             </Dialog>
-
-            {/* Dedicated Print Overlay - Bypasses Modal/Portal Issues completely */}
-            <div id="print-overlay" className="hidden print:block">
-                <div className="p-8">
-                    <div className="text-center space-y-2 mb-6">
-                        <h2 className="text-2xl font-black uppercase tracking-tighter text-slate-900">{pharmacyName}</h2>
-                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Pakistan Official Drug License #4492-PK</p>
-                        <p className="text-[10px] font-bold text-slate-400">Main Road, Commercial Area, Terminal 01</p>
-                        <p className="text-[10px] font-bold text-slate-400">PH: +92 300 1234567</p>
-                    </div>
-
-                    <div className="border-t border-b border-dashed border-slate-200 py-3 my-4 space-y-2">
-                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
-                            <span>{lastSale?.invoiceNo || 'INV-TEMP'}</span>
-                            <span>{new Date().toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-[10px] font-bold text-slate-700">
-                            <span>Customer: {lastSale?.manualCustomerName || lastSale?.customer?.name || "Walk-in"}</span>
-                            <span>Mode: {lastSale?.paymentMethod || "CASH"}</span>
-                        </div>
-                        {lastSale?.manualCustomerAddress && (
-                            <div className="text-[10px] font-bold text-slate-500 text-left">
-                                Address: {lastSale.manualCustomerAddress}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="space-y-4 mb-6">
-                        <div className="flex justify-between border-b pb-2 text-[9px] font-black text-slate-400 uppercase">
-                            <span className="flex-[2]">Item Description</span>
-                            <span className="flex-1 text-center">Qty</span>
-                            <span className="flex-1 text-right">Price</span>
-                            <span className="flex-1 text-right">Total</span>
-                        </div>
-                        {lastSale?.items?.map((item: any, idx: number) => (
-                            <div key={idx} className="flex justify-between text-[11px] font-bold text-slate-700">
-                                <span className="flex-[2] uppercase">{item.name} <br /><span className="text-[8px] text-slate-400 opacity-60">Batch: {item.batchNo}</span></span>
-                                <span className="flex-1 text-center text-slate-500">{item.qty}</span>
-                                <span className="flex-1 text-right">{item.unitPrice.toFixed(2)}</span>
-                                <span className="flex-1 text-right text-slate-900">{(item.qty * item.unitPrice).toFixed(2)}</span>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="space-y-2 border-t border-dashed border-slate-200 pt-4">
-                        <div className="flex justify-between text-[11px] font-bold text-slate-500">
-                            <span>Subtotal</span>
-                            <span>Rs. {lastSale?.subtotal?.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-[11px] font-bold text-rose-600 print-color-exact">
-                            <span>Discount</span>
-                            <span>- Rs. {lastSale?.discount?.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-lg font-black italic pt-2 border-t border-slate-100 text-indigo-700 print-color-exact">
-                            <span className="uppercase tracking-tighter">Net Total</span>
-                            <span>Rs. {lastSale?.total?.toLocaleString()}</span>
-                        </div>
-                    </div>
-
-                    <div className="mt-8 text-center space-y-2">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Terminal: 01-PK-ADMIN</p>
-                        <p className="text-[10px] font-black uppercase tracking-tight text-slate-500">**** Non-Refundable if Seal Broken ****</p>
-                        <p className="text-[12px] font-black italic tracking-tighter text-indigo-500 print-color-exact">Thank You for Choosing PharmPro</p>
-                    </div>
-                </div>
-            </div>
 
             <style dangerouslySetInnerHTML={{
                 __html: `
@@ -966,8 +897,6 @@ export default function BillingPage() {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                     }
-                    
-                    /* Force Print Overlay to be the ONLY thing visible */
                     #print-overlay {
                         visibility: visible !important;
                         position: fixed !important;
@@ -980,25 +909,33 @@ export default function BillingPage() {
                         display: block !important;
                         padding: 0 !important;
                     }
-                    
-                    #print-overlay * {
-                        visibility: visible !important;
-                    }
-
+                    #receipt-content { visibility: visible !important; }
                     .print-color-exact {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                     }
-
-                    .text-rose-600 { color: #e11d48 !important; }
-                    .text-indigo-700 { color: #4338ca !important; }
-                    .text-indigo-500 { color: #6366f1 !important; }
-
-                    /* Hide everything else */
-                    #receipt-content { display: none !important; }
-                    .print\\:hidden, button, [role="separator"], [data-radix-portal] { display: none !important; }
                 }
             ` }} />
         </div>
     );
+}
+
+function CheckCircle2(props: any) {
+    return (
+        <svg
+            {...props}
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        >
+            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+            <path d="m9 12 2 2 4-4" />
+        </svg>
+    )
 }

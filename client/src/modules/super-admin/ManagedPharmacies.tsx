@@ -36,7 +36,7 @@ function EditPharmacyModal({ pharmacy, onUpdate }: EditPharmacyModalProps) {
     const [name, setName] = useState(pharmacy.name);
     // Assuming the first user is the ADMIN/Owner
     const [ownerName, setOwnerName] = useState(pharmacy.users[0]?.name || "");
-    const [email, setEmail] = useState(pharmacy.users[0]?.email || "");
+    const [email, setEmail] = useState(pharmacy.users[0]?.email?.split('@')[0] || "");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -54,7 +54,7 @@ function EditPharmacyModal({ pharmacy, onUpdate }: EditPharmacyModalProps) {
                     pharmacyId: pharmacy.id,
                     pharmacyName: name,
                     ownerName: ownerName,
-                    ownerEmail: email,
+                    ownerEmail: `${email}@pharmacy.com`,
                     ownerPassword: password
                 })
             });
@@ -103,7 +103,18 @@ function EditPharmacyModal({ pharmacy, onUpdate }: EditPharmacyModalProps) {
                         </div>
                         <div className="space-y-2">
                             <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Login Email</Label>
-                            <Input type="email" value={email} onChange={e => setEmail(e.target.value)} className="rounded-xl h-12 border-slate-100" required />
+                            <div className="relative">
+                                <Input
+                                    type="text"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value.toLowerCase().replace(/\s/g, ""))}
+                                    className="rounded-xl h-12 border-slate-100 pr-32"
+                                    required
+                                />
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                    @pharmacy.com
+                                </div>
+                            </div>
                         </div>
                         <div className="space-y-2">
                             <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">New Password (Optional)</Label>
@@ -294,6 +305,8 @@ export default function ManagedPharmacies() {
     const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
     const [search, setSearch] = useState("");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const [newPharmacy, setNewPharmacy] = useState({
         name: "",
@@ -303,6 +316,65 @@ export default function ManagedPharmacies() {
         months: 12,
         paidAmount: 0
     });
+
+    const [validationErrors, setValidationErrors] = useState({
+        name: "",
+        ownerName: "",
+        ownerEmail: "",
+        ownerPassword: "",
+        months: "",
+        paidAmount: ""
+    });
+
+    const validateField = (field: string, value: any) => {
+        let error = "";
+
+        switch (field) {
+            case "name":
+                if (value.length < 3) error = "Pharmacy name must be at least 3 characters";
+                else if (value.length > 50) error = "Pharmacy name cannot exceed 50 characters";
+                break;
+            case "ownerName":
+                if (value.length < 3) error = "Owner name must be at least 3 characters";
+                else if (value.length > 50) error = "Owner name cannot exceed 50 characters";
+                else if (!/^[a-zA-Z\s]+$/.test(value)) error = "Owner name can only contain letters and spaces";
+                break;
+            case "ownerEmail":
+                if (value.length < 3) error = "Email username must be at least 3 characters";
+                else if (value.length > 30) error = "Email username cannot exceed 30 characters";
+                else if (!/^[a-z0-9]+$/.test(value)) error = "Email can only contain lowercase letters and numbers";
+                break;
+            case "ownerPassword":
+                if (value.length < 8) error = "Password must be at least 8 characters";
+                else if (value.length > 20) error = "Password cannot exceed 20 characters";
+                break;
+            case "months":
+                if (value < 1) error = "Minimum 1 month required";
+                else if (value > 36) error = "Maximum 36 months allowed";
+                break;
+            case "paidAmount":
+                if (value < 0) error = "Amount cannot be negative";
+                else if (value > 1000000) error = "Amount cannot exceed Rs. 1,000,000";
+                break;
+        }
+
+        setValidationErrors(prev => ({ ...prev, [field]: error }));
+        return error === "";
+    };
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+
+    const generateSuggestions = (name: string) => {
+        if (!name || name.length < 3) {
+            setSuggestions([]);
+            return;
+        }
+        const base = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const s1 = base;
+        const s2 = `${base}${new Date().getFullYear()}`;
+        const s3 = `pms-${base}`;
+        // Unique suggestions
+        setSuggestions(Array.from(new Set([s1, s2, s3])).slice(0, 3));
+    };
 
     const fetchPharmacies = async () => {
         try {
@@ -322,6 +394,19 @@ export default function ManagedPharmacies() {
 
     const handleCreatePharmacy = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validate all fields
+        const isNameValid = validateField("name", newPharmacy.name);
+        const isOwnerNameValid = validateField("ownerName", newPharmacy.ownerName);
+        const isEmailValid = validateField("ownerEmail", newPharmacy.ownerEmail);
+        const isPasswordValid = validateField("ownerPassword", newPharmacy.ownerPassword);
+        const isMonthsValid = validateField("months", newPharmacy.months);
+        const isPaidAmountValid = validateField("paidAmount", newPharmacy.paidAmount);
+
+        if (!isNameValid || !isOwnerNameValid || !isEmailValid || !isPasswordValid || !isMonthsValid || !isPaidAmountValid) {
+            return;
+        }
+
         try {
             const response = await fetch("http://localhost:5000/api/super/create-pharmacy", {
                 method: "POST",
@@ -331,7 +416,7 @@ export default function ManagedPharmacies() {
                 },
                 body: JSON.stringify({
                     pharmacyName: newPharmacy.name,
-                    ownerEmail: newPharmacy.ownerEmail,
+                    ownerEmail: `${newPharmacy.ownerEmail}@pharmacy.com`,
                     ownerPassword: newPharmacy.ownerPassword,
                     ownerName: newPharmacy.ownerName,
                     licenseMonths: Number(newPharmacy.months),
@@ -343,16 +428,43 @@ export default function ManagedPharmacies() {
                 setIsAddModalOpen(false);
                 fetchPharmacies();
                 setNewPharmacy({ name: "", ownerEmail: "", ownerPassword: "", ownerName: "", months: 12, paidAmount: 0 });
+                setValidationErrors({ name: "", ownerName: "", ownerEmail: "", ownerPassword: "", months: "", paidAmount: "" });
             }
         } catch (err: any) {
             console.error(err);
         }
     };
 
+    const isFormValid = () => {
+        return newPharmacy.name.length >= 3 &&
+            newPharmacy.ownerName.length >= 3 &&
+            newPharmacy.ownerEmail.length >= 3 &&
+            newPharmacy.ownerPassword.length >= 8 &&
+            newPharmacy.months >= 1 &&
+            newPharmacy.paidAmount >= 0 &&
+            !validationErrors.name &&
+            !validationErrors.ownerName &&
+            !validationErrors.ownerEmail &&
+            !validationErrors.ownerPassword &&
+            !validationErrors.months &&
+            !validationErrors.paidAmount;
+    };
+
     const filteredPharmacies = pharmacies.filter(p =>
         p.name.toLowerCase().includes(search.toLowerCase()) ||
         p.users[0]?.email.toLowerCase().includes(search.toLowerCase())
     );
+
+    // Pagination calculations
+    const totalPages = Math.ceil(filteredPharmacies.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedPharmacies = filteredPharmacies.slice(startIndex, endIndex);
+
+    // Reset to page 1 when search changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search]);
 
     return (
         <div className="p-8 bg-[#f8fafc] min-h-screen space-y-8 pb-12">
@@ -386,34 +498,149 @@ export default function ManagedPharmacies() {
                         <form onSubmit={handleCreatePharmacy} className="p-8 space-y-5 bg-white">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Pharmacy Information</Label>
-                                <Input placeholder="e.g. Al-Shifa Pharmacy" value={newPharmacy.name} onChange={e => setNewPharmacy({ ...newPharmacy, name: e.target.value })} required className="rounded-xl h-12 border-slate-100 focus:ring-indigo-500" />
+                                <Input
+                                    placeholder="e.g. Al-Shifa Pharmacy"
+                                    value={newPharmacy.name}
+                                    onChange={e => {
+                                        const value = e.target.value;
+                                        if (value.length <= 50) {
+                                            setNewPharmacy({ ...newPharmacy, name: value });
+                                            validateField("name", value);
+                                        }
+                                    }}
+                                    required
+                                    className={`rounded-xl h-12 border-slate-100 focus:ring-indigo-500 ${validationErrors.name ? 'border-red-300 focus:ring-red-500' : ''}`}
+                                />
+                                {validationErrors.name && <p className="text-xs text-red-500 font-medium mt-1">{validationErrors.name}</p>}
+                                <p className="text-[9px] text-slate-400 font-medium">{newPharmacy.name.length}/50 characters</p>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Owner Name</Label>
-                                    <Input placeholder="Full Name" value={newPharmacy.ownerName} onChange={e => setNewPharmacy({ ...newPharmacy, ownerName: e.target.value })} required className="rounded-xl h-12 border-slate-100" />
+                                    <Input
+                                        placeholder="Full Name"
+                                        value={newPharmacy.ownerName}
+                                        onChange={e => {
+                                            const value = e.target.value;
+                                            if (value.length <= 50 && /^[a-zA-Z\s]*$/.test(value)) {
+                                                setNewPharmacy({ ...newPharmacy, ownerName: value });
+                                                validateField("ownerName", value);
+                                            }
+                                        }}
+                                        required
+                                        className={`rounded-xl h-12 border-slate-100 ${validationErrors.ownerName ? 'border-red-300 focus:ring-red-500' : ''}`}
+                                    />
+                                    {validationErrors.ownerName && <p className="text-xs text-red-500 font-medium mt-1">{validationErrors.ownerName}</p>}
+                                    <p className="text-[9px] text-slate-400 font-medium">{newPharmacy.ownerName.length}/50 characters</p>
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Subscription Details</Label>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="relative">
                                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">M</div>
-                                            <Input type="number" min="1" placeholder="Months" value={newPharmacy.months} onChange={e => setNewPharmacy({ ...newPharmacy, months: Number(e.target.value) })} required className="pl-8 rounded-xl h-12 border-slate-100 font-bold text-indigo-600" />
+                                            <Input
+                                                type="number"
+                                                min="1"
+                                                max="36"
+                                                placeholder="Months"
+                                                value={newPharmacy.months}
+                                                onChange={e => {
+                                                    const value = Number(e.target.value);
+                                                    if (value <= 36) {
+                                                        setNewPharmacy({ ...newPharmacy, months: value });
+                                                        validateField("months", value);
+                                                    }
+                                                }}
+                                                required
+                                                className={`pl-8 rounded-xl h-12 border-slate-100 font-bold text-indigo-600 ${validationErrors.months ? 'border-red-300' : ''}`}
+                                            />
+                                            {validationErrors.months && <p className="text-xs text-red-500 font-medium mt-1 absolute -bottom-5 left-0">{validationErrors.months}</p>}
                                         </div>
                                         <div className="relative">
                                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">Rs.</div>
-                                            <Input type="number" placeholder="Payment Amount" value={newPharmacy.paidAmount} onChange={e => setNewPharmacy({ ...newPharmacy, paidAmount: Number(e.target.value) })} required className="pl-10 rounded-xl h-12 border-slate-100 font-bold text-emerald-600" />
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                max="1000000"
+                                                placeholder="Payment Amount"
+                                                value={newPharmacy.paidAmount}
+                                                onChange={e => {
+                                                    const value = Number(e.target.value);
+                                                    if (value <= 1000000) {
+                                                        setNewPharmacy({ ...newPharmacy, paidAmount: value });
+                                                        validateField("paidAmount", value);
+                                                    }
+                                                }}
+                                                required
+                                                className={`pl-10 rounded-xl h-12 border-slate-100 font-bold text-emerald-600 ${validationErrors.paidAmount ? 'border-red-300' : ''}`}
+                                            />
+                                            {validationErrors.paidAmount && <p className="text-xs text-red-500 font-medium mt-1 absolute -bottom-5 left-0">{validationErrors.paidAmount}</p>}
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Credentials</Label>
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between ml-1">
+                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Credentials & Username</Label>
+                                    {suggestions.length > 0 && (
+                                        <div className="flex gap-2">
+                                            {suggestions.map((s, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    type="button"
+                                                    onClick={() => setNewPharmacy({ ...newPharmacy, ownerEmail: s })}
+                                                    className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all animate-in fade-in slide-in-from-right-2"
+                                                >
+                                                    {s}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <Input type="email" placeholder="Email" value={newPharmacy.ownerEmail} onChange={e => setNewPharmacy({ ...newPharmacy, ownerEmail: e.target.value })} required className="rounded-xl h-12 border-slate-100" />
-                                    <Input type="password" placeholder="Password" value={newPharmacy.ownerPassword} onChange={e => setNewPharmacy({ ...newPharmacy, ownerPassword: e.target.value })} required className="rounded-xl h-12 border-slate-100" />
+                                    <div className="space-y-2">
+                                        <div className="relative">
+                                            <Input
+                                                type="text"
+                                                placeholder="Email User"
+                                                value={newPharmacy.ownerEmail}
+                                                onChange={e => {
+                                                    const value = e.target.value.toLowerCase().replace(/\s/g, "");
+                                                    if (value.length <= 30 && /^[a-z0-9]*$/.test(value)) {
+                                                        setNewPharmacy({ ...newPharmacy, ownerEmail: value });
+                                                        validateField("ownerEmail", value);
+                                                    }
+                                                }}
+                                                required
+                                                className={`rounded-xl h-12 border-slate-100 pr-24 ${validationErrors.ownerEmail ? 'border-red-300 focus:ring-red-500' : ''}`}
+                                            />
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400 pointer-events-none bg-slate-50 px-1.5 py-1 rounded-md border border-slate-100">
+                                                @pharmacy.com
+                                            </div>
+                                        </div>
+                                        {validationErrors.ownerEmail && <p className="text-xs text-red-500 font-medium">{validationErrors.ownerEmail}</p>}
+                                        <p className="text-[9px] text-slate-400 font-medium">{newPharmacy.ownerEmail.length}/30 characters</p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Input
+                                            type="password"
+                                            placeholder="Password (8-20 chars)"
+                                            value={newPharmacy.ownerPassword}
+                                            onChange={e => {
+                                                const value = e.target.value;
+                                                if (value.length <= 20) {
+                                                    setNewPharmacy({ ...newPharmacy, ownerPassword: value });
+                                                    validateField("ownerPassword", value);
+                                                }
+                                            }}
+                                            required
+                                            className={`rounded-xl h-12 border-slate-100 ${validationErrors.ownerPassword ? 'border-red-300 focus:ring-red-500' : ''}`}
+                                        />
+                                        {validationErrors.ownerPassword && <p className="text-xs text-red-500 font-medium">{validationErrors.ownerPassword}</p>}
+                                        <p className="text-[9px] text-slate-400 font-medium">{newPharmacy.ownerPassword.length}/20 characters</p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -440,8 +667,15 @@ export default function ManagedPharmacies() {
                                 </div>
                             </div>
 
-                            <Button type="submit" className="w-full h-16 bg-[#0f172a] hover:bg-indigo-600 font-black text-sm rounded-2xl mt-2 transition-all shadow-xl shadow-slate-200 uppercase tracking-widest active:scale-95">
-                                Create Pharmacy & Account
+                            <Button
+                                type="submit"
+                                disabled={!isFormValid()}
+                                className={`w-full h-16 font-black text-sm rounded-2xl mt-2 transition-all shadow-xl uppercase tracking-widest active:scale-95 ${isFormValid()
+                                    ? 'bg-[#0f172a] hover:bg-indigo-600 shadow-slate-200'
+                                    : 'bg-slate-300 cursor-not-allowed opacity-60'
+                                    }`}
+                            >
+                                {isFormValid() ? 'Create Pharmacy & Account' : 'Please Fill All Required Fields'}
                             </Button>
                         </form>
                     </DialogContent>
@@ -480,7 +714,7 @@ export default function ManagedPharmacies() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredPharmacies.map((p) => {
+                            {paginatedPharmacies.map((p) => {
                                 const isExpired = new Date(p.licenseExpiresAt) < new Date();
                                 const startDate = p.licenseStartedAt ? new Date(p.licenseStartedAt).toLocaleDateString('en-PK', {
                                     weekday: 'short',
@@ -555,6 +789,56 @@ export default function ManagedPharmacies() {
                         </TableBody>
                     </Table>
                 </CardContent>
+
+                {/* Pagination Controls */}
+                {filteredPharmacies.length > 0 && (
+                    <div className="px-8 py-6 border-t border-slate-100 flex items-center justify-between bg-slate-50/30">
+                        <div className="text-sm text-slate-600 font-medium">
+                            Showing <span className="font-bold text-slate-900">{startIndex + 1}</span> to{' '}
+                            <span className="font-bold text-slate-900">{Math.min(endIndex, filteredPharmacies.length)}</span> of{' '}
+                            <span className="font-bold text-slate-900">{filteredPharmacies.length}</span> pharmacies
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className="h-9 px-4 rounded-xl font-bold disabled:opacity-40"
+                            >
+                                Previous
+                            </Button>
+
+                            <div className="flex items-center gap-1">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                    <Button
+                                        key={page}
+                                        variant={currentPage === page ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => setCurrentPage(page)}
+                                        className={`h-9 w-9 rounded-xl font-bold ${currentPage === page
+                                                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                                : 'hover:bg-slate-100'
+                                            }`}
+                                    >
+                                        {page}
+                                    </Button>
+                                ))}
+                            </div>
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                                className="h-9 px-4 rounded-xl font-bold disabled:opacity-40"
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </Card>
         </div>
     );
