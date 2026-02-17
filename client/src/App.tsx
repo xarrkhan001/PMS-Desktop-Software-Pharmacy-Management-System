@@ -14,6 +14,7 @@ import AdminPage from "./modules/admin/AdminPage";
 import SuperAdminDashboard from "./modules/super-admin/SuperAdminDashboard";
 import ManagedPharmacies from "./modules/super-admin/ManagedPharmacies";
 import TerminalControl from "./modules/super-admin/TerminalControl";
+import PharmacyActivityMonitor from "./modules/super-admin/PharmacyActivityMonitor";
 import LandingPage from "./modules/auth/LandingPage";
 import ProfilePage from "./modules/profile/ProfilePage";
 import SystemLogsPage from "./modules/logs/SystemLogsPage";
@@ -102,6 +103,7 @@ function App() {
               <Route element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]} />}>
                 <Route path="super-admin" element={<SuperAdminDashboard />} />
                 <Route path="super-pharmacies" element={<ManagedPharmacies />} />
+                <Route path="super-activity" element={<PharmacyActivityMonitor />} />
                 <Route path="super-terminal" element={<TerminalControl />} />
               </Route>
             </Route>

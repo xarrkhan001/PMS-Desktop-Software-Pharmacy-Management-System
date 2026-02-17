@@ -87,6 +87,8 @@ export default function DashboardPage() {
 
     const { stats, revenueTrend, topProducts, recentActivity } = data;
 
+    const userName = localStorage.getItem("userName") || "Pharmacist";
+
     return (
         <div className="flex flex-col gap-8 pb-10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -94,7 +96,7 @@ export default function DashboardPage() {
                     <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white uppercase italic">
                         Cloud <span className="text-primary">Control</span>
                     </h1>
-                    <p className="text-muted-foreground font-medium">Welcome back, Admin. Here's your pharmacy's live status.</p>
+                    <p className="text-muted-foreground font-medium">Welcome back, {userName}. Here's your pharmacy's live status.</p>
                 </div>
                 <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
                     <button className="px-4 py-2 rounded-xl text-sm font-bold bg-white dark:bg-slate-900 shadow-sm">Real-time</button>

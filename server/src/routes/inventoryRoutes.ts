@@ -235,14 +235,34 @@ router.put("/medicines/:id", authenticateToken, async (req: any, res) => {
 router.delete("/medicines/:id", authenticateToken, async (req: any, res) => {
     try {
         const { id } = req.params;
+        const medicineId = Number(id);
         const pharmacyId = req.user.pharmacyId;
 
-        await prisma.medicine.delete({
-            where: { id: Number(id), pharmacyId }
+        await prisma.$transaction(async (tx) => {
+            // 1. Delete associated stock batches
+            await tx.stockBatch.deleteMany({
+                where: { medicineId }
+            });
+
+            // 2. Delete associated sale items
+            await tx.saleItem.deleteMany({
+                where: { medicineId }
+            });
+
+            // 3. Delete associated purchase items
+            await tx.purchaseItem.deleteMany({
+                where: { medicineId }
+            });
+
+            // 4. Finally delete the medicine
+            await tx.medicine.delete({
+                where: { id: medicineId, pharmacyId }
+            });
         });
 
-        res.json({ message: "Medicine deleted successfully" });
+        res.json({ message: "Medicine and all related records deleted successfully" });
     } catch (error: any) {
+        console.error("Delete medicine error:", error);
         res.status(500).json({ error: error.message });
     }
 });
