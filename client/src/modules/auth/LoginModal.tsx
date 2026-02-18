@@ -223,12 +223,12 @@ export default function LoginModal({ open, onOpenChange, trigger, message }: Log
                                 <div className="flex gap-4">
                                     <div className="flex flex-col items-center">
                                         <span className="text-[10px] text-slate-400 uppercase font-bold">Default Admin</span>
-                                        <span className="text-xs font-mono font-bold text-blue-600">admin@pharmpro.com</span>
+                                        <span className="text-xs font-mono font-bold text-blue-600">superadmin01</span>
                                     </div>
                                     <div className="w-[1px] h-8 bg-slate-100"></div>
                                     <div className="flex flex-col items-center">
                                         <span className="text-[10px] text-slate-400 uppercase font-bold">Pass</span>
-                                        <span className="text-xs font-mono font-bold text-blue-600">admin123</span>
+                                        <span className="text-xs font-mono font-bold text-blue-600">superadmin123</span>
                                     </div>
                                 </div>
                             </div>
