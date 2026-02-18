@@ -143,18 +143,27 @@ function EditPharmacyModal({ pharmacy, onUpdate }: EditPharmacyModalProps) {
 interface ManageLicenseModalProps {
     pharmacy: Pharmacy;
     onUpdate: () => void;
+    disabled?: boolean;
 }
 
-function ManageLicenseModal({ pharmacy, onUpdate }: ManageLicenseModalProps) {
+function ManageLicenseModal({ pharmacy, onUpdate, disabled }: ManageLicenseModalProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [months, setMonths] = useState(12);
     const [isActive, setIsActive] = useState(pharmacy.isActive);
     const [paidAmount, setPaidAmount] = useState(0);
+    const [machineId, setMachineId] = useState("");
+    const [generatedKey, setGeneratedKey] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const [testMinutes, setTestMinutes] = useState<number | null>(null);
+
     const now = new Date();
-    const previewDate = new Date(now);
-    previewDate.setMonth(previewDate.getMonth() + Number(months));
+    const previewDate = new Date(pharmacy.licenseExpiresAt || now);
+    if (testMinutes) {
+        previewDate.setMinutes(previewDate.getMinutes() + testMinutes);
+    } else {
+        previewDate.setMonth(previewDate.getMonth() + Number(months));
+    }
 
     const handleUpdate = async () => {
         setLoading(true);
@@ -167,15 +176,22 @@ function ManageLicenseModal({ pharmacy, onUpdate }: ManageLicenseModalProps) {
                 },
                 body: JSON.stringify({
                     pharmacyId: pharmacy.id,
-                    extraMonths: Number(months),
+                    extraMonths: testMinutes ? undefined : Number(months),
+                    extraMinutes: testMinutes || undefined,
                     isActive: isActive,
-                    paidAmount: Number(paidAmount)
+                    paidAmount: Number(paidAmount),
+                    machineId: machineId.trim() || undefined
                 }),
             });
 
             if (response.ok) {
-                setIsOpen(false);
-                onUpdate();
+                const data = await response.json();
+                if (data.newKey) {
+                    setGeneratedKey(data.newKey);
+                } else {
+                    setIsOpen(false);
+                    onUpdate();
+                }
             }
         } catch (err: any) {
             console.error(err);
@@ -184,18 +200,27 @@ function ManageLicenseModal({ pharmacy, onUpdate }: ManageLicenseModalProps) {
         }
     };
 
+    const copyKey = () => {
+        navigator.clipboard.writeText(generatedKey);
+        // Toast can be added here if available
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button
                     variant="outline"
                     size="sm"
-                    className="rounded-lg font-bold text-indigo-600 hover:bg-indigo-50 border-indigo-100 shadow-sm transition-all active:scale-95"
+                    disabled={disabled}
+                    className={`rounded-lg font-bold transition-all active:scale-95 ${disabled
+                        ? 'opacity-40 grayscale cursor-not-allowed bg-slate-50 text-slate-400 border-slate-100'
+                        : 'text-indigo-600 hover:bg-indigo-50 border-indigo-100 shadow-sm'
+                        }`}
                 >
                     Renew / Manage
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[400px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
+            <DialogContent className="sm:max-w-[450px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
                 <div className="bg-[#0f172a] p-6 text-white relative">
                     <div className="absolute top-0 right-0 p-4 opacity-5">
                         <ShieldCheck className="h-24 w-24" />
@@ -210,91 +235,134 @@ function ManageLicenseModal({ pharmacy, onUpdate }: ManageLicenseModalProps) {
                     </DialogHeader>
                 </div>
 
-                <div className="p-6 space-y-5 bg-white">
-                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group/status transition-colors hover:bg-white hover:shadow-sm">
-                        <div className="flex flex-col">
-                            <span className="text-xs font-black text-slate-900 tracking-tight uppercase">System Access</span>
-                            <span className={`text-[10px] font-bold ${isActive ? 'text-emerald-500' : 'text-red-500'} flex items-center gap-1`}>
-                                <div className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></div>
-                                {isActive ? "Live & Running" : "Access Suspended"}
-                            </span>
-                        </div>
+                <div className="p-6 space-y-5 bg-white max-h-[80vh] overflow-y-auto">
+                    {generatedKey ? (
+                        <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
+                            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col items-center text-center">
+                                <div className="h-12 w-12 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-2">
+                                    <ShieldCheck size={24} />
+                                </div>
+                                <h3 className="font-black text-slate-900">New License Key Generated</h3>
+                                <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider">Valid until {previewDate.toLocaleDateString()}</p>
 
-                        <div
-                            onClick={() => setIsActive(!isActive)}
-                            className={`relative w-14 h-7 rounded-full cursor-pointer transition-all duration-300 ring-4 ${isActive
-                                ? 'bg-emerald-500 ring-emerald-50'
-                                : 'bg-slate-300 ring-slate-100'
-                                }`}
-                        >
-                            <div className={`absolute top-1 left-1 bg-white w-5 h-5 rounded-full shadow-lg transition-transform duration-300 flex items-center justify-center ${isActive ? 'translate-x-7' : 'translate-x-0'
-                                }`}>
-                                {isActive ? (
-                                    <Power className="h-3 w-3 text-emerald-600" />
-                                ) : (
-                                    <ShieldCheck className="h-3 w-3 text-slate-400" />
-                                )}
+                                <div className="mt-4 w-full relative">
+                                    <textarea
+                                        readOnly
+                                        value={generatedKey}
+                                        className="w-full h-32 p-3 bg-zinc-950 text-emerald-400 font-mono text-[10px] rounded-xl border border-zinc-800 resize-none focus:outline-none"
+                                    />
+                                    <button
+                                        onClick={copyKey}
+                                        className="absolute bottom-3 right-3 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                                    >
+                                        Copy Key
+                                    </button>
+                                </div>
+                                <p className="text-[10px] text-slate-400 mt-3 italic">Copy this key and send it to the pharmacy owner.</p>
                             </div>
+                            <Button
+                                onClick={() => {
+                                    setIsOpen(false);
+                                    setGeneratedKey("");
+                                    onUpdate();
+                                }}
+                                className="w-full h-12 bg-[#0f172a] hover:bg-slate-800 font-black rounded-xl"
+                            >
+                                Close & Update List
+                            </Button>
                         </div>
-                    </div>
+                    ) : (
+                        <>
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 ml-1">Client Machine ID (Optional for Lock)</Label>
+                                    <Input
+                                        placeholder="Paste Machine ID from client node..."
+                                        value={machineId}
+                                        onChange={e => setMachineId(e.target.value)}
+                                        className="h-11 rounded-xl border-slate-100 font-mono text-xs focus:ring-indigo-500"
+                                    />
+                                    <p className="text-[9px] text-slate-400 italic font-medium ml-1">Provide ID to generate a hardware-locked license key.</p>
+                                </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Start Date</p>
-                            <p className="font-black text-slate-900 text-sm">{now.toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })}</p>
-                        </div>
-                        <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100/50">
-                            <Label className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest mb-0.5">Payment (Rs.)</Label>
-                            <input
-                                type="number"
-                                value={paidAmount}
-                                onChange={e => setPaidAmount(Number(e.target.value))}
-                                className="w-full bg-transparent border-none p-0 focus:ring-0 font-black text-indigo-700 text-sm placeholder:text-indigo-200"
-                                placeholder="0.00"
-                            />
-                        </div>
-                    </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Renew From</p>
+                                        <p className="font-black text-slate-900 text-sm">Now / Expiry</p>
+                                    </div>
+                                    <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100/50">
+                                        <Label className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest mb-0.5">Payment (Rs.)</Label>
+                                        <input
+                                            type="number"
+                                            value={paidAmount}
+                                            onChange={e => setPaidAmount(Number(e.target.value))}
+                                            className="w-full bg-transparent border-none p-0 focus:ring-0 font-black text-indigo-700 text-sm placeholder:text-indigo-200"
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                </div>
 
-                    <div className="space-y-2">
-                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 ml-1">Extension Plan</Label>
-                        <div className="flex gap-2">
-                            {[1, 6, 12].map((m) => (
-                                <button
-                                    key={m}
-                                    type="button"
-                                    className={`flex-1 h-11 rounded-xl font-bold text-xs transition-all border-2 ${months === m
-                                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100'
-                                        : 'bg-white border-slate-100 text-slate-500 hover:border-indigo-100'
-                                        }`}
-                                    onClick={() => setMonths(m)}
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 ml-1">Extension Plan</Label>
+                                    <div className="flex gap-2">
+                                        {[1, 6, 12].map((m) => (
+                                            <button
+                                                key={m}
+                                                type="button"
+                                                className={`flex-1 h-11 rounded-xl font-bold text-xs transition-all border-2 ${months === m && !testMinutes
+                                                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100'
+                                                    : 'bg-white border-slate-100 text-slate-500 hover:border-indigo-100'
+                                                    }`}
+                                                onClick={() => {
+                                                    setMonths(m);
+                                                    setTestMinutes(null);
+                                                }}
+                                            >
+                                                {m === 12 ? "1 Year" : `${m}M`}
+                                            </button>
+                                        ))}
+                                        {/* Testing Option */}
+                                        <button
+                                            type="button"
+                                            className={`flex-1 h-11 rounded-xl font-bold text-[10px] transition-all border-2 border-dashed ${testMinutes === 3
+                                                ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-100'
+                                                : 'bg-red-50 border-red-100 text-red-500 hover:bg-red-100'
+                                                }`}
+                                            onClick={() => {
+                                                setTestMinutes(3);
+                                                setMonths(0);
+                                            }}
+                                        >
+                                            🧪 3 MIN
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="p-4 bg-indigo-50 rounded-2xl border-2 border-indigo-100 border-dashed relative">
+                                    <p className="text-center text-[9px] font-bold text-indigo-400 uppercase tracking-[0.2em] mb-1">New Expiration Date</p>
+                                    <p className="text-center text-sm font-black text-indigo-900">
+                                        {testMinutes
+                                            ? previewDate.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                                            : previewDate.toLocaleDateString('en-PK', {
+                                                day: 'numeric',
+                                                month: 'short',
+                                                year: 'numeric'
+                                            })
+                                        }
+                                        {testMinutes && <span className="block text-[9px] text-red-500 mt-1 italic uppercase tracking-wider">(Today)</span>}
+                                    </p>
+                                </div>
+
+                                <Button
+                                    onClick={handleUpdate}
+                                    disabled={loading}
+                                    className="w-full h-14 bg-[#0f172a] hover:bg-indigo-600 font-black text-sm rounded-2xl transition-all shadow-xl shadow-slate-200 uppercase tracking-widest active:scale-95"
                                 >
-                                    {m === 12 ? "1 Year" : `${m}M`}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="p-5 bg-indigo-50 rounded-3xl border-2 border-indigo-100 border-dashed relative group">
-                        <p className="text-center text-[9px] font-bold text-indigo-400 uppercase tracking-[0.2em] mb-1">New Expiration Date</p>
-                        <p className="text-center text-lg font-black text-indigo-900 group-hover:scale-105 transition-transform">
-                            {previewDate.toLocaleDateString('en-PK', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric'
-                            })}
-                        </p>
-                        <p className="text-center text-[10px] font-medium text-indigo-400 mt-1 italic">
-                            {previewDate.toLocaleDateString('en-PK', { weekday: 'long' })}
-                        </p>
-                    </div>
-
-                    <Button
-                        onClick={handleUpdate}
-                        disabled={loading}
-                        className="w-full h-14 bg-[#0f172a] hover:bg-indigo-600 font-black text-sm rounded-2xl transition-all shadow-xl shadow-slate-200 uppercase tracking-widest active:scale-95"
-                    >
-                        {loading ? "Processing..." : "Apply Subscription"}
-                    </Button>
+                                    {loading ? "Processing..." : "Generate & Renew"}
+                                </Button>
+                            </div>
+                        </>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>
@@ -305,6 +373,8 @@ export default function ManagedPharmacies() {
     const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
     const [search, setSearch] = useState("");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [onboardedKey, setOnboardedKey] = useState("");
+    const [showKeyModal, setShowKeyModal] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
@@ -314,6 +384,7 @@ export default function ManagedPharmacies() {
         ownerPassword: "",
         ownerName: "",
         months: 12,
+        minutes: 0,
         paidAmount: 0
     });
 
@@ -349,8 +420,14 @@ export default function ManagedPharmacies() {
                 else if (value.length > 20) error = "Password cannot exceed 20 characters";
                 break;
             case "months":
-                if (value < 1) error = "Minimum 1 month required";
-                else if (value > 36) error = "Maximum 36 months allowed";
+                // If it's a trial (minutes > 0), 0 months is fine
+                if (newPharmacy.minutes > 0 && value === 0) {
+                    error = "";
+                } else if (value < 1) {
+                    error = "Minimum 1 month required";
+                } else if (value > 36) {
+                    error = "Maximum 36 months allowed";
+                }
                 break;
             case "paidAmount":
                 if (value < 0) error = "Amount cannot be negative";
@@ -419,19 +496,29 @@ export default function ManagedPharmacies() {
                     ownerEmail: `${newPharmacy.ownerEmail}@pharmacy.com`,
                     ownerPassword: newPharmacy.ownerPassword,
                     ownerName: newPharmacy.ownerName,
-                    licenseMonths: Number(newPharmacy.months),
+                    licenseMonths: newPharmacy.minutes > 0 ? undefined : Number(newPharmacy.months),
+                    licenseMinutes: newPharmacy.minutes > 0 ? Number(newPharmacy.minutes) : undefined,
                     paidAmount: Number(newPharmacy.paidAmount)
                 }),
             });
 
             if (response.ok) {
+                const result = await response.json();
                 setIsAddModalOpen(false);
                 fetchPharmacies();
-                setNewPharmacy({ name: "", ownerEmail: "", ownerPassword: "", ownerName: "", months: 12, paidAmount: 0 });
+                setNewPharmacy({ name: "", ownerEmail: "", ownerPassword: "", ownerName: "", months: 12, minutes: 0, paidAmount: 0 });
                 setValidationErrors({ name: "", ownerName: "", ownerEmail: "", ownerPassword: "", months: "", paidAmount: "" });
+
+                // Show the activation key modal
+                setOnboardedKey(result.data.activationKey);
+                setShowKeyModal(true);
+            } else {
+                const data = await response.json();
+                alert(`❌ Failed: ${data.details || data.error || "Unknown error"}`);
             }
         } catch (err: any) {
             console.error(err);
+            alert("❌ Network error. Please check if the server is running.");
         }
     };
 
@@ -440,7 +527,7 @@ export default function ManagedPharmacies() {
             newPharmacy.ownerName.length >= 3 &&
             newPharmacy.ownerEmail.length >= 3 &&
             newPharmacy.ownerPassword.length >= 8 &&
-            newPharmacy.months >= 1 &&
+            (newPharmacy.months >= 1 || newPharmacy.minutes > 0) &&
             newPharmacy.paidAmount >= 0 &&
             !validationErrors.name &&
             !validationErrors.ownerName &&
@@ -476,6 +563,55 @@ export default function ManagedPharmacies() {
                     </h1>
                     <p className="text-indigo-200/50 font-medium mt-1 text-xs italic tracking-wide">Monitor license status and technical health of client nodes.</p>
                 </div>
+
+                {/* Onboarding Success Modal */}
+                <Dialog open={showKeyModal} onOpenChange={setShowKeyModal}>
+                    <DialogContent className="sm:max-w-[450px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
+                        <div className="bg-emerald-600 p-8 text-white text-center">
+                            <div className="h-20 w-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-white/30">
+                                <ShieldCheck className="h-10 w-10 text-white" />
+                            </div>
+                            <DialogTitle className="text-2xl font-black mb-1">Registration Successful!</DialogTitle>
+                            <p className="text-emerald-100 text-sm font-medium">Pharmacy has been onboarded as restricted.</p>
+                        </div>
+                        <div className="p-8 space-y-6 bg-white">
+                            <div className="space-y-3">
+                                <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 ml-1">Universal Activation Key</Label>
+                                <div className="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200 relative group">
+                                    <p className="font-mono text-center text-sm font-black text-slate-700 break-all select-all leading-relaxed">
+                                        {onboardedKey}
+                                    </p>
+                                    <Button
+                                        size="sm"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(onboardedKey);
+                                            alert("Key copied to clipboard!");
+                                        }}
+                                        className="mt-4 w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl h-10 border-none shadow-none text-xs"
+                                    >
+                                        Copy Activation Key
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
+                                <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                    <Clock className="h-3.3 w-3.3" /> Instructions for Owner
+                                </p>
+                                <p className="text-[11px] text-amber-600 font-medium leading-relaxed">
+                                    Provide this key to the pharmacy owner. They must enter it on their system's lock screen to activate and bind the license to their hardware.
+                                </p>
+                            </div>
+
+                            <Button
+                                onClick={() => setShowKeyModal(false)}
+                                className="w-full h-12 bg-slate-900 hover:bg-slate-800 font-black rounded-xl uppercase tracking-widest text-xs text-white"
+                            >
+                                I Have Saved the Key
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
 
                 <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
                     <DialogTrigger asChild>
@@ -537,25 +673,36 @@ export default function ManagedPharmacies() {
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Subscription Details</Label>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="relative">
-                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">M</div>
-                                            <Input
-                                                type="number"
-                                                min="1"
-                                                max="36"
-                                                placeholder="Months"
-                                                value={newPharmacy.months}
-                                                onChange={e => {
-                                                    const value = Number(e.target.value);
-                                                    if (value <= 36) {
-                                                        setNewPharmacy({ ...newPharmacy, months: value });
-                                                        validateField("months", value);
+                                        <div className="flex gap-2 items-center">
+                                            <div className="relative flex-1">
+                                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs text uppercase font-bold">M</div>
+                                                <Input
+                                                    type="number"
+                                                    value={newPharmacy.months}
+                                                    onChange={e => {
+                                                        const val = Number(e.target.value);
+                                                        setNewPharmacy({ ...newPharmacy, months: val, minutes: 0 });
+                                                        validateField("months", val);
+                                                    }}
+                                                    className="pl-8 rounded-xl h-12 border-slate-100 font-bold text-indigo-600 focus:ring-indigo-500"
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const isTest = newPharmacy.minutes > 0;
+                                                    setNewPharmacy({ ...newPharmacy, minutes: isTest ? 0 : 3, months: isTest ? 12 : 0 });
+                                                    // Clear month error if switching to trial
+                                                    if (!isTest) {
+                                                        setValidationErrors(prev => ({ ...prev, months: "" }));
                                                     }
                                                 }}
-                                                required
-                                                className={`pl-8 rounded-xl h-12 border-slate-100 font-bold text-indigo-600 ${validationErrors.months ? 'border-red-300' : ''}`}
-                                            />
-                                            {validationErrors.months && <p className="text-xs text-red-500 font-medium mt-1 absolute -bottom-5 left-0">{validationErrors.months}</p>}
+                                                className={`h-12 px-3 rounded-xl font-black text-[10px] border-2 transition-all ${newPharmacy.minutes > 0
+                                                    ? 'bg-red-600 border-red-600 text-white'
+                                                    : 'bg-red-50 border-red-100 text-red-500 hover:bg-red-100'}`}
+                                            >
+                                                {newPharmacy.minutes > 0 ? "3 MIN" : "TRIAL"}
+                                            </button>
                                         </div>
                                         <div className="relative">
                                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">Rs.</div>
@@ -652,13 +799,19 @@ export default function ManagedPharmacies() {
                                         <p className="font-bold text-slate-700 text-xs">{new Date().toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })}</p>
                                     </div>
                                     <div className="h-px bg-indigo-200 flex-1 mx-2 relative">
-                                        <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 bg-white px-2 py-0.5 rounded-full border border-indigo-100 text-[8px] font-black text-indigo-500">{newPharmacy.months}M</div>
+                                        <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 bg-white px-2 py-0.5 rounded-full border border-indigo-100 text-[8px] font-black text-indigo-500">
+                                            {newPharmacy.minutes > 0 ? "3m" : `${newPharmacy.months}M`}
+                                        </div>
                                     </div>
                                     <div className="text-center flex-1">
                                         <p className="text-[8px] font-bold text-slate-400 uppercase">Expires</p>
-                                        <p className="font-black text-indigo-600 text-xs">
+                                        <p className="font-black text-indigo-600 text-[10px]">
                                             {(() => {
                                                 const d = new Date();
+                                                if (newPharmacy.minutes > 0) {
+                                                    d.setMinutes(d.getMinutes() + newPharmacy.minutes);
+                                                    return d.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                                                }
                                                 d.setMonth(d.getMonth() + (Number(newPharmacy.months) || 0));
                                                 return d.toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' });
                                             })()}
@@ -722,11 +875,15 @@ export default function ManagedPharmacies() {
                                     month: 'short',
                                     year: 'numeric'
                                 }) : 'N/A';
-                                const expiryDate = new Date(p.licenseExpiresAt).toLocaleDateString('en-PK', {
+                                const expiryObj = new Date(p.licenseExpiresAt);
+                                const isExpiringToday = expiryObj.toDateString() === new Date().toDateString();
+
+                                const expiryDate = expiryObj.toLocaleDateString('en-PK', {
                                     weekday: 'short',
                                     day: 'numeric',
                                     month: 'short',
-                                    year: 'numeric'
+                                    year: 'numeric',
+                                    ...(isExpiringToday ? { hour: '2-digit', minute: '2-digit', second: '2-digit' } : {})
                                 });
 
                                 return (
@@ -773,7 +930,11 @@ export default function ManagedPharmacies() {
                                         <TableCell className="pr-8 text-right">
                                             <div className="flex justify-end gap-2 text-right items-center">
                                                 <EditPharmacyModal pharmacy={p} onUpdate={fetchPharmacies} />
-                                                <ManageLicenseModal pharmacy={p} onUpdate={fetchPharmacies} />
+                                                <ManageLicenseModal
+                                                    pharmacy={p}
+                                                    onUpdate={fetchPharmacies}
+                                                    disabled={!isExpired && p.isActive}
+                                                />
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -818,8 +979,8 @@ export default function ManagedPharmacies() {
                                         size="sm"
                                         onClick={() => setCurrentPage(page)}
                                         className={`h-9 w-9 rounded-xl font-bold ${currentPage === page
-                                                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                                : 'hover:bg-slate-100'
+                                            ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                            : 'hover:bg-slate-100'
                                             }`}
                                     >
                                         {page}
