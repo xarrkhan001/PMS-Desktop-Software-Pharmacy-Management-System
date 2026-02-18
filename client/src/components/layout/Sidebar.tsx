@@ -16,6 +16,7 @@ import {
     FileText,
     PackagePlus,
     Activity,
+    History,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -50,6 +51,7 @@ export default function Sidebar({ isMobile }: SidebarProps) {
         { name: "Customers", icon: Users, path: "/customers", roles: ["ADMIN", "PHARMACIST", "STAFF"] },
         { name: "Finance & Accounts", icon: Wallet, path: "/finance", roles: ["ADMIN"] },
         { name: "Reports", icon: FileBarChart, path: "/reports", roles: ["ADMIN", "PHARMACIST"] },
+        { name: "Activity Logs", icon: History, path: "/logs", roles: ["ADMIN"] },
         { name: "Admin", icon: Settings, path: "/admin", roles: ["ADMIN"] },
     ];
 
