@@ -41,6 +41,13 @@ export default function LoginModal({ open, onOpenChange, trigger, message }: Log
                 localStorage.setItem("userRole", data.user.role.toUpperCase());
                 localStorage.setItem("userName", data.user.name);
 
+                // Save license status for LicenseGuard to read (pharmacy users only)
+                if (data.licenseStatus) {
+                    localStorage.setItem("licenseStatus", JSON.stringify(data.licenseStatus));
+                } else {
+                    localStorage.removeItem("licenseStatus"); // Super Admin has no license
+                }
+
                 // Intelligent Redirection based on Role
                 if (data.user.role === "SUPER_ADMIN") {
                     navigate("/super-admin");

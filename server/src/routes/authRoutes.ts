@@ -20,20 +20,6 @@ router.post('/login', async (req, res) => {
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) return res.status(400).json({ error: 'Invalid password' });
 
-        // License Check for Pharmacy Users
-        if (user.role !== 'SUPER_ADMIN' && user.pharmacy) {
-            const now = new Date();
-            if (!user.pharmacy.isActive) {
-                return res.status(403).json({ error: 'Your pharmacy account has been deactivated. Contact Super Admin.' });
-            }
-            if (user.pharmacy.licenseExpiresAt && new Date(user.pharmacy.licenseExpiresAt) < now) {
-                return res.status(403).json({
-                    error: 'Your license has expired. Please make payment to renew your access.',
-                    expiredAt: user.pharmacy.licenseExpiresAt
-                });
-            }
-        }
-
         const token = jwt.sign(
             {
                 id: user.id,
@@ -46,6 +32,22 @@ router.post('/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        // Build license status for pharmacy users
+        let licenseStatus = null;
+        if (user.role !== 'SUPER_ADMIN' && user.pharmacy) {
+            const now = new Date();
+            const expiresAt = user.pharmacy.licenseExpiresAt;
+            const isExpired = expiresAt ? new Date(expiresAt) < now : true;
+            const isActive = user.pharmacy.isActive;
+
+            licenseStatus = {
+                isActive,
+                isExpired,
+                expiresAt,
+                licenseNo: user.pharmacy.licenseNo,
+            };
+        }
+
         res.json({
             token,
             user: {
@@ -55,7 +57,8 @@ router.post('/login', async (req, res) => {
                 role: user.role,
                 pharmacyId: user.pharmacyId,
                 pharmacyName: user.pharmacy?.name
-            }
+            },
+            licenseStatus
         });
     } catch (error) {
         res.status(500).json({ error: 'Login failed' });

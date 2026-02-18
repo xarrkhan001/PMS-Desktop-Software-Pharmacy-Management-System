@@ -187,11 +187,13 @@ router.post('/create-pharmacy', async (req, res) => {
     }
 
     // Validate License Months
-    const months = Number(licenseMonths);
-    if (isNaN(months) || months < 1) {
-        errors.push('License months must be at least 1');
-    } else if (months > 36) {
-        errors.push('License months cannot exceed 36');
+    if (!req.body.licenseMinutes) {
+        const months = Number(licenseMonths);
+        if (isNaN(months) || months < 1) {
+            errors.push('License months must be at least 1');
+        } else if (months > 36) {
+            errors.push('License months cannot exceed 36');
+        }
     }
 
     // Validate Paid Amount
@@ -213,7 +215,12 @@ router.post('/create-pharmacy', async (req, res) => {
     try {
         const startDate = new Date();
         const expiryDate = new Date();
-        expiryDate.setMonth(expiryDate.getMonth() + (licenseMonths || 12));
+
+        if (req.body.licenseMinutes) {
+            expiryDate.setMinutes(expiryDate.getMinutes() + Number(req.body.licenseMinutes));
+        } else {
+            expiryDate.setMonth(expiryDate.getMonth() + (Number(licenseMonths) || 12));
+        }
 
         const result = await prisma.$transaction(async (tx) => {
             const pharmacy = await tx.pharmacy.create({
@@ -221,7 +228,7 @@ router.post('/create-pharmacy', async (req, res) => {
                     name: pharmacyName.trim(),
                     licenseStartedAt: startDate,
                     licenseExpiresAt: expiryDate,
-                    isActive: true,
+                    isActive: false, // Must be activated with the key
                     subscriptionFee: Number(paidAmount) || 0,
                     totalPaid: Number(paidAmount) || 0
                 },
@@ -238,37 +245,81 @@ router.post('/create-pharmacy', async (req, res) => {
                 },
             });
 
-            return { pharmacy };
+            // Generate the first-time activation key (Machine independent initially)
+            const firstTimeKey = generateLicenseKey(pharmacy.id, expiryDate, 'OPEN');
+
+            return { pharmacy, activationKey: firstTimeKey };
         });
 
-        res.json({ message: 'Pharmacy onboarded successfully', data: result });
+        res.json({
+            message: 'Pharmacy onboarded successfully. Please provide the activation key to the pharmacy owner.',
+            data: result
+        });
+    } catch (error: any) {
+        console.error("Pharmacy creation error:", error);
+        res.status(400).json({
+            error: 'Failed to create pharmacy',
+            details: error.message || 'Unknown database error'
+        });
+    }
+});
+
+import { generateLicenseKey } from '../utils/license';
+
+// Generate License Key for a Machine
+router.post('/generate-license', async (req, res) => {
+    const { pharmacyId, extraMonths, machineId } = req.body;
+
+    try {
+        const pharmacy = await prisma.pharmacy.findUnique({ where: { id: pharmacyId } });
+        if (!pharmacy) return res.status(404).json({ error: 'Pharmacy not found' });
+
+        const expiryDate = new Date();
+        expiryDate.setMonth(expiryDate.getMonth() + (Number(extraMonths) || 12));
+
+        const licenseKey = generateLicenseKey(pharmacyId, expiryDate, machineId);
+
+        res.json({
+            message: 'License key generated successfully',
+            key: licenseKey,
+            expiryDate: expiryDate
+        });
     } catch (error) {
-        res.status(400).json({ error: 'Failed to create pharmacy. Email might be in use.' });
+        res.status(500).json({ error: 'Failed to generate license key' });
     }
 });
 
 // Renew/Manage License
 router.post('/renew-license', async (req, res) => {
-    const { pharmacyId, extraMonths, isActive, paidAmount } = req.body;
+    const { pharmacyId, extraMonths, isActive, paidAmount, machineId } = req.body;
 
     try {
         const pharmacy = await prisma.pharmacy.findUnique({ where: { id: pharmacyId } });
         if (!pharmacy) return res.status(404).json({ error: 'Pharmacy not found' });
 
         const now = new Date();
-        let newExpiry = new Date(now);
+        const newExpiry = new Date(pharmacy.licenseExpiresAt || now);
 
-        if (extraMonths) {
-            newExpiry.setMonth(newExpiry.getMonth() + extraMonths);
+        if (req.body.extraMinutes) {
+            newExpiry.setMinutes(newExpiry.getMinutes() + Number(req.body.extraMinutes));
+        } else if (extraMonths) {
+            newExpiry.setMonth(newExpiry.getMonth() + Number(extraMonths));
         }
 
         const amountToAdd = Number(paidAmount) || 0;
+
+        // If machineId is provided, generate a new key and save it automatically
+        let licenseKey = pharmacy.licenseNo;
+        if (machineId) {
+            licenseKey = generateLicenseKey(pharmacyId, newExpiry, machineId);
+        }
 
         const updated = await prisma.pharmacy.update({
             where: { id: pharmacyId },
             data: {
                 licenseExpiresAt: newExpiry,
                 licenseStartedAt: now,
+                licenseNo: licenseKey,
                 isActive: isActive !== undefined ? isActive : pharmacy.isActive,
                 subscriptionFee: amountToAdd > 0 ? amountToAdd : pharmacy.subscriptionFee,
                 totalPaid: { increment: amountToAdd }
@@ -276,9 +327,10 @@ router.post('/renew-license', async (req, res) => {
         });
 
         res.json({
-            message: 'License updated successfully',
+            message: 'License biological updated successfully',
             newExpiry: updated.licenseExpiresAt,
-            newStart: updated.licenseStartedAt
+            newStart: updated.licenseStartedAt,
+            newKey: licenseKey
         });
     } catch (error) {
         res.status(500).json({ error: 'Failed to update license' });
