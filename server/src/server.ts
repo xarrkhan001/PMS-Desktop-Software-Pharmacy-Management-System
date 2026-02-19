@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+dotenv.config();
+console.log("Auth Secret:", process.env.JWT_SECRET ? "Loaded from .env" : "Using fallback secret");
 
 // Routes & Utilities
 import authRoutes from './routes/authRoutes';
@@ -16,9 +18,8 @@ import customerRoutes from './routes/customerRoutes';
 import financeRoutes from './routes/financeRoutes';
 import reportRoutes from './routes/reportRoutes';
 import logRoutes from './routes/logRoutes';
+import settingRoutes from './routes/settingRoutes';
 import { seedSystem } from './utils/seed';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -44,6 +45,7 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/finance', financeRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/logs', logRoutes);
+app.use('/api/settings', settingRoutes);
 
 // Health Check
 app.get('/', (req, res) => {

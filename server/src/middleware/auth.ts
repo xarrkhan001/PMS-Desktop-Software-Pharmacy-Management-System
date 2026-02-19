@@ -10,7 +10,10 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
     if (!token) return res.status(401).json({ error: 'Access denied' });
 
     jwt.verify(token, JWT_SECRET, async (err: any, decoded: any) => {
-        if (err) return res.status(403).json({ error: 'Invalid token' });
+        if (err) {
+            console.error("JWT Verification Error:", err.message);
+            return res.status(403).json({ error: 'Invalid token' });
+        }
 
         try {
             const userExists = await prisma.user.findUnique({

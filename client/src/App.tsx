@@ -19,6 +19,7 @@ import LandingPage from "./modules/auth/LandingPage";
 import ProfilePage from "./modules/profile/ProfilePage";
 import SystemLogsPage from "./modules/logs/SystemLogsPage";
 import LicenseLockPage from "./modules/auth/LicenseLockPage";
+import SettingsPage from "./modules/settings/SettingsPage";
 import { Toaster } from "@/components/ui/toaster";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -215,9 +216,9 @@ function App() {
                   <Route path="customers" element={<CustomersPage />} />
                   <Route path="finance" element={<FinancePage />} />
                   <Route path="reports" element={<ReportsPage />} />
-                  <Route path="admin" element={<AdminPage />} />
                   <Route path="profile" element={<ProfilePage />} />
                   <Route path="logs" element={<SystemLogsPage />} />
+                  <Route path="settings" element={<SettingsPage />} />
                 </Route>
 
                 {/* Super Admin Specific Routes */}
