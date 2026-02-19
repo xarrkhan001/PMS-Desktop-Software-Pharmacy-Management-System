@@ -49,7 +49,7 @@ export default function Sidebar({ isMobile }: SidebarProps) {
         { name: "Suppliers", icon: Truck, path: "/suppliers", roles: ["ADMIN", "PHARMACIST"] },
         { name: "Stock Inward", icon: PackagePlus, path: "/purchases", roles: ["ADMIN", "PHARMACIST"] },
         { name: "Customers", icon: Users, path: "/customers", roles: ["ADMIN", "PHARMACIST", "STAFF"] },
-        { name: "Finance & Accounts", icon: Wallet, path: "/finance", roles: ["ADMIN"] },
+        { name: "Financial Hub", icon: Wallet, path: "/finance", roles: ["ADMIN"] },
         { name: "Reports", icon: FileBarChart, path: "/reports", roles: ["ADMIN", "PHARMACIST"] },
         { name: "Activity Logs", icon: History, path: "/logs", roles: ["ADMIN"] },
         { name: "Admin", icon: Settings, path: "/admin", roles: ["ADMIN"] },

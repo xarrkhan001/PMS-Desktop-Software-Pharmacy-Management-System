@@ -1,6 +1,7 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { authenticateToken } from "../middleware/auth";
+import { logActivity } from "../utils/logger";
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -85,6 +86,18 @@ router.post("/", authenticateToken, async (req: any, res) => {
                 pharmacyId
             }
         });
+
+        // Log the expense
+        await logActivity({
+            type: "finance",
+            action: "Expense Recorded",
+            detail: `${expense.title} — PKR ${expense.amount.toLocaleString()} paid via ${expense.paymentMethod}.`,
+            amount: expense.amount,
+            status: "warning", // Expenses are outflows, marked as warning/info for visibility
+            userId: req.user.userId,
+            pharmacyId: req.user.pharmacyId
+        });
+
         res.json(expense);
     } catch (error: any) {
         res.status(500).json({ error: error.message });

@@ -1,6 +1,7 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { authenticateToken } from "../middleware/auth";
+import { logActivity } from "../utils/logger";
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -52,8 +53,8 @@ router.post("/", authenticateToken, async (req: any, res) => {
                     pharmacyId,
                     supplierId,
                     invoiceNo,
-                    totalAmount: parseFloat(totalAmount),
-                    paidAmount: parseFloat(paidAmount),
+                    totalAmount: parseFloat(totalAmount) || 0,
+                    paidAmount: parseFloat(paidAmount) || 0,
                     status: status || "COMPLETED",
                     items: {
                         create: items.map((item: any) => ({
@@ -61,7 +62,14 @@ router.post("/", authenticateToken, async (req: any, res) => {
                             quantity: parseInt(item.quantity),
                             price: parseFloat(item.price),
                             batchNo: item.batchNo,
-                            expiryDate: new Date(item.expiryDate)
+                            expiryDate: (() => {
+                                if (!item.expiryDate) return null;
+                                const d = new Date(item.expiryDate);
+                                if (isNaN(d.getTime())) return null;
+                                const year = d.getFullYear();
+                                if (year < 1900 || year > 2100) return null;
+                                return d;
+                            })()
                         }))
                     }
                 },
@@ -81,18 +89,38 @@ router.post("/", authenticateToken, async (req: any, res) => {
                 });
 
                 // Create a new stock batch for FEFO tracking
+                const safeExpiry = (() => {
+                    if (!item.expiryDate) return new Date(new Date().setFullYear(new Date().getFullYear() + 2));
+                    const d = new Date(item.expiryDate);
+                    if (isNaN(d.getTime())) return new Date(new Date().setFullYear(new Date().getFullYear() + 2));
+                    const year = d.getFullYear();
+                    if (year < 1900 || year > 2100) return new Date(new Date().setFullYear(new Date().getFullYear() + 2));
+                    return d;
+                })();
+
                 await tx.stockBatch.create({
                     data: {
                         medicineId: item.medicineId,
                         batchNo: item.batchNo,
                         quantity: parseInt(item.quantity),
                         purchasePrice: parseFloat(item.price),
-                        expiryDate: new Date(item.expiryDate)
+                        expiryDate: safeExpiry
                     }
                 });
             }
 
             return purchase;
+        });
+
+        // 3. Log the activity
+        await logActivity({
+            type: "purchase",
+            action: "Stock Inward",
+            detail: `Purchase Invoice #${result.invoiceNo} — PKR ${result.totalAmount.toLocaleString()} added to stock. Total items: ${items.length}`,
+            amount: result.totalAmount,
+            status: result.status === "COMPLETED" ? "success" : "warning",
+            userId: req.user.userId,
+            pharmacyId: req.user.pharmacyId
         });
 
         res.json(result);
@@ -171,10 +199,20 @@ router.delete("/:id", authenticateToken, async (req: any, res) => {
             await tx.purchaseItem.deleteMany({ where: { purchaseId: Number(id) } });
             await tx.purchase.delete({ where: { id: Number(id) } });
 
-            return { success: true };
+            return { success: true, purchase };
         });
 
-        res.json(result);
+        // 4. Log the cancellation
+        await logActivity({
+            type: "purchase",
+            action: "Purchase Cancelled",
+            detail: `Invoice #${result.purchase.invoiceNo} was deleted and stock was reversed.`,
+            status: "warning",
+            userId: req.user.userId,
+            pharmacyId: req.user.pharmacyId
+        });
+
+        res.json({ success: true, message: "Purchase cancelled and stock reversed" });
     } catch (error: any) {
         console.error("Cancellation Error:", error);
         res.status(400).json({ error: error.message });

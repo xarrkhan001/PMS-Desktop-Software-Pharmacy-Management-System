@@ -225,7 +225,7 @@ export default function FinancePage() {
                         <div className="p-2 bg-indigo-600 rounded-xl">
                             <Wallet className="h-6 w-6 text-white" />
                         </div>
-                        Finance & Accounts
+                        Financial Hub
                     </h1>
                     <p className="text-slate-500 font-medium mt-1">Professional ledger and cash flow management for your pharmacy.</p>
                 </div>

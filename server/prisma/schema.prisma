@@ -30,6 +30,7 @@ model Pharmacy {
   expenses  Expense[]
   expenseCategories ExpenseCategory[]
   paymentHistories  PaymentHistory[]
+  auditLogs         AuditLog[]
 }
 
 model User {
@@ -45,6 +46,7 @@ model User {
   pharmacy   Pharmacy? @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
   
   tokenVersion Int @default(0) // Used to invalidate sessions on password change
+  auditLogs    AuditLog[]
 }
 
 model Supplier {
@@ -221,4 +223,22 @@ model PaymentHistory {
   
   pharmacyId    Int
   pharmacy      Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+}
+// --- Audit & System Logging ---
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  type        String   // sale, purchase, inventory, customer, finance, system
+  action      String   // e.g., "Medicine Added", "Sale Completed"
+  detail      String   // Description of the action
+  amount      Float?   // Optional financial impact
+  status      String   @default("info") // success, warning, error, info
+  
+  // Traceability
+  userId      Int?
+  user        User?     @relation(fields: [userId], references: [id])
+  pharmacyId  Int
+  pharmacy    Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
 }

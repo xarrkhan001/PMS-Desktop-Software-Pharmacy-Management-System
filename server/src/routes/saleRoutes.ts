@@ -1,6 +1,7 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { authenticateToken } from "../middleware/auth";
+import { logActivity } from "../utils/logger";
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -159,6 +160,17 @@ router.post("/process", authenticateToken, async (req: any, res) => {
             }
 
             return newSale;
+        });
+
+        // 4. Log the activity for audit
+        await logActivity({
+            type: "sale",
+            action: "Sale Completed",
+            detail: `Invoice #${sale.invoiceNo} — PKR ${sale.netAmount.toLocaleString()} received via ${sale.paymentMethod}. Items: ${items.length}`,
+            amount: sale.netAmount,
+            status: sale.dueAmount > 0 ? "warning" : "success",
+            userId: req.user.userId,
+            pharmacyId: req.user.pharmacyId
         });
 
         res.json({ message: "Sale processed successfully", sale });

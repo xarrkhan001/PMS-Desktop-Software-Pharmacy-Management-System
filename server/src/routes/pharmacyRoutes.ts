@@ -99,4 +99,29 @@ router.post("/license/activate", async (req, res) => {
     }
 });
 
+// Update Pharmacy Profile (Allow updating name, location, contact)
+router.put("/profile", authenticateToken, async (req: any, res) => {
+    try {
+        const pharmacyId = req.user.pharmacyId;
+        const { name, location, contact } = req.body;
+
+        if (!pharmacyId) {
+            return res.status(404).json({ error: "Pharmacy not found for this user context." });
+        }
+
+        const updatedPharmacy = await prisma.pharmacy.update({
+            where: { id: pharmacyId },
+            data: {
+                name,
+                location,
+                contact
+            }
+        });
+
+        res.json(updatedPharmacy);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 export default router;

@@ -1,6 +1,7 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { authenticateToken } from "../middleware/auth";
+import { logActivity } from "../utils/logger";
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -196,6 +197,16 @@ router.post("/medicines", authenticateToken, async (req: any, res) => {
             }
         });
 
+        // Log medicine creation
+        await logActivity({
+            type: "inventory",
+            action: "Medicine Added",
+            detail: `${medicine.name} (${medicine.genericName}) was added to the master list.`,
+            status: "success",
+            userId: req.user.userId,
+            pharmacyId: req.user.pharmacyId
+        });
+
         res.json(medicine);
     } catch (error: any) {
         res.status(500).json({ error: error.message });
@@ -223,6 +234,16 @@ router.put("/medicines/:id", authenticateToken, async (req: any, res) => {
                 unitType: unitType,
                 rackNo
             }
+        });
+
+        // Log medicine update
+        await logActivity({
+            type: "inventory",
+            action: "Medicine Updated",
+            detail: `Information for ${medicine.name} was updated. Status: Active`,
+            status: "info",
+            userId: req.user.userId,
+            pharmacyId: req.user.pharmacyId
         });
 
         res.json(medicine);
@@ -258,6 +279,16 @@ router.delete("/medicines/:id", authenticateToken, async (req: any, res) => {
             await tx.medicine.delete({
                 where: { id: medicineId, pharmacyId }
             });
+        });
+
+        // Log medicine deletion
+        await logActivity({
+            type: "inventory",
+            action: "Medicine Deleted",
+            detail: `Item ID ${medicineId} and all related records were permanently removed from the system.`,
+            status: "error",
+            userId: req.user.userId,
+            pharmacyId: req.user.pharmacyId
         });
 
         res.json({ message: "Medicine and all related records deleted successfully" });

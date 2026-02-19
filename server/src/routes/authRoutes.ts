@@ -48,6 +48,19 @@ router.post('/login', async (req, res) => {
             };
         }
 
+        // Log the login activity
+        if (user.pharmacyId) {
+            const { logActivity } = require("../utils/logger");
+            await logActivity({
+                type: "system",
+                action: "User Login",
+                detail: `${user.name || user.email} logged into the system.`,
+                status: "success",
+                userId: user.id,
+                pharmacyId: user.pharmacyId
+            });
+        }
+
         res.json({
             token,
             user: {
