@@ -1,6 +1,7 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { authenticateToken } from "../middleware/auth";
+import { logActivity } from "../utils/logger";
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -63,6 +64,16 @@ router.post("/", authenticateToken, async (req: any, res) => {
             }
         });
 
+        // Log customer registration
+        await logActivity({
+            type: "customer",
+            action: "Customer Registered",
+            detail: `${customer.name} was added to the database.`,
+            status: "success",
+            userId: req.user.userId,
+            pharmacyId: req.user.pharmacyId
+        });
+
         res.status(201).json(customer);
     } catch (error: any) {
         res.status(500).json({ error: error.message });
@@ -103,6 +114,17 @@ router.post("/:id/pay", authenticateToken, async (req: any, res) => {
         await prisma.customer.update({
             where: { id: Number(id) },
             data: { totalDue: { decrement: parseFloat(amount) } }
+        });
+
+        // Log the payment
+        await logActivity({
+            type: "customer",
+            action: "Debt Payment Recovery",
+            detail: `Received PKR ${amount} from ${customer.name} against pending dues.`,
+            amount: parseFloat(amount),
+            status: "success",
+            userId: req.user.userId,
+            pharmacyId: req.user.pharmacyId
         });
 
         res.json({ message: `Payment of Rs. ${amount} recorded successfully.` });

@@ -6,17 +6,18 @@ import {
     Building2,
     Mail,
     ShieldCheck,
-    Calendar,
+    MapPin,
+    Phone,
     CreditCard,
     Users,
-    FileText,
-    Info,
-    Lock
+    FileText
 } from "lucide-react";
 
 interface PharmacyProfile {
     id: number;
     name: string;
+    location: string | null;
+    contact: string | null;
     licenseStartedAt: string;
     licenseExpiresAt: string;
     isActive: boolean;
@@ -33,25 +34,60 @@ interface PharmacyProfile {
 export default function ProfilePage() {
     const [profile, setProfile] = useState<PharmacyProfile | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [editForm, setEditForm] = useState({
+        name: "",
+        location: "",
+        contact: ""
+    });
+
+    const fetchProfile = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch("http://localhost:5000/api/pharmacy/profile", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await response.json();
+            setProfile(data);
+            setEditForm({
+                name: data.name,
+                location: data.location || "",
+                contact: data.contact || ""
+            });
+        } catch (error) {
+            console.error("Failed to fetch profile", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const token = localStorage.getItem("token");
-                const response = await fetch("http://localhost:5000/api/pharmacy/profile", {
-                    headers: { "Authorization": `Bearer ${token}` }
-                });
-                const data = await response.json();
-                setProfile(data);
-            } catch (error) {
-                console.error("Failed to fetch profile", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchProfile();
     }, []);
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch("http://localhost:5000/api/pharmacy/profile", {
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(editForm)
+            });
+            if (response.ok) {
+                await fetchProfile();
+                setIsEditing(false);
+            }
+        } catch (error) {
+            console.error("Update failed", error);
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     if (loading) return (
         <div className="flex items-center justify-center min-h-[400px]">
@@ -65,15 +101,30 @@ export default function ProfilePage() {
 
     return (
         <div className="space-y-8 max-w-6xl mx-auto pb-12">
-            {/* Admin Notice */}
-            <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-center gap-4 text-amber-800">
-                <div className="h-10 w-10 bg-amber-100 rounded-xl flex items-center justify-center">
-                    <Lock className="h-5 w-5" />
+            {/* Action Bar */}
+            <div className="flex justify-between items-center bg-white p-6 rounded-3xl border shadow-sm no-print">
+                <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 bg-indigo-50 rounded-2xl flex items-center justify-center">
+                        <Building2 className="h-6 w-6 text-indigo-600" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-black text-slate-900 tracking-tight">Access Profile</h2>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Enterprise Configuration</p>
+                    </div>
                 </div>
-                <div>
-                    <p className="font-black text-sm uppercase tracking-tight">Enterprise Lock Enabled</p>
-                    <p className="text-xs font-bold opacity-80">Profile details are read-only for security. To update your info, please contact Super Admin support.</p>
-                </div>
+
+                {isEditing ? (
+                    <div className="flex gap-2">
+                        <Button variant="ghost" className="rounded-xl font-bold" onClick={() => setIsEditing(false)}>Cancel</Button>
+                        <Button className="bg-indigo-600 hover:bg-indigo-700 rounded-xl font-bold px-8 shadow-lg shadow-indigo-100" onClick={handleSave} disabled={isSaving}>
+                            {isSaving ? "Saving..." : "Save Changes"}
+                        </Button>
+                    </div>
+                ) : (
+                    <Button className="bg-slate-900 hover:bg-slate-800 rounded-xl font-bold px-8" onClick={() => setIsEditing(true)}>
+                        Update Info
+                    </Button>
+                )}
             </div>
 
             {/* Header Identity */}
@@ -81,23 +132,62 @@ export default function ProfilePage() {
                 <div className="h-32 w-32 bg-indigo-600 rounded-[2.5rem] shadow-xl flex items-center justify-center text-white shrink-0 shadow-indigo-100">
                     <Building2 className="h-16 w-16" />
                 </div>
-                <div className="space-y-4 pt-2 flex-1">
-                    <div className="flex flex-wrap items-center gap-3">
-                        <h1 className="text-4xl font-black text-slate-900 tracking-tight">{profile.name}</h1>
-                        <Badge className={`px-4 py-1.5 rounded-xl font-black text-xs uppercase ${profile.isActive ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-red-50 text-red-700'}`}>
-                            {profile.isActive ? 'Enterprise Active' : 'Suspended'}
-                        </Badge>
-                    </div>
-                    <div className="flex flex-wrap gap-6 text-slate-500 font-bold text-sm">
-                        <div className="flex items-center gap-2">
-                            <ShieldCheck className="h-4 w-4 text-indigo-500" />
-                            License: #{profile.id.toString().padStart(5, '0')}
+                <div className="space-y-4 pt-2 flex-1 w-full">
+                    {isEditing ? (
+                        <div className="grid gap-4 max-w-xl">
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-black uppercase text-slate-400">Pharmacy Name</label>
+                                <input
+                                    className="w-full bg-slate-50 border-2 border-slate-100 p-3 rounded-2xl font-black text-xl text-slate-900 focus:border-indigo-500 outline-none transition-all"
+                                    value={editForm.name}
+                                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black uppercase text-slate-400">Location</label>
+                                    <input
+                                        className="w-full bg-slate-50 border-2 border-slate-100 p-3 rounded-2xl font-bold text-sm text-slate-700 focus:border-indigo-500 outline-none transition-all"
+                                        value={editForm.location}
+                                        onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                                        placeholder="e.g. Saddar, Karachi"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black uppercase text-slate-400">Contact</label>
+                                    <input
+                                        className="w-full bg-slate-50 border-2 border-slate-100 p-3 rounded-2xl font-bold text-sm text-slate-700 focus:border-indigo-500 outline-none transition-all"
+                                        value={editForm.contact}
+                                        onChange={(e) => setEditForm({ ...editForm, contact: e.target.value })}
+                                        placeholder="e.g. 0300-1234567"
+                                    />
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-indigo-500" />
-                            Joined {new Date(profile.licenseStartedAt).toLocaleDateString('en-PK', { month: 'long', year: 'numeric' })}
-                        </div>
-                    </div>
+                    ) : (
+                        <>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <h1 className="text-4xl font-black text-slate-900 tracking-tight uppercase italic">{profile.name}</h1>
+                                <Badge className={`px-4 py-1.5 rounded-xl font-black text-xs uppercase ${profile.isActive ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-red-50 text-red-700'}`}>
+                                    {profile.isActive ? 'Enterprise Active' : 'Suspended'}
+                                </Badge>
+                            </div>
+                            <div className="flex flex-wrap gap-6 text-slate-500 font-bold text-sm">
+                                <div className="flex items-center gap-2">
+                                    <MapPin className="h-4 w-4 text-indigo-500" />
+                                    {profile.location || "Location Not Specified"}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Phone className="h-4 w-4 text-indigo-500" />
+                                    {profile.contact || "Contact Not Specified"}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <ShieldCheck className="h-4 w-4 text-indigo-500" />
+                                    License: #{profile.id.toString().padStart(5, '0')}
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -126,9 +216,9 @@ export default function ProfilePage() {
                             <span className="text-slate-400 font-black text-xs uppercase tracking-widest">Total Paid</span>
                             <span className="text-emerald-600 font-black">Rs. {profile.totalPaid.toLocaleString()}</span>
                         </div>
-                        <Button variant="outline" className="w-full h-14 rounded-2xl border-slate-200 font-black gap-2 hover:bg-slate-50 opacity-50 cursor-not-allowed">
-                            <FileText className="h-5 w-5" />
-                            Download Ledger
+                        <Button variant="outline" className="w-full h-14 rounded-2xl border-slate-200 font-black gap-2 hover:bg-slate-50">
+                            <FileText className="h-5 w-5 text-indigo-600" />
+                            Download Statement
                         </Button>
                     </CardContent>
                 </Card>
@@ -138,15 +228,15 @@ export default function ProfilePage() {
                     <CardHeader className="p-8 pb-0">
                         <CardTitle className="text-2xl font-black text-slate-900 flex items-center gap-3">
                             <Users className="h-7 w-7 text-indigo-500" />
-                            Authenticated Personnel
+                            Staff Permissions
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-8">
                         <div className="space-y-4">
                             {profile.users.map((user) => (
-                                <div key={user.id} className="flex items-center justify-between p-5 rounded-2xl bg-slate-50 group hover:bg-indigo-50/50 transition-all border border-transparent hover:border-indigo-100">
+                                <div key={user.id} className="flex items-center justify-between p-5 rounded-3xl bg-slate-50 group hover:bg-indigo-50/50 transition-all border border-transparent hover:border-indigo-100">
                                     <div className="flex items-center gap-4">
-                                        <div className="h-12 w-12 rounded-xl bg-white shadow-sm flex items-center justify-center font-black text-indigo-600 text-lg">
+                                        <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center font-black text-indigo-600 text-lg">
                                             {user.name.charAt(0)}
                                         </div>
                                         <div>
@@ -157,18 +247,11 @@ export default function ProfilePage() {
                                             </div>
                                         </div>
                                     </div>
-                                    <Badge className={`${user.role === 'ADMIN' ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'} rounded-lg px-3 py-1 font-black text-[10px] uppercase border-none`}>
+                                    <Badge className={`${user.role === 'ADMIN' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200'} rounded-xl px-4 py-1.5 font-black text-[10px] uppercase`}>
                                         {user.role}
                                     </Badge>
                                 </div>
                             ))}
-                        </div>
-
-                        <div className="mt-8 p-6 bg-indigo-50/50 rounded-2xl border border-indigo-100 flex items-start gap-4">
-                            <Info className="h-5 w-5 text-indigo-600 shrink-0 mt-0.5" />
-                            <p className="text-xs font-bold text-indigo-900/70 leading-relaxed">
-                                Personnel access is managed by the Super Admin. If you need to add or remove staff members, please initiate a request through the terminal support channel.
-                            </p>
                         </div>
                     </CardContent>
                 </Card>

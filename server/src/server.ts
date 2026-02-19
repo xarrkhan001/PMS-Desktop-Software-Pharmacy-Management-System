@@ -14,6 +14,8 @@ import supplierRoutes from './routes/supplierRoutes';
 import purchaseRoutes from './routes/purchaseRoutes';
 import customerRoutes from './routes/customerRoutes';
 import financeRoutes from './routes/financeRoutes';
+import reportRoutes from './routes/reportRoutes';
+import logRoutes from './routes/logRoutes';
 import { seedSystem } from './utils/seed';
 
 dotenv.config();
@@ -40,6 +42,8 @@ app.use('/api/suppliers', supplierRoutes);
 app.use('/api/purchases', purchaseRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/finance', financeRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/logs', logRoutes);
 
 // Health Check
 app.get('/', (req, res) => {
