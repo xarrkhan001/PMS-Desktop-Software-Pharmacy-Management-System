@@ -27,6 +27,9 @@ model Pharmacy {
   suppliers Supplier[]
   customers Customer[]
   purchases Purchase[]
+  expenses  Expense[]
+  expenseCategories ExpenseCategory[]
+  paymentHistories  PaymentHistory[]
 }
 
 model User {
@@ -176,4 +179,46 @@ model SaleItem {
   
   medicineId  Int
   medicine    Medicine @relation(fields: [medicineId], references: [id])
+}
+
+// --- Finance & Accounts Models ---
+
+model ExpenseCategory {
+  id          Int       @id @default(autoincrement())
+  name        String    // e.g., Rent, Utilities, Salaries
+  description String?
+  pharmacyId  Int
+  pharmacy    Pharmacy  @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  expenses    Expense[]
+}
+
+model Expense {
+  id          Int             @id @default(autoincrement())
+  title       String
+  amount      Float
+  date        DateTime        @default(now())
+  description String?
+  paymentMethod String        @default("CASH") // CASH, BANK
+  
+  categoryId  Int
+  category    ExpenseCategory @relation(fields: [categoryId], references: [id])
+  
+  pharmacyId  Int
+  pharmacy    Pharmacy        @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+}
+
+// For detailed ledger tracking of partial payments
+model PaymentHistory {
+  id            Int      @id @default(autoincrement())
+  amount        Float
+  paymentDate   DateTime @default(now())
+  paymentMethod String   @default("CASH") // CASH, CARD, BANK
+  note          String?
+  
+  // Can be for a sale (customer udhaar) or purchase (supplier udhaar)
+  saleId        Int?
+  purchaseId    Int?
+  
+  pharmacyId    Int
+  pharmacy      Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
 }
