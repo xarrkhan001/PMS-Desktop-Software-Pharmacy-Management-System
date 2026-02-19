@@ -13,6 +13,7 @@ import saleRoutes from './routes/saleRoutes';
 import supplierRoutes from './routes/supplierRoutes';
 import purchaseRoutes from './routes/purchaseRoutes';
 import customerRoutes from './routes/customerRoutes';
+import financeRoutes from './routes/financeRoutes';
 import { seedSystem } from './utils/seed';
 
 dotenv.config();
@@ -38,6 +39,7 @@ app.use('/api/sales', saleRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/purchases', purchaseRoutes);
 app.use('/api/customers', customerRoutes);
+app.use('/api/finance', financeRoutes);
 
 // Health Check
 app.get('/', (req, res) => {
