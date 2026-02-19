@@ -52,7 +52,7 @@ export default function Sidebar({ isMobile }: SidebarProps) {
         { name: "Financial Hub", icon: Wallet, path: "/finance", roles: ["ADMIN"] },
         { name: "Reports", icon: FileBarChart, path: "/reports", roles: ["ADMIN", "PHARMACIST"] },
         { name: "Activity Logs", icon: History, path: "/logs", roles: ["ADMIN"] },
-        { name: "Admin", icon: Settings, path: "/admin", roles: ["ADMIN"] },
+        { name: "General Settings", icon: Settings, path: "/settings", roles: ["ADMIN"] },
     ];
 
     const navItems = allNavItems.filter(item => item.roles.includes(userRole || ""));

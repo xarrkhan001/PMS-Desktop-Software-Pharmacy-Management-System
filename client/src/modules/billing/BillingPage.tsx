@@ -83,13 +83,30 @@ export default function BillingPage() {
     const [cashReceived, setCashReceived] = useState<number | "">(0);
     const [isReceiptOpen, setIsReceiptOpen] = useState(false);
     const [lastSale, setLastSale] = useState<any>(null);
+    const [pmsSettings, setPmsSettings] = useState<any>(null);
     const { toast } = useToast();
 
     // Fetch initial data
     useEffect(() => {
         fetchRecentInvoices();
         fetchCustomers();
+        fetchPmsSettings();
     }, []);
+
+    const fetchPmsSettings = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch("http://localhost:5000/api/settings", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setPmsSettings(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch settings", error);
+        }
+    };
 
     const fetchCustomers = async () => {
         try {
@@ -356,7 +373,7 @@ export default function BillingPage() {
                                                         </div>
                                                         <h3 className="font-black text-slate-900 text-sm tracking-tighter uppercase">{med.name}</h3>
                                                         <Badge className="bg-indigo-600 text-white border-none text-[7px] font-black px-1.5 py-0 rounded-md uppercase tracking-widest">{med.category}</Badge>
-                                                        {med.batches && med.batches.reduce((sum, b) => sum + b.quantity, 0) <= (med.reorderLevel || 10) && (
+                                                        {med.batches && med.batches.reduce((sum, b) => sum + b.quantity, 0) <= (pmsSettings?.lowStockThreshold || med.reorderLevel || 10) && (
                                                             <Badge variant="outline" className="text-rose-600 border-rose-200 bg-rose-50 text-[7px] font-black animate-pulse flex items-center gap-1 px-1.5">
                                                                 <TrendingDown className="h-2 w-2" /> SHORTAGE
                                                             </Badge>
@@ -375,13 +392,13 @@ export default function BillingPage() {
                                                         .slice(0, 2)
                                                         .map(batch => (
                                                             <div key={batch.id} className="flex items-center gap-4 p-2.5 bg-white rounded-[1rem] border border-slate-100 shadow-sm hover:border-indigo-200 transition-colors group/batch relative overflow-hidden">
-                                                                {Math.ceil((new Date(batch.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) <= 90 && (
+                                                                {Math.ceil((new Date(batch.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) <= (pmsSettings?.nearExpiryDays || 30) && (
                                                                     <div className="absolute top-0 left-0 w-1 h-full bg-rose-500" />
                                                                 )}
                                                                 <div className="flex flex-col min-w-[80px]">
                                                                     <div className="flex items-center justify-between gap-2 mb-0.5">
                                                                         <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.1em]">{batch.batchNo}</span>
-                                                                        {Math.ceil((new Date(batch.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) <= 90 && (
+                                                                        {Math.ceil((new Date(batch.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) <= (pmsSettings?.nearExpiryDays || 30) && (
                                                                             <span className="text-rose-500 text-[7px] font-black uppercase animate-pulse leading-none italic">Expiring</span>
                                                                         )}
                                                                     </div>
@@ -819,12 +836,16 @@ export default function BillingPage() {
                 <DialogContent className="max-w-sm rounded-[3rem] p-0 border-none shadow-5xl overflow-hidden bg-white">
                     <div id="receipt-content" className="p-8">
                         <div className="text-center space-y-2 mb-8">
-                            <div className="h-12 w-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mx-auto mb-4">
-                                <Receipt className="h-6 w-6" />
-                            </div>
+                            {pmsSettings?.showPharmacyLogo !== false && (
+                                <div className="h-12 w-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mx-auto mb-4">
+                                    <Receipt className="h-6 w-6" />
+                                </div>
+                            )}
                             <h2 className="text-2xl font-black italic tracking-tighter uppercase text-slate-900">{pharmacyName}</h2>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Medical Complex, Main Road</p>
-                            <p className="text-[10px] font-bold text-slate-400">PH: +92 300 1234567</p>
+                            <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-2">{pmsSettings?.billHeader || "Quality Healthcare Services"}</p>
+                            {pmsSettings?.showTaxId && (
+                                <p className="text-[10px] font-bold text-slate-400">NTN: 1234567-8</p>
+                            )}
                         </div>
 
                         <div className="border-t border-b border-dashed border-slate-200 py-3 my-4 space-y-2">
@@ -876,8 +897,8 @@ export default function BillingPage() {
                         </div>
 
                         <div className="mt-8 text-center space-y-2">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Terminal: 01-PK-ADMIN</p>
-                            <p className="text-[10px] font-black uppercase tracking-tight text-slate-500">**** Non-Refundable if Seal Broken ****</p>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Terminal: {sessionId}-ADMIN</p>
+                            <p className="text-[10px] font-black uppercase tracking-tight text-slate-500">{pmsSettings?.billFooter || "**** Non-Refundable if Seal Broken ****"}</p>
                             <p className="text-[12px] font-black italic tracking-tighter text-indigo-500 print-color-exact">Thank You for Choosing PharmPro</p>
                         </div>
                         <Button className="w-full mt-6 h-12 rounded-2xl bg-slate-900 text-white font-black uppercase italic tracking-tighter" onClick={() => window.print()}>

@@ -31,6 +31,7 @@ model Pharmacy {
   expenseCategories ExpenseCategory[]
   paymentHistories  PaymentHistory[]
   auditLogs         AuditLog[]
+  settings          PharmacySettings?
 }
 
 model User {
@@ -241,4 +242,26 @@ model AuditLog {
   pharmacy    Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
   
   createdAt   DateTime @default(now())
+}
+
+model PharmacySettings {
+  id                Int      @id @default(autoincrement())
+  pharmacyId        Int      @unique
+  pharmacy          Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  
+  // Bill Customization
+  billHeader        String?  @default("Thank you for choosing us!")
+  billFooter        String?  @default("Medicines once sold will not be returned or exchanged.")
+  showPharmacyLogo  Boolean  @default(true)
+  showTaxId         Boolean  @default(true)
+  
+  // Financials
+  defaultTaxRate    Float    @default(0.0) // Percentage
+  currencySymbol    String   @default("PKR")
+  
+  // Alerts
+  nearExpiryDays    Int      @default(30)
+  lowStockThreshold Int      @default(10)
+  
+  updatedAt         DateTime @updatedAt
 }
