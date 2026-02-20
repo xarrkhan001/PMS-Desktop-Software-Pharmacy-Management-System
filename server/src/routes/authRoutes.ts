@@ -29,7 +29,7 @@ router.post('/login', async (req, res) => {
                 tokenVersion: user.tokenVersion
             },
             JWT_SECRET,
-            { expiresIn: '24h' }
+            { expiresIn: '30d' }
         );
 
         // Build license status for pharmacy users

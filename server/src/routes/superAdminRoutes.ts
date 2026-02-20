@@ -453,4 +453,45 @@ router.delete('/pharmacy/:id', async (req, res) => {
     }
 });
 
+// Database Explorer - Fetch raw data from any table
+router.get('/explorer/:table', async (req: any, res) => {
+    const { table } = req.params;
+
+    // Mapping of table names to prisma models
+    const modelMapping: { [key: string]: any } = {
+        'pharmacies': prisma.pharmacy,
+        'users': prisma.user,
+        'medicines': prisma.medicine,
+        'batches': prisma.stockBatch,
+        'sales': prisma.sale,
+        'sale-items': prisma.saleItem,
+        'purchases': prisma.purchase,
+        'purchase-items': prisma.purchaseItem,
+        'suppliers': prisma.supplier,
+        'customers': prisma.customer,
+        'expenses': prisma.expense,
+        'expense-categories': prisma.expenseCategory,
+        'logs': prisma.auditLog,
+        'settings': prisma.pharmacySettings,
+        'payments': prisma.paymentHistory
+    };
+
+    const model = modelMapping[table];
+
+    if (!model) {
+        return res.status(400).json({ error: 'Invalid table name' });
+    }
+
+    try {
+        const data = await model.findMany({
+            take: 200, // Limit for safety
+            orderBy: { id: 'desc' }
+        });
+        res.json(data);
+    } catch (error: any) {
+        console.error(`Explorer error (${table}):`, error);
+        res.status(500).json({ error: `Failed to fetch data from ${table}: ${error.message}` });
+    }
+});
+
 export default router;

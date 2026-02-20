@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
     LayoutDashboard,
+    Database,
     Pill,
     ShoppingCart,
     Truck,
@@ -42,6 +43,7 @@ export default function Sidebar({ isMobile }: SidebarProps) {
         { name: "Managed Pharmacies", icon: Users, path: "/super-pharmacies", roles: ["SUPER_ADMIN"] },
         { name: "Activity Monitor", icon: Activity, path: "/super-activity", roles: ["SUPER_ADMIN"] },
         { name: "Terminal Purge", icon: ShieldAlert, path: "/super-terminal", roles: ["SUPER_ADMIN"] },
+        { name: "Master Database", icon: Database, path: "/super-database", roles: ["SUPER_ADMIN"] },
         { name: "Dashboard", icon: LayoutDashboard, path: "/", roles: ["ADMIN", "PHARMACIST", "STAFF"] },
         { name: "Inventory", icon: Pill, path: "/inventory", roles: ["ADMIN", "PHARMACIST"] },
         { name: "Billing", icon: ShoppingCart, path: "/billing", roles: ["ADMIN", "PHARMACIST", "STAFF"] },
