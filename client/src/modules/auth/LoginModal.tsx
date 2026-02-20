@@ -225,17 +225,21 @@ export default function LoginModal({ open, onOpenChange, trigger, message }: Log
                                 </Button>
                             </form>
 
-                            <div className="pt-6 border-t border-slate-100 flex flex-col items-center gap-4">
-                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Secure Access Point</p>
-                                <div className="flex gap-4">
-                                    <div className="flex flex-col items-center">
-                                        <span className="text-[10px] text-slate-400 uppercase font-bold">Default Admin</span>
-                                        <span className="text-xs font-mono font-bold text-blue-600">superadmin01</span>
+                            <div className="pt-8 border-t border-slate-100 dark:border-slate-800/50 flex flex-col items-center gap-4">
+                                <div className="flex items-center gap-4 sm:gap-6 flex-wrap justify-center">
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse"></div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">System Ready</span>
                                     </div>
-                                    <div className="w-[1px] h-8 bg-slate-100"></div>
-                                    <div className="flex flex-col items-center">
-                                        <span className="text-[10px] text-slate-400 uppercase font-bold">Pass</span>
-                                        <span className="text-xs font-mono font-bold text-blue-600">superadmin123</span>
+                                    <div className="h-4 w-[1px] bg-slate-100 dark:bg-slate-800 hidden sm:block"></div>
+                                    <div className="flex items-center gap-2">
+                                        <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">AES-256 Active</span>
+                                    </div>
+                                    <div className="h-4 w-[1px] bg-slate-100 dark:bg-slate-800 hidden sm:block"></div>
+                                    <div className="flex items-center gap-2">
+                                        <Zap className="h-3.5 w-3.5 text-amber-500" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Offline Node</span>
                                     </div>
                                 </div>
                             </div>
