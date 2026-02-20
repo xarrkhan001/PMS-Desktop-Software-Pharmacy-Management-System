@@ -554,14 +554,14 @@ export default function ManagedPharmacies() {
     }, [search]);
 
     return (
-        <div className="p-8 bg-[#f8fafc] min-h-screen space-y-8 pb-12">
-            <div className="flex justify-between items-center bg-indigo-950 px-12 py-12 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-indigo-500/20 transition-all duration-500"></div>
+        <div className="p-8 bg-[#fafafa] min-h-screen space-y-8 pb-12">
+            <div className="flex justify-between items-center bg-zinc-950 px-12 py-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl transition-all duration-500"></div>
                 <div className="relative z-10">
-                    <h1 className="text-4xl font-black tracking-tight flex items-center gap-4">
-                        Managed Pharmacies
+                    <h1 className="text-4xl font-black tracking-tight uppercase italic">
+                        Managed <span className="text-zinc-500 italic">Entities</span>
                     </h1>
-                    <p className="text-indigo-200/50 font-medium mt-1 text-xs italic tracking-wide">Monitor license status and technical health of client nodes.</p>
+                    <p className="text-zinc-500 font-bold mt-1 text-[10px] uppercase tracking-[0.3em]">Core Node Registry & Subscription Management</p>
                 </div>
 
                 {/* Onboarding Success Modal */}
@@ -616,7 +616,7 @@ export default function ManagedPharmacies() {
                 <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
                     <DialogTrigger asChild>
                         <Button className="bg-indigo-500 hover:bg-white hover:text-indigo-900 h-16 px-8 rounded-2xl font-black shadow-xl shadow-indigo-500/20 gap-3 text-lg transition-all active:scale-95 border-none">
-                            <Plus className="h-6 w-6" /> Onboard New
+                            <Plus className="h-6 w-6" /> onboard node
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[500px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
@@ -836,22 +836,28 @@ export default function ManagedPharmacies() {
             </div>
 
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
-                <CardHeader className="p-8 border-b border-slate-50 flex flex-row items-center justify-between">
+                <CardHeader className="p-8 border-b border-slate-100 flex flex-row items-center justify-between">
                     <div>
-                        <CardTitle className="text-2xl font-black">All Pharmacy Nodes</CardTitle>
+                        <CardTitle className="text-2xl font-black uppercase italic tracking-tighter">Node Directory</CardTitle>
+                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">Authorized instances currently active in the network</p>
                     </div>
                     <div className="flex gap-4">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <Input
-                                placeholder="Search client..."
+                                placeholder="Search by name or email..."
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
-                                className="pl-10 h-11 w-64 bg-slate-50 border-none rounded-xl font-medium"
+                                className="pl-10 h-11 w-72 bg-slate-50 border border-slate-100 rounded-xl font-bold text-xs"
                             />
                         </div>
-                        <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl" onClick={fetchPharmacies}>
-                            <RefreshCw className="h-4 w-4" />
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-11 w-11 rounded-xl border-slate-100"
+                            onClick={fetchPharmacies}
+                        >
+                            <RefreshCw className="h-4 w-4 text-slate-400" />
                         </Button>
                     </div>
                 </CardHeader>
@@ -859,11 +865,11 @@ export default function ManagedPharmacies() {
                     <Table>
                         <TableHeader className="bg-slate-50/50">
                             <TableRow className="border-none">
-                                <TableHead className="py-5 text-[10px] font-black uppercase tracking-widest pl-8">Pharmacy Details</TableHead>
-                                <TableHead className="py-5 text-[10px] font-black uppercase tracking-widest">Payment History</TableHead>
-                                <TableHead className="py-5 text-[10px] font-black uppercase tracking-widest">Status</TableHead>
-                                <TableHead className="py-5 text-[10px] font-black uppercase tracking-widest">Duration</TableHead>
-                                <TableHead className="pr-8 py-5 text-[10px] font-black uppercase tracking-widest text-right">Actions</TableHead>
+                                <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] pl-10 text-slate-400">Node Identifier</TableHead>
+                                <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Financials</TableHead>
+                                <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Protocol Status</TableHead>
+                                <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">License Span</TableHead>
+                                <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] pr-10 text-right text-slate-400">Management</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>

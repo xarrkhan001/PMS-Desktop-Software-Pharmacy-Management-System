@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
-    FileText, Printer, Search, Filter,
-    Calendar, History, Receipt,
-    ChevronRight, Download, Eye, XCircle, Trash2, CheckCircle, Trash
+    Printer, Search, Filter,
+    Calendar, History,
+    Download, Eye, XCircle, Trash2, CheckCircle
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +24,7 @@ export default function SalesHistoryPage() {
 
     // Get Pharmacy Name
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const pharmacyName = user.pharmacyName || "PharmPro Pharmacy";
+    const pharmacyName = user.pharmacyName || "MediCore PMS";
 
     useEffect(() => {
         fetchHistory();
@@ -347,7 +347,7 @@ export default function SalesHistoryPage() {
 
                         <div className="mt-8 text-center space-y-2">
                             <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 leading-none">Original Terminal Sale Verified</p>
-                            <p className="text-[12px] font-black italic tracking-tighter text-indigo-500 pt-2">Powered by PharmPro Enterprise</p>
+                            <p className="text-[12px] font-black italic tracking-tighter text-indigo-500 pt-2">Powered by MediCore PMS</p>
                         </div>
                     </div>
 
@@ -431,7 +431,7 @@ export default function SalesHistoryPage() {
 
                     <div className="mt-8 text-center space-y-2">
                         <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 leading-none">Original Terminal Sale Verified</p>
-                        <p className="text-[12px] font-black italic tracking-tighter text-indigo-500 pt-2">Powered by PharmPro Enterprise</p>
+                        <p className="text-[12px] font-black italic tracking-tighter text-indigo-500 pt-2">Powered by MediCore PMS</p>
                     </div>
                 </div>
             </div>

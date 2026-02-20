@@ -138,7 +138,7 @@ export default function SettingsPage() {
                                         <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Receipt Header Message</Label>
                                         <Input
                                             className="h-14 bg-slate-50 border-none rounded-2xl text-sm font-bold"
-                                            placeholder="e.g. Welcome to PharmPro"
+                                            placeholder="e.g. Welcome to MediCore PMS"
                                             value={settings.billHeader}
                                             onChange={(e) => setSettings({ ...settings, billHeader: e.target.value })}
                                         />

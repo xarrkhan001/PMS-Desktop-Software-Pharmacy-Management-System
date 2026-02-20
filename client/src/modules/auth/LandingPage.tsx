@@ -6,12 +6,12 @@ import {
     ShieldCheck,
     Zap,
     ArrowRight,
-    LayoutDashboard,
-    Lock
+    Lock,
+    Database
 } from "lucide-react";
 import LoginModal from "./LoginModal";
 
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 
 export default function LandingPage() {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -28,152 +28,211 @@ export default function LandingPage() {
         }
     }, [location]);
 
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20);
+        };
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
     return (
         <div className="min-h-screen bg-white dark:bg-slate-950 font-sans selection:bg-blue-100 dark:selection:bg-blue-900/30">
             <LoginModal open={isLoginOpen} onOpenChange={setIsLoginOpen} message={loginMessage} />
 
             {/* Navigation */}
-            <nav className="fixed top-0 w-full z-40 border-b border-slate-200 bg-white/80 backdrop-blur-lg px-6 lg:px-20 h-16 flex items-center justify-between transition-all duration-300">
-                <div className="flex items-center gap-2">
-                    <div className="h-9 w-9 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm border border-primary/20">
-                        <Pill className="h-5 w-5 text-primary" />
+            <nav className={`fixed top-0 w-full z-50 transition-all duration-500 px-6 lg:px-20 ${scrolled
+                ? "h-20 bg-white/70 dark:bg-slate-950/70 backdrop-blur-2xl border-b border-slate-200/50 dark:border-slate-800/50 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)]"
+                : "h-24 bg-transparent border-transparent"
+                } flex items-center justify-between`}>
+                <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                    <div className="h-10 w-10 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-200 dark:shadow-blue-900/20 group-hover:rotate-12 transition-transform duration-500">
+                        <Pill className="h-5 w-5 text-white" />
                     </div>
-                    <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Pharm<span className="text-blue-600 dark:text-blue-500">Pro</span></span>
+                    <div className="flex flex-col leading-none">
+                        <span className="text-xl font-black italic tracking-tighter text-slate-900 dark:text-white uppercase">MediCore <span className="text-blue-600">PMS</span></span>
+                        <span className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Terminal</span>
+                    </div>
                 </div>
-                <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600 dark:text-slate-400">
-                    <a href="#features" className="hover:text-primary transition-colors">Features</a>
-                    <a href="#security" className="hover:text-primary transition-colors">Security</a>
-                    <a href="#enterprise" className="hover:text-primary transition-colors">Enterprise</a>
+
+                <div className="hidden lg:flex items-center gap-10">
+                    {['Features', 'Security', 'Enterprise'].map((item) => (
+                        <a
+                            key={item}
+                            href={`#${item.toLowerCase()}`}
+                            className="text-xs font-black uppercase tracking-[0.2em] text-slate-500 hover:text-blue-600 transition-colors relative group"
+                        >
+                            {item}
+                            <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-blue-600 transition-all group-hover:w-full"></span>
+                        </a>
+                    ))}
                 </div>
-                <div className="flex items-center gap-4">
+
+                <div className="flex items-center gap-6">
+                    <Link to="/docs" className="hidden sm:block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                        Documentation
+                    </Link>
                     <Button
-                        variant="ghost"
-                        size="sm"
-                        className="hidden md:flex text-slate-600 hover:text-primary hover:bg-primary/5 rounded-full"
-                        onClick={() => window.location.href = '#features'}
-                    >
-                        Learn More
-                    </Button>
-                    <Button
-                        className="rounded-full px-8 h-11 shadow-2xl shadow-blue-500/30 bg-blue-600 hover:bg-blue-700 text-white transition-all active:scale-95 font-bold border-none"
+                        className="rounded-2xl px-8 h-12 shadow-[0_20px_40px_-10px_rgba(37,99,235,0.4)] bg-blue-600 hover:bg-blue-700 text-white transition-all active:scale-95 font-black uppercase italic tracking-widest text-[10px] border-none flex items-center gap-3 group"
                         onClick={() => setIsLoginOpen(true)}
                     >
-                        Login to Portal
+                        Login to Portal <div className="h-1.5 w-1.5 rounded-full bg-blue-200 animate-pulse group-hover:bg-white" />
                     </Button>
                 </div>
             </nav>
 
             <main>
                 {/* Hero Section */}
-                <section className="relative pt-28 pb-24 lg:pt-36 lg:pb-40 px-6 lg:px-20 overflow-hidden min-h-[90vh] flex items-center">
-                    {/* Background Hero Image with Deep Overlay */}
+                <section className="relative pt-20 pb-20 lg:pt-28 lg:pb-32 px-6 lg:px-20 overflow-hidden bg-white dark:bg-slate-950">
+                    {/* Background Visual Elements */}
                     <div className="absolute inset-0 z-0">
-                        <img
-                            src="https://images.unsplash.com/photo-1631549916768-4119b2e5f926?q=80&w=2079&auto=format&fit=crop"
-                            alt="Professional Pharmacy Environment"
-                            className="w-full h-full object-cover object-center"
-                        />
-                        {/* Multi-layered Light Premium Overlays */}
-                        <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px]"></div>
-                        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-blue-50/20"></div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
+                        {/* Soft Mesh Gradients */}
+                        <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-100/30 dark:bg-blue-900/10 rounded-full blur-[150px]"></div>
+                        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-emerald-100/30 dark:bg-emerald-900/10 rounded-full blur-[150px]"></div>
+
+                        {/* Subtle Grid Pattern */}
+                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] brightness-0 invert dark:invert-0"></div>
+                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]"></div>
                     </div>
 
-                    {/* Animated Particles/Orbs for Light Theme */}
-                    <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-blue-400/10 rounded-full blur-[120px] pointer-events-none animate-pulse-slow"></div>
-                    <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-400/10 rounded-full blur-[120px] pointer-events-none"></div>
-
-                    <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16 relative z-10 w-full">
-                        {/* Left Content */}
-                        <div className="flex-1 text-center lg:text-left space-y-6 animate-fade-in-up">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600/5 backdrop-blur-md text-blue-600 border border-blue-200 text-xs font-bold uppercase tracking-[0.2em] shadow-sm">
-                                <ShieldCheck className="h-4 w-4 text-blue-600" />
-                                <span>#1 Professional Pharmacy Software in Pakistan</span>
-                            </div>
-                            <h1 className="text-5xl lg:text-[5.5rem] font-black tracking-tight text-slate-900 leading-[0.95]">
-                                Manage Your <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-800 italic">Pharmacy.</span>
-                            </h1>
-                            <p className="text-lg lg:text-xl text-slate-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium opacity-90">
-                                The ultimate desktop management system for modern healthcare.
-                                Secure local storage, high-speed billing, and zero internet dependency.
-                            </p>
-
-                            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                                <Button size="lg" className="h-16 px-10 rounded-2xl text-lg shadow-[0_20px_50px_-10px_rgba(37,99,235,0.5)] bg-blue-600 hover:bg-blue-500 text-white transition-all hover:-translate-y-1 active:scale-95 font-black flex items-center gap-3 group border-none" onClick={() => setIsLoginOpen(true)}>
-                                    Launch Software <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                                </Button>
-                                <Button variant="outline" size="lg" className="h-16 px-10 rounded-2xl text-lg border-2 border-slate-200 hover:border-blue-600 hover:bg-white hover:text-blue-600 bg-white/50 backdrop-blur-md font-bold text-slate-900 transition-all">
-                                    Product Demo
-                                </Button>
+                    <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-20 relative z-10">
+                        {/* Left Side: Copy & Actions */}
+                        <div className="flex-1 space-y-10 text-center lg:text-left">
+                            <div className="space-y-4">
+                                <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-black uppercase tracking-[0.25em] shadow-2xl animate-fade-in-down">
+                                    <div className="h-4 w-4 rounded-full bg-blue-500 animate-pulse"></div>
+                                    <span>Terminal V1.0 Stable Build</span>
+                                </div>
+                                <h1 className="text-6xl lg:text-[7.5rem] font-black italic tracking-tighter text-slate-900 dark:text-white leading-[0.85] uppercase">
+                                    Pharma <br />
+                                    <span className="text-blue-600 dark:text-blue-500">Command.</span>
+                                </h1>
+                                <p className="text-xl lg:text-2xl text-slate-500 dark:text-slate-400 font-medium leading-tight max-w-xl mx-auto lg:mx-0">
+                                    The definitive <span className="text-blue-600 font-black">PMS System</span> for modern pharmacies.
+                                    <span className="text-slate-900 dark:text-white"> Zero latency. Total security.</span>
+                                </p>
                             </div>
 
-                            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-8 pt-2">
-                                <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
-                                    <CheckCircle2 className="h-5 w-5 text-blue-600" />
-                                    <span className="uppercase tracking-widest">Offline Ready</span>
+                            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-5">
+                                <Button
+                                    size="lg"
+                                    className="h-20 px-12 rounded-[2rem] text-xl shadow-[0_25px_60px_-15px_rgba(37,99,235,0.4)] bg-blue-600 hover:bg-blue-700 text-white transition-all transform hover:-translate-y-1 active:scale-95 font-black uppercase italic tracking-tighter gap-4"
+                                    onClick={() => setIsLoginOpen(true)}
+                                >
+                                    Launch Terminal <ArrowRight className="h-6 w-6" />
+                                </Button>
+                                <Link to="/docs" className="w-full sm:w-auto">
+                                    <Button
+                                        variant="outline"
+                                        size="lg"
+                                        className="h-20 px-12 rounded-[2rem] text-xl border-2 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 font-black uppercase italic tracking-tighter text-slate-900 dark:text-white transition-all w-full"
+                                    >
+                                        System Guide
+                                    </Button>
+                                </Link>
+                            </div>
+
+                            {/* Trust Badges */}
+                            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-10 pt-4 opacity-80 transition-all">
+                                <div className="flex items-center gap-4">
+                                    <div className="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                                        <Database className="h-5 w-5 text-blue-600" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Database</span>
+                                        <span className="text-sm font-black text-slate-900 dark:text-white">AES-256 Ledger</span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
-                                    <CheckCircle2 className="h-5 w-5 text-blue-600" />
-                                    <span className="uppercase tracking-widest">AES-256 Auth</span>
+                                <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 hidden sm:block"></div>
+                                <div className="flex items-center gap-4">
+                                    <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+                                        <Zap className="h-5 w-5 text-emerald-600" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Performance</span>
+                                        <span className="text-sm font-black text-slate-900 dark:text-white">Zero Latency</span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-3 text-sm font-bold text-slate-600">
-                                    <CheckCircle2 className="h-5 w-5 text-blue-600" />
-                                    <span className="uppercase tracking-widest">Enterprise Support</span>
+                                <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 hidden sm:block"></div>
+                                <div className="flex items-center gap-4">
+                                    <div className="h-10 w-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
+                                        <ShieldCheck className="h-5 w-5 text-indigo-600" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Compliance</span>
+                                        <span className="text-sm font-black text-slate-900 dark:text-white">PCS & FBR Ready</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Right Content: Dashboard Preview */}
-                        <div className="w-full flex-1 relative animate-slide-up-fade lg:block hidden">
-                            <div className="relative z-10 bg-blue-600/5 backdrop-blur-3xl rounded-[2.5rem] shadow-[0_40px_80px_-15px_rgba(30,58,138,0.2)] border border-blue-100 p-4 transform lg:rotate-3 hover:rotate-0 transition-all duration-1000 ease-out group">
-                                <div className="bg-slate-900 rounded-[2rem] overflow-hidden border border-blue-900/10 min-h-[460px] flex flex-col shadow-inner">
-                                    {/* Mock Header */}
-                                    <div className="h-16 border-b border-white/5 bg-slate-900/50 flex items-center px-8 gap-3">
+                        {/* Right Side: Advanced Application Mock */}
+                        <div className="flex-1 relative w-full lg:max-w-[700px]">
+                            {/* Main App Window */}
+                            <div className="relative z-10 bg-slate-900 rounded-[3rem] p-3 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border-[12px] border-slate-800 overflow-hidden transform lg:rotate-2 hover:rotate-0 transition-all duration-1000 group">
+                                <div className="bg-slate-900 rounded-[2rem] flex flex-col h-[500px]">
+                                    {/* App Header */}
+                                    <div className="h-14 border-b border-white/5 flex items-center px-10 gap-3">
                                         <div className="flex gap-2">
-                                            <div className="h-3 w-3 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
-                                            <div className="h-3 w-3 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
-                                            <div className="h-3 w-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                                            <div className="h-2.5 w-2.5 rounded-full bg-slate-700"></div>
+                                            <div className="h-2.5 w-2.5 rounded-full bg-slate-700"></div>
+                                            <div className="h-2.5 w-2.5 rounded-full bg-slate-700"></div>
                                         </div>
-                                        <div className="ml-6 h-4 w-48 bg-white/10 rounded-full animate-pulse"></div>
+                                        <div className="ml-6 h-3 w-40 bg-white/5 rounded-full"></div>
                                     </div>
-                                    {/* Mock Content */}
-                                    <div className="p-10 grid grid-cols-2 gap-8">
-                                        <div className="col-span-2 h-44 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-3xl shadow-2xl p-8 text-white flex flex-col justify-between relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-700">
-                                            <div className="absolute -top-10 -right-10 opacity-10">
-                                                <LayoutDashboard className="h-48 w-48" />
+
+                                    {/* Dashboard Body */}
+                                    <div className="p-8 space-y-8">
+                                        <div className="grid grid-cols-2 gap-6">
+                                            <div className="col-span-2 h-48 bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-800 rounded-[2.5rem] p-8 text-white flex flex-col justify-between shadow-2xl relative overflow-hidden">
+                                                <div className="absolute top-0 right-0 p-8 opacity-10">
+                                                    <Zap className="h-32 w-32" />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-blue-200">Total Net Liquidity</p>
+                                                    <p className="text-4xl font-black tracking-tighter">Rs. 842,500.00</p>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-[10px] bg-white/20 px-3 py-1 rounded-full font-black uppercase tracking-widest">+ 12.5% Today</span>
+                                                </div>
                                             </div>
-                                            <div className="text-xs font-bold uppercase tracking-widest text-blue-200">Revenue Metrics</div>
-                                            <div className="text-5xl font-black tracking-tighter">Rs. 2.48M</div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="text-[10px] bg-white/20 w-fit px-3 py-1 rounded-full font-black uppercase">+18.2% Growth</div>
-                                                <span className="text-xs font-bold text-blue-100 opacity-60 italic">Real-time stats</span>
+                                            <div className="h-32 bg-white/5 border border-white/10 rounded-3xl p-6">
+                                                <div className="h-10 w-10 bg-emerald-500/10 text-emerald-500 rounded-xl flex items-center justify-center mb-4">
+                                                    <CheckCircle2 className="h-6 w-6" />
+                                                </div>
+                                                <div className="h-2 w-16 bg-white/10 rounded-full"></div>
                                             </div>
-                                        </div>
-                                        <div className="h-32 bg-white/5 border border-white/10 rounded-3xl p-6 shadow-sm hover:shadow-2xl transition-all duration-300">
-                                            <div className="h-12 w-12 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-4 border border-blue-500/20">
-                                                <Pill className="h-7 w-7" />
+                                            <div className="h-32 bg-white/5 border border-white/10 rounded-3xl p-6">
+                                                <div className="h-10 w-10 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center mb-4">
+                                                    <Pill className="h-6 w-6" />
+                                                </div>
+                                                <div className="h-2 w-16 bg-white/10 rounded-full"></div>
                                             </div>
-                                            <div className="h-3 w-24 bg-white/10 rounded-full"></div>
-                                        </div>
-                                        <div className="h-32 bg-white/5 border border-white/10 rounded-3xl p-6 shadow-sm hover:shadow-2xl transition-all duration-300">
-                                            <div className="h-12 w-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4 border border-emerald-500/20">
-                                                <Zap className="h-7 w-7" />
-                                            </div>
-                                            <div className="h-3 w-24 bg-white/10 rounded-full"></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Floating Check Badge */}
-                            <div className="absolute -bottom-6 -left-6 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-slate-100 dark:border-slate-700 flex items-center gap-4 animate-bounce-slow z-20">
-                                <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center shadow-inner">
-                                    <ShieldCheck className="h-7 w-7 text-emerald-600" />
+                            {/* Floating Integration Cards */}
+                            <div className="absolute top-4 -right-4 z-20 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 animate-bounce-slow flex items-center gap-3 group hover:scale-105 transition-transform">
+                                <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                                    <ShieldCheck className="h-5 w-5" />
                                 </div>
-                                <div className="pr-4">
-                                    <p className="font-bold text-slate-900 dark:text-white">PCR Verified</p>
-                                    <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">License Active</p>
+                                <div>
+                                    <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Auth Level</p>
+                                    <p className="text-xs font-black text-slate-900 dark:text-white">Military Grade</p>
+                                </div>
+                            </div>
+
+                            <div className="absolute bottom-4 -left-4 z-20 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 animate-slide-right flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-200">
+                                    <Zap className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Sync Status</p>
+                                    <p className="text-xs font-black text-slate-900 dark:text-white">Optimal (0ms)</p>
                                 </div>
                             </div>
                         </div>
@@ -295,19 +354,63 @@ export default function LandingPage() {
             </main>
 
             {/* Footer */}
-            <footer className="py-12 px-6 lg:px-20 border-t dark:border-slate-800 bg-white dark:bg-slate-950">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div className="flex items-center gap-2 opacity-50">
-                        <Pill className="h-5 w-5" />
-                        <span className="text-sm font-semibold">PharmPro © 2026</span>
+            <footer className="py-16 px-6 lg:px-20 border-t dark:border-slate-800 bg-white dark:bg-slate-950">
+                <div className="max-w-7xl mx-auto">
+                    <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-12">
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 bg-blue-600/10 rounded-lg flex items-center justify-center">
+                                    <Pill className="h-4 w-4 text-blue-600" />
+                                </div>
+                                <span className="text-xl font-black italic tracking-tighter">MEDICORE <span className="text-blue-600">PMS</span></span>
+                            </div>
+                            <p className="text-sm text-slate-500 max-w-xs leading-relaxed font-medium">
+                                The next generation of pharmacy management. Built for speed, security, and absolute reliability.
+                            </p>
+                        </div>
+
+                        {/* Developer Info */}
+                        <div className="space-y-4">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Architect & Developer</h4>
+                            <div className="flex items-center gap-4 group">
+                                <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center text-white font-black text-lg shadow-xl shadow-slate-200">
+                                    A
+                                </div>
+                                <div>
+                                    <p className="text-sm font-black text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">Abuzar</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Software Engineer</p>
+                                    <div className="mt-3 space-y-1">
+                                        <a href="mailto:abuzarktk123@gmail.com" className="text-[10px] text-blue-500 hover:underline font-bold block">abuzarktk123@gmail.com</a>
+                                        <p className="text-[10px] text-slate-400 font-bold">+92 317 8521144</p>
+                                        <p className="text-[10px] text-slate-400 font-bold">+92 342 9752032</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-12 flex-wrap">
+                            <div className="space-y-4">
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">System Resources</h4>
+                                <ul className="space-y-2 text-xs font-bold text-slate-600 dark:text-slate-400">
+                                    <li><Link to="/docs" className="hover:text-blue-600 transition-colors">Documentation</Link></li>
+                                    <li><Link to="/privacy" className="hover:text-blue-600 transition-colors">Privacy Protocol</Link></li>
+                                    <li><Link to="/terms" className="hover:text-blue-600 transition-colors">Service Terms</Link></li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex gap-8 text-xs text-slate-500 font-medium">
-                        <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
-                        <a href="#" className="hover:text-primary transition-colors">Terms of Service</a>
-                        <a href="#" className="hover:text-primary transition-colors">Documentation</a>
+
+                    <div className="pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            © 2026 MediCore Technologies. All Rights Reserved.
+                        </div>
+                        <div className="flex items-center gap-6">
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter italic">V 1.0.4 Stable Build</span>
+                        </div>
                     </div>
                 </div>
             </footer>
-        </div>
+        </div >
     );
 }

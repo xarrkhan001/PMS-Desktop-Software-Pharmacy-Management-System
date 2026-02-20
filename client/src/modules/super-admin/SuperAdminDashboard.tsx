@@ -99,49 +99,52 @@ export default function SuperAdminDashboard() {
     const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
     return (
-        <div className="p-8 bg-[#f8fafc] min-h-screen space-y-8 pb-12">
-            {/* Header: Master UI Section - Restored Rounding */}
-            <div className="bg-indigo-950 px-12 py-12 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full -mr-40 -mt-20 blur-[80px]"></div>
+        <div className="p-8 bg-[#fafafa] min-h-screen space-y-8 pb-12">
+            {/* Header: Master UI Section - Sovereign Look */}
+            <div className="bg-zinc-950 px-12 py-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full -mr-40 -mt-20 blur-[100px]"></div>
 
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="space-y-1">
                         <div className="flex items-center gap-2 mb-1">
-                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-300/60">System Live Update</span>
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Live Infrastructure Status</span>
                         </div>
-                        <h1 className="text-4xl font-black tracking-tighter flex items-center gap-3">
-                            PharmPro <span className="bg-gradient-to-r from-indigo-400 to-indigo-200 bg-clip-text text-transparent">Master Control</span>
+                        <h1 className="text-4xl font-black tracking-tighter uppercase italic">
+                            System <span className="text-zinc-500 italic">Sovereign</span>
                         </h1>
-                        <p className="text-indigo-200/50 font-medium text-xs italic tracking-wide">
-                            High-fidelity technical monitoring for the global PharmaCloud ecosystem.
+                        <p className="text-zinc-500 font-bold text-[10px] uppercase tracking-widest leading-none">
+                            High-fidelity technical monitoring for global pharmaceutical nodes.
                         </p>
                     </div>
 
-                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 px-6 py-3 rounded-2xl text-center shadow-inner">
-                        <p className="text-[9px] font-black text-indigo-300/80 uppercase mb-0.5 tracking-wider">Health Score</p>
-                        <p className="text-2xl font-black tabular-nums">98.4%</p>
+                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 px-8 py-4 rounded-3xl text-center">
+                        <p className="text-[10px] font-black text-zinc-500 uppercase mb-0.5 tracking-[0.2em]">Network Health</p>
+                        <p className="text-3xl font-black tabular-nums tracking-tighter text-emerald-500">98.4<span className="text-xs opacity-50 ml-1">%</span></p>
                     </div>
                 </div>
             </div>
 
-            {/* Stats Grid */}
+            {/* Stats Grid - Cleaner & Sober */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
                 {[
-                    { label: "Partners", val: pharmacies.length, icon: Users, color: "indigo" },
+                    { label: "Total Nodes", val: pharmacies.length, icon: Users, color: "zinc" },
                     { label: "Operational", val: activeCount, icon: Power, color: "emerald" },
-                    { label: "Suspended", val: blockedCount, icon: ShieldAlert, color: "red" },
-                    { label: "Pending", val: "03", icon: CircleDashed, color: "amber" },
-                    { label: "Net Revenue", val: `Rs. ${totalRevenue.toLocaleString()}`, icon: Wallet, color: "indigo" }
+                    { label: "Suspended", val: blockedCount, icon: ShieldAlert, color: "rose" },
+                    { label: "Onboarding", val: "03", icon: CircleDashed, color: "amber" },
+                    { label: "Net Assets", val: `Rs. ${totalRevenue.toLocaleString()}`, icon: Wallet, color: "zinc" }
                 ].map((stat, i) => (
-                    <Card key={i} className="border-none shadow-sm rounded-3xl bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden border-b-2 border-b-slate-100">
-                        <CardContent className="p-5 relative flex items-center gap-4">
-                            <div className={`h-10 w-10 rounded-xl bg-${stat.color}-500/10 flex items-center justify-center text-${stat.color}-600 shrink-0`}>
-                                <stat.icon className="h-5 w-5" />
+                    <Card key={i} className="border border-slate-200/50 shadow-sm rounded-[2rem] bg-white hover:shadow-md transition-all duration-500 group overflow-hidden">
+                        <CardContent className="p-6 relative flex flex-col gap-4">
+                            <div className="flex justify-between items-start">
+                                <div className={`h-11 w-11 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-900 border border-slate-100`}>
+                                    <stat.icon className="h-5 w-5" />
+                                </div>
+                                <div className="h-2 w-2 rounded-full bg-slate-200 group-hover:bg-emerald-500 transition-colors"></div>
                             </div>
                             <div>
-                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{stat.label}</p>
-                                <p className="text-xl font-black text-slate-900 tracking-tight">{stat.val}</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{stat.label}</p>
+                                <p className="text-2xl font-black text-slate-950 tracking-tighter tabular-nums">{stat.val}</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -202,36 +205,43 @@ export default function SuperAdminDashboard() {
             </div>
 
             {/* Bottom Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="border-none shadow-lg rounded-[2rem] bg-[#0f172a] p-6 text-white text-center">
-                    <h4 className="text-sm font-black tracking-widest uppercase text-indigo-400 mb-4">Network Integrity</h4>
-                    <div className="h-[140px] w-full relative mb-4">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie data={piezoData} cx="50%" cy="50%" innerRadius={45} outerRadius={60} paddingAngle={8} dataKey="value" stroke="none">
-                                    {piezoData.map((entry, index) => <Cell key={`cell-pie-${index}`} fill={entry.color} />)}
-                                </Pie>
-                            </PieChart>
-                        </ResponsiveContainer>
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                            <p className="text-2xl font-black mb-0">{pharmacies.length}</p>
-                            <p className="text-[7px] font-bold text-slate-500 tracking-[0.2em]">NODES</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-12">
+                <Card className="border border-slate-200 bg-zinc-950 p-8 rounded-[2.5rem] text-white text-center shadow-2xl relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent"></div>
+                    <div className="relative z-10">
+                        <h4 className="text-[10px] font-black tracking-[0.3em] uppercase text-zinc-500 mb-6">Network Distribution</h4>
+                        <div className="h-[140px] w-full relative mb-6">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={piezoData} cx="50%" cy="50%" innerRadius={50} outerRadius={65} paddingAngle={10} dataKey="value" stroke="none">
+                                        {piezoData.map((entry, index) => <Cell key={`cell-pie-${index}`} fill={entry.color} />)}
+                                    </Pie>
+                                </PieChart>
+                            </ResponsiveContainer>
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                                <p className="text-3xl font-black mb-0 tracking-tighter">{pharmacies.length}</p>
+                                <p className="text-[8px] font-black text-slate-600 tracking-[0.2em] -mt-1">UNITS</p>
+                            </div>
                         </div>
-                    </div>
-                    <div className="flex justify-center gap-4">
-                        <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-emerald-500"></div><span className="text-[10px] font-bold text-slate-400 uppercase">Live</span></div>
-                        <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-red-500"></div><span className="text-[10px] font-bold text-slate-400 uppercase">Down</span></div>
+                        <div className="flex justify-center gap-6">
+                            <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-emerald-500"></div><span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Active</span></div>
+                            <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-rose-500"></div><span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Locked</span></div>
+                        </div>
                     </div>
                 </Card>
 
                 <div className="lg:col-span-2">
-                    <div className="p-8 bg-gradient-to-br from-indigo-700 to-indigo-900 rounded-[2rem] text-white flex flex-col justify-center h-full relative overflow-hidden group shadow-xl">
-                        <ShieldCheck className="absolute right-0 bottom-0 h-40 w-40 -mr-10 -mb-10 opacity-10 group-hover:scale-110 transition-transform" />
-                        <h4 className="text-2xl font-black tracking-tight mb-2">Network Status: Optimal</h4>
-                        <p className="text-indigo-100/60 text-xs font-medium max-w-md leading-relaxed">
+                    <div className="p-10 bg-white border border-slate-200 rounded-[2.5rem] text-slate-900 flex flex-col justify-center h-full relative overflow-hidden group shadow-sm">
+                        <ShieldCheck className="absolute right-0 bottom-0 h-48 w-48 -mr-12 -mb-12 opacity-[0.03] group-hover:scale-110 transition-transform duration-1000" />
+                        <h4 className="text-2xl font-black tracking-tighter uppercase italic mb-3 text-zinc-950">System Integrity: <span className="text-emerald-500">Optimal</span></h4>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest max-w-sm leading-relaxed mb-6">
                             All global nodes are operating within established performance parameters.
-                            Security protocols active and verified.
+                            Hardware binding verified across 100% of the active network.
                         </p>
+                        <div className="flex gap-3">
+                            <div className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400">Security: Tier 1</div>
+                            <div className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400">Latency: 12ms</div>
+                        </div>
                     </div>
                 </div>
             </div>

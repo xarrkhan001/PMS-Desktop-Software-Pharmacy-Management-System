@@ -72,8 +72,8 @@ export default function BillingPage() {
 
     // Get Pharmacy Name from Local Storage
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const pharmacyName = user.pharmacyName || "PharmPro Pharmacy";
-    const [paymentMethod, setPaymentMethod] = useState<"CASH">("CASH");
+    const pharmacyName = user.pharmacyName || "MediCore PMS";
+    const [paymentMethod] = useState<"CASH">("CASH");
     const [customerName, setCustomerName] = useState("Walk-in Customer");
     const [customerAddress, setCustomerAddress] = useState("");
     const [customerId, setCustomerId] = useState<number | null>(null);
@@ -899,7 +899,7 @@ export default function BillingPage() {
                         <div className="mt-8 text-center space-y-2">
                             <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Terminal: {sessionId}-ADMIN</p>
                             <p className="text-[10px] font-black uppercase tracking-tight text-slate-500">{pmsSettings?.billFooter || "**** Non-Refundable if Seal Broken ****"}</p>
-                            <p className="text-[12px] font-black italic tracking-tighter text-indigo-500 print-color-exact">Thank You for Choosing PharmPro</p>
+                            <p className="text-[12px] font-black italic tracking-tighter text-indigo-500 print-color-exact">Thank You for Choosing MediCore PMS</p>
                         </div>
                         <Button className="w-full mt-6 h-12 rounded-2xl bg-slate-900 text-white font-black uppercase italic tracking-tighter" onClick={() => window.print()}>
                             <Printer className="h-4 w-4 mr-2" /> Print Receipt

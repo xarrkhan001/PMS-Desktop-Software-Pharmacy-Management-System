@@ -160,26 +160,26 @@ export default function TerminalControl() {
     }, [isAuthorized]);
 
     return (
-        <div className="p-8 bg-[#f8fafc] min-h-screen space-y-8 pb-12">
-            {/* Header: High Security Area */}
-            <div className="bg-red-950 px-12 py-12 rounded-3xl text-white shadow-2xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-80 h-80 bg-red-500/10 rounded-full -mr-40 -mt-20 blur-[80px]"></div>
+        <div className="p-8 bg-[#fafafa] min-h-screen space-y-8 pb-12">
+            {/* Header: High Security Area - Sovereign Command */}
+            <div className="bg-zinc-950 px-12 py-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500/5 rounded-full -mr-40 -mt-20 blur-[100px]"></div>
 
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="space-y-1">
                         <div className="flex items-center gap-2 mb-1">
-                            <div className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse"></div>
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-300/60">Restricted Access</span>
+                            <div className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></div>
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Restricted Command Interface</span>
                         </div>
-                        <h1 className="text-4xl font-black tracking-tighter flex items-center gap-3">
-                            Terminal <span className="text-red-400">Purge Control</span>
+                        <h1 className="text-4xl font-black tracking-tighter uppercase italic">
+                            Terminal <span className="text-rose-500 italic">Access</span>
                         </h1>
-                        <p className="text-red-200/50 font-medium text-xs italic tracking-wide">
-                            Critical maintenance tools for the global PharmaCloud ecosystem.
+                        <p className="text-zinc-500 font-bold text-[10px] uppercase tracking-widest leading-none">
+                            Critical maintenance tools for the global pharmaceutical ecosystem.
                         </p>
                     </div>
 
-                    <div className="h-16 w-16 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-400 border border-red-500/20">
+                    <div className="h-16 w-16 bg-white/5 rounded-2xl flex items-center justify-center text-rose-500 border border-white/10 transition-all hover:bg-white/10">
                         <ShieldAlert className="h-8 w-8" />
                     </div>
                 </div>
@@ -269,7 +269,6 @@ export default function TerminalControl() {
                                                     </span>
                                                 </div>
                                                 <div className="flex gap-4 mt-1 text-xs text-slate-500">
-                                                    <span>License: <strong>{pharmacy.licenseNo || "N/A"}</strong></span>
                                                     <span>Users: <strong>{pharmacy.users.length}</strong></span>
                                                     <span>ID: <strong>#{pharmacy.id}</strong></span>
                                                 </div>

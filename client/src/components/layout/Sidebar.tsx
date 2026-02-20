@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import LogoutConfirmModal from "./LogoutConfirmModal";
 
 interface SidebarProps {
     isMobile?: boolean;
@@ -29,14 +30,17 @@ interface SidebarProps {
 export default function Sidebar({ isMobile }: SidebarProps) {
     const location = useLocation();
     const navigate = useNavigate();
-    const [isExpanded, setIsExpanded] = useState(false);
-
-    const handleLogout = () => {
-        localStorage.removeItem("isAuthenticated");
-        navigate("/login");
-    };
 
     const userRole = localStorage.getItem("userRole")?.toUpperCase();
+    const isSuperAdmin = userRole === "SUPER_ADMIN";
+    const [isExpanded, setIsExpanded] = useState(isSuperAdmin);
+
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+    const handleLogout = () => {
+        localStorage.clear();
+        navigate("/login");
+    };
 
     const allNavItems = [
         { name: "Super Admin Control", icon: ShieldCheck, path: "/super-admin", roles: ["SUPER_ADMIN"] },
@@ -62,20 +66,32 @@ export default function Sidebar({ isMobile }: SidebarProps) {
     return (
         <div
             className={cn(
-                "flex flex-col h-full bg-white dark:bg-slate-900 border-r dark:border-slate-800 transition-all duration-300 ease-in-out",
+                "flex flex-col h-full transition-all duration-300 ease-in-out",
+                isSuperAdmin
+                    ? "bg-zinc-950 border-r border-white/5"
+                    : "bg-white dark:bg-slate-900 border-r dark:border-slate-800",
                 isMobile ? "w-full" : isExpanded ? "w-64" : "w-20"
             )}
-            onMouseEnter={() => !isMobile && setIsExpanded(true)}
-            onMouseLeave={() => !isMobile && setIsExpanded(false)}
+            onMouseEnter={() => !isMobile && !isSuperAdmin && setIsExpanded(true)}
+            onMouseLeave={() => !isMobile && !isSuperAdmin && setIsExpanded(false)}
         >
             {/* Logo Section */}
-            <div className="h-16 flex items-center px-4 border-b dark:border-slate-800">
-                <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Pill className="h-5 w-5 text-primary" />
+            <div className={cn(
+                "h-16 flex items-center px-4 border-b",
+                isSuperAdmin ? "border-white/5" : "dark:border-slate-800"
+            )}>
+                <div className={cn(
+                    "h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0",
+                    isSuperAdmin ? "bg-white/5" : "bg-primary/10"
+                )}>
+                    <Pill className={cn("h-5 w-5", isSuperAdmin ? "text-zinc-400" : "text-primary")} />
                 </div>
                 {(isExpanded || isMobile) && (
-                    <span className="ml-3 text-xl font-bold text-slate-900 dark:text-white whitespace-nowrap overflow-hidden">
-                        Pharm<span className="text-blue-600">Pro</span>
+                    <span className={cn(
+                        "ml-3 text-xl font-black uppercase italic tracking-tighter whitespace-nowrap overflow-hidden",
+                        isSuperAdmin ? "text-white" : "text-slate-900 dark:text-white"
+                    )}>
+                        MediCore<span className={isSuperAdmin ? "text-zinc-500" : "text-blue-600"}> PMS</span>
                     </span>
                 )}
             </div>
@@ -90,23 +106,33 @@ export default function Sidebar({ isMobile }: SidebarProps) {
                                 <Link
                                     to={item.path}
                                     className={cn(
-                                        "flex items-center px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative",
+                                        "flex items-center px-3 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-200 group relative",
                                         isActive
-                                            ? "bg-primary/10 text-primary dark:bg-primary/20"
-                                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                                            ? isSuperAdmin
+                                                ? "bg-white/10 text-white"
+                                                : "bg-primary/10 text-primary dark:bg-primary/20"
+                                            : isSuperAdmin
+                                                ? "text-zinc-500 hover:bg-white/5 hover:text-white"
+                                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
                                     )}
                                     title={!isExpanded && !isMobile ? item.name : undefined}
                                 >
-                                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                                    <item.icon className={cn("h-4 w-4 flex-shrink-0", isActive && isSuperAdmin && "text-emerald-500")} />
                                     {(isExpanded || isMobile) && (
                                         <span className="ml-3 whitespace-nowrap">{item.name}</span>
                                     )}
 
                                     {/* Tooltip for collapsed state */}
                                     {!isExpanded && !isMobile && (
-                                        <div className="absolute left-full ml-6 px-3 py-2 bg-slate-900 text-white text-xs font-semibold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-xl">
+                                        <div className={cn(
+                                            "absolute left-full ml-6 px-3 py-2 text-xs font-semibold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-xl",
+                                            isSuperAdmin ? "bg-white text-zinc-950" : "bg-slate-900 text-white"
+                                        )}>
                                             {item.name}
-                                            <div className="absolute right-full top-1/2 -translate-y-1/2 mr-1 border-4 border-transparent border-r-slate-900"></div>
+                                            <div className={cn(
+                                                "absolute right-full top-1/2 -translate-y-1/2 mr-1 border-4 border-transparent",
+                                                isSuperAdmin ? "border-r-white" : "border-r-slate-900"
+                                            )}></div>
                                         </div>
                                     )}
                                 </Link>
@@ -122,16 +148,25 @@ export default function Sidebar({ isMobile }: SidebarProps) {
                 <Button
                     variant="ghost"
                     className={cn(
-                        "w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive rounded-xl",
+                        "w-full justify-start rounded-xl group",
+                        isSuperAdmin
+                            ? "text-zinc-500 hover:bg-rose-500/10 hover:text-rose-500"
+                            : "text-destructive hover:bg-destructive/10 hover:text-destructive",
                         !isExpanded && !isMobile && "justify-center px-2"
                     )}
-                    onClick={handleLogout}
+                    onClick={() => setShowLogoutModal(true)}
                     title={!isExpanded && !isMobile ? "Logout" : undefined}
                 >
                     <LogOut className="h-5 w-5 flex-shrink-0" />
-                    {(isExpanded || isMobile) && <span className="ml-3">Logout</span>}
+                    {(isExpanded || isMobile) && <span className="ml-3 font-black uppercase text-[10px] tracking-widest">Terminate Session</span>}
                 </Button>
             </div>
+
+            <LogoutConfirmModal
+                isOpen={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+                onConfirm={handleLogout}
+            />
         </div>
     );
 }

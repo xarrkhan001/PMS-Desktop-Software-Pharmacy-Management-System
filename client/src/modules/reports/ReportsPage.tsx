@@ -64,7 +64,7 @@ export default function ReportsPage() {
             doc.rect(0, 0, pageWidth, 40, "F");
             doc.setTextColor(255, 255, 255);
             doc.setFont("helvetica", "bold"); doc.setFontSize(22);
-            doc.text("PHARMPRO CORE", margin, 18);
+            doc.text("MEDICORE PMS CORE", margin, 18);
             doc.setFontSize(8); doc.setFont("helvetica", "normal");
             doc.text("OFFICIAL PHARMACY FINANCIAL LEDGER & PERFORMANCE RECORDS", margin, 25);
             doc.text(`GENERATED: ${format(new Date(), 'dd MMM yyyy').toUpperCase()}`, margin, 31);

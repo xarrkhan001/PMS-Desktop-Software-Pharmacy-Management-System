@@ -140,4 +140,125 @@ router.get("/stats", authenticateToken, async (req: any, res) => {
     }
 });
 
+// Get Comprehensive System Alerts for All Sections
+router.get("/system-alerts", authenticateToken, async (req: any, res) => {
+    try {
+        const pharmacyId = req.user.pharmacyId;
+        const now = new Date();
+        const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        const [lowStock, expiring, expired, unpaidSales, pendingPurchases, criticalLogs, pharmacy] = await Promise.all([
+            // 1. Inventory: Low Stock
+            prisma.medicine.findMany({
+                where: { pharmacyId, stock: { lte: prisma.medicine.fields.reorderLevel } },
+                select: { id: true, name: true, stock: true, reorderLevel: true }
+            }),
+            // 2. Inventory: Near Expiry
+            prisma.stockBatch.findMany({
+                where: {
+                    medicine: { pharmacyId },
+                    expiryDate: { gte: now, lte: thirtyDaysFromNow }
+                },
+                include: { medicine: { select: { name: true } } }
+            }),
+            // 3. Inventory: Expired
+            prisma.stockBatch.findMany({
+                where: {
+                    medicine: { pharmacyId },
+                    expiryDate: { lt: now }
+                },
+                include: { medicine: { select: { name: true } } }
+            }),
+            // 4. Finance: Customer Dues (Unpaid Sales)
+            prisma.sale.findMany({
+                where: { pharmacyId, dueAmount: { gt: 0 } },
+                select: { id: true, invoiceNo: true, dueAmount: true, manualCustomerName: true, customer: { select: { name: true } } },
+                take: 5
+            }),
+            // 5. Finance: Pending Supplier Payments
+            prisma.purchase.findMany({
+                where: { pharmacyId, status: "PENDING" },
+                include: { supplier: { select: { name: true } } },
+                take: 5
+            }),
+            // 6. Security/Operations: Critical Logs
+            prisma.auditLog.findMany({
+                where: { pharmacyId, status: "error" },
+                orderBy: { createdAt: 'desc' },
+                take: 3
+            }),
+            // 7. Compliance: Pharmacy License
+            prisma.pharmacy.findUnique({
+                where: { id: pharmacyId },
+                select: { licenseExpiresAt: true, name: true }
+            })
+        ]);
+
+        const alerts: any[] = [];
+
+        // Inventory Alerts
+        lowStock.forEach(m => alerts.push({
+            id: `low-${m.id}`, section: 'Inventory', type: 'danger',
+            title: 'Critical Low Stock',
+            description: `${m.name} is at ${m.stock} units (Threshold: ${m.reorderLevel}).`,
+            timestamp: now
+        }));
+
+        expiring.forEach(b => alerts.push({
+            id: `exp-${b.id}`, section: 'Inventory', type: 'warning',
+            title: 'Expiry Approaching',
+            description: `${b.medicine.name} (Batch ${b.batchNo}) expires in ${Math.ceil((new Date(b.expiryDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))} days.`,
+            timestamp: now
+        }));
+
+        expired.forEach(b => alerts.push({
+            id: `dead-${b.id}`, section: 'Inventory', type: 'danger',
+            title: 'Medicine Expired',
+            description: `${b.medicine.name} (Batch ${b.batchNo}) has expired. Remove immediately.`,
+            timestamp: now
+        }));
+
+        // Finance Alerts
+        unpaidSales.forEach(s => alerts.push({
+            id: `due-${s.id}`, section: 'Finance', type: 'warning',
+            title: 'Pending Customer Due',
+            description: `Payment of PKR ${s.dueAmount} is pending for ${s.manualCustomerName || s.customer?.name || 'Customer'} (Inv: ${s.invoiceNo}).`,
+            timestamp: now
+        }));
+
+        pendingPurchases.forEach(p => alerts.push({
+            id: `pur-${p.id}`, section: 'Purchases', type: 'info',
+            title: 'Unpaid Supplier Bill',
+            description: `Invoice ${p.invoiceNo || 'N/A'} for ${p.supplier.name} is still marked as PENDING.`,
+            timestamp: now
+        }));
+
+        // Security Alerts
+        criticalLogs.forEach(l => alerts.push({
+            id: `log-${l.id}`, section: 'System', type: 'danger',
+            title: 'System Error Logged',
+            description: `${l.action}: ${l.detail}`,
+            timestamp: l.createdAt
+        }));
+
+        // Compliance Alerts
+        if (pharmacy?.licenseExpiresAt) {
+            const daysLeft = Math.ceil((new Date(pharmacy.licenseExpiresAt).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            if (daysLeft <= 15) {
+                alerts.push({
+                    id: 'license-alert', section: 'Compliance', type: daysLeft <= 5 ? 'danger' : 'warning',
+                    title: 'PMS License Expiring',
+                    description: `Your terminal license for ${pharmacy.name} expires in ${daysLeft} days.`,
+                    timestamp: now
+                });
+            }
+        }
+
+        res.json(alerts);
+    } catch (error: any) {
+        console.error("Alerts Error:", error);
+        res.status(500).json({ error: "Failed to generate system-wide alerts." });
+    }
+});
+
 export default router;
