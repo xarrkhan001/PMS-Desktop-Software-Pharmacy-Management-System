@@ -15,6 +15,7 @@ import SuperAdminDashboard from "./modules/super-admin/SuperAdminDashboard";
 import ManagedPharmacies from "./modules/super-admin/ManagedPharmacies";
 import TerminalControl from "./modules/super-admin/TerminalControl";
 import PharmacyActivityMonitor from "./modules/super-admin/PharmacyActivityMonitor";
+import MasterDatabase from "./modules/super-admin/DatabaseExplorer";
 import LandingPage from "./modules/auth/LandingPage";
 import ProfilePage from "./modules/profile/ProfilePage";
 import SystemLogsPage from "./modules/logs/SystemLogsPage";
@@ -150,11 +151,11 @@ const RealTimeGuard = ({ children }: { children: React.ReactNode }) => {
           headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
         });
 
-        if (response.status === 401) {
+        if (response.status === 401 || response.status === 403) {
           localStorage.clear();
           navigate("/login", {
             replace: true,
-            state: { message: "Security Update: Your credentials have been changed. Please login with new details." }
+            state: { message: "Session Expired: Please login again to continue." }
           });
         }
       } catch (err: any) {
@@ -227,6 +228,7 @@ function App() {
                   <Route path="super-pharmacies" element={<ManagedPharmacies />} />
                   <Route path="super-activity" element={<PharmacyActivityMonitor />} />
                   <Route path="super-terminal" element={<TerminalControl />} />
+                  <Route path="super-database" element={<MasterDatabase />} />
                 </Route>
               </Route>
             </Route>
