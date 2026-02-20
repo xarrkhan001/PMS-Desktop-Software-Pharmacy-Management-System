@@ -1,4 +1,4 @@
-import { Bell, Menu, ShieldCheck, Zap, User } from "lucide-react";
+import { Menu, ShieldCheck, Zap, User, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -10,6 +10,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate, Link } from "react-router-dom";
+import { useState } from "react";
+import LogoutConfirmModal from "./LogoutConfirmModal";
+import NotificationDropdown from "./NotificationDropdown";
 
 interface NavbarProps {
     onMenuClick: () => void;
@@ -19,6 +22,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     const userRole = localStorage.getItem("userRole")?.toUpperCase();
     const userName = localStorage.getItem("userName") || "Admin";
     const navigate = useNavigate();
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     const handleLogout = () => {
         localStorage.clear();
@@ -48,10 +52,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             </div>
 
             <div className="flex items-center gap-5 ml-auto">
-                <Button variant="ghost" size="icon" className="relative text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-2xl h-12 w-12 transition-all">
-                    <Bell className="h-6 w-6" />
-                    <span className="absolute top-3 right-3 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-white shadow-sm" />
-                </Button>
+                <NotificationDropdown />
 
                 <div className="h-8 w-[1px] bg-slate-100 mx-1" />
 
@@ -78,22 +79,39 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                                 <span className="font-bold">Access Profile</span>
                             </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                            <Link to="/logs" className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-                                <Zap className="h-4 w-4" />
-                                <span className="font-bold">System Logs</span>
-                            </Link>
-                        </DropdownMenuItem>
+                        {userRole === "ADMIN" && (
+                            <DropdownMenuItem asChild>
+                                <Link to="/logs" className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
+                                    <Zap className="h-4 w-4" />
+                                    <span className="font-bold">System Logs</span>
+                                </Link>
+                            </DropdownMenuItem>
+                        )}
+                        {userRole === "ADMIN" && (
+                            <DropdownMenuItem asChild>
+                                <Link to="/settings" className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
+                                    <Settings className="h-4 w-4" />
+                                    <span className="font-bold">General Settings</span>
+                                </Link>
+                            </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator className="bg-slate-50" />
                         <DropdownMenuItem
                             className="flex items-center gap-3 p-3 rounded-xl cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
-                            onClick={handleLogout}
+                            onClick={() => setShowLogoutModal(true)}
                         >
+                            <LogOut className="h-4 w-4" />
                             <span className="font-black uppercase text-[11px] tracking-wider">Logout Terminal</span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
+
+            <LogoutConfirmModal
+                isOpen={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+                onConfirm={handleLogout}
+            />
         </header>
     );
 }

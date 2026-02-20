@@ -127,7 +127,7 @@ export default function AdminPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium">Pharmacy Name</label>
-                                    <Input defaultValue="PharmPro" />
+                                    <Input defaultValue="MediCore PMS" />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium">Contact Number</label>

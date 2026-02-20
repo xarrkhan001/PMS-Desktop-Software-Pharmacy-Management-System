@@ -1,9 +1,9 @@
 {
-  "name": "pharmacy-managemnt-system",
+  "name": "medicore-pms",
   "private": true,
   "version": "1.0.0",
-  "description": "Pharmacy Management System for PharmaCloud",
-  "author": "PharmaCloud Team",
+  "description": "MediCore PMS - Advanced Pharmacy Management System",
+  "author": "MediCore Team",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -13,11 +13,11 @@
     "preview": "vite preview",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
     "electron:build": "npm run build && electron-builder",
-    "electron:package": "npm run build && electron-packager . PharmaCloud --platform=win32 --arch=x64 --out=dist_electron --overwrite"
+    "electron:package": "npm run build && electron-packager . MediCore-PMS --platform=win32 --arch=x64 --out=dist_electron --overwrite"
   },
   "build": {
-    "appId": "com.pharmacloud.app",
-    "productName": "PharmaCloud",
+    "appId": "com.medicore.pms",
+    "productName": "MediCore PMS",
     "directories": {
       "output": "dist_electron"
     },
@@ -28,14 +28,14 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "public/vite.svg"
+      "icon": "public/medicore_icon.svg"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "PharmaCloud"
+      "shortcutName": "MediCore PMS"
     }
   },
   "dependencies": {

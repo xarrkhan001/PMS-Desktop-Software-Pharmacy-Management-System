@@ -105,40 +105,40 @@ export default function PharmacyActivityMonitor() {
     };
 
     return (
-        <div className="p-8 bg-[#f8fafc] min-h-screen space-y-8 pb-12">
-            {/* Header */}
-            <div className="bg-gradient-to-br from-indigo-950 via-indigo-900 to-indigo-950 px-12 py-12 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full -mr-40 -mt-20 blur-[80px]"></div>
+        <div className="p-8 bg-[#fafafa] min-h-screen space-y-8 pb-12">
+            {/* Header: Network Intelligence */}
+            <div className="bg-zinc-950 px-12 py-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full -mr-40 -mt-20 blur-[100px]"></div>
 
                 <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-2">
-                        <Activity className="h-8 w-8 text-indigo-400" />
-                        <h1 className="text-4xl font-black tracking-tight">
-                            Pharmacy Activity Monitor
+                        <Activity className="h-7 w-7 text-emerald-500" />
+                        <h1 className="text-4xl font-black tracking-tight uppercase italic">
+                            Activity <span className="text-zinc-500 italic">Intelligence</span>
                         </h1>
                     </div>
-                    <p className="text-indigo-200/60 font-medium text-sm">
-                        Real-time tracking of all pharmacy operations and performance metrics
+                    <p className="text-zinc-500 font-bold text-[10px] uppercase tracking-[0.3em]">
+                        High-fidelity telemetry tracking for all authorized pharmacy nodes.
                     </p>
                 </div>
             </div>
 
-            {/* Overall Stats */}
+            {/* Overall Stats - Cleaner */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {[
-                    { label: "Total Sales", value: totalStats.sales.toLocaleString(), icon: ShoppingCart, color: "indigo" },
-                    { label: "Total Revenue", value: `Rs. ${totalStats.revenue.toLocaleString()}`, icon: DollarSign, color: "emerald" },
-                    { label: "Total Customers", value: totalStats.customers.toLocaleString(), icon: Users, color: "blue" },
-                    { label: "Total Medicines", value: totalStats.medicines.toLocaleString(), icon: Package, color: "amber" }
+                    { label: "Network Sales", value: totalStats.sales.toLocaleString(), icon: ShoppingCart, color: "zinc" },
+                    { label: "Global Revenue", value: `Rs. ${totalStats.revenue.toLocaleString()}`, icon: DollarSign, color: "emerald" },
+                    { label: "Active Users", value: totalStats.customers.toLocaleString(), icon: Users, color: "blue" },
+                    { label: "Stock Units", value: totalStats.medicines.toLocaleString(), icon: Package, color: "amber" }
                 ].map((stat, i) => (
-                    <Card key={i} className="border-none shadow-lg rounded-3xl bg-white hover:shadow-xl transition-all">
-                        <CardContent className="p-6 flex items-center gap-4">
-                            <div className={`h-14 w-14 rounded-2xl bg-${stat.color}-500/10 flex items-center justify-center`}>
-                                <stat.icon className={`h-7 w-7 text-${stat.color}-600`} />
+                    <Card key={i} className="border border-slate-200/50 shadow-sm rounded-[2rem] bg-white hover:shadow-md transition-all">
+                        <CardContent className="p-6 flex items-center gap-5">
+                            <div className="h-14 w-14 rounded-[1.2rem] bg-slate-50 border border-slate-100 flex items-center justify-center">
+                                <stat.icon className="h-6 w-6 text-slate-900" />
                             </div>
                             <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                                <p className="text-2xl font-black text-slate-900">{stat.value}</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{stat.label}</p>
+                                <p className="text-2xl font-black text-slate-950 tabular-nums tracking-tighter">{stat.value}</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -247,8 +247,8 @@ export default function PharmacyActivityMonitor() {
                                             <div className="space-y-2">
                                                 <Badge
                                                     className={`${pharmacy.isActive && !isExpired
-                                                            ? 'bg-emerald-500/10 text-emerald-700 border-emerald-200'
-                                                            : 'bg-red-500/10 text-red-700 border-red-200'
+                                                        ? 'bg-emerald-500/10 text-emerald-700 border-emerald-200'
+                                                        : 'bg-red-500/10 text-red-700 border-red-200'
                                                         } font-bold text-[10px] uppercase tracking-wider border`}
                                                 >
                                                     {pharmacy.isActive && !isExpired ? '● Active' : '● Inactive'}

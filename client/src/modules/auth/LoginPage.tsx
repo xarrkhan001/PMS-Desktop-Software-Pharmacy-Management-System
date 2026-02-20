@@ -19,7 +19,7 @@ export default function LoginPage() {
 
         // Mock Login Logic
         setTimeout(() => {
-            if (email === "test@PharmPro.com" && password === "Ntl@0099") {
+            if (email === "test@MediCore.com" && password === "Ntl@0099") {
                 localStorage.setItem("isAuthenticated", "true");
                 localStorage.setItem("userRole", "admin");
                 navigate("/");
@@ -41,7 +41,7 @@ export default function LoginPage() {
                             <Pill className="h-6 w-6 text-primary" />
                         </div>
                     </div>
-                    <CardTitle className="text-2xl font-bold text-slate-900 dark:text-white">Pharm<span className="text-blue-600">Pro</span> System</CardTitle>
+                    <CardTitle className="text-2xl font-bold text-slate-900 dark:text-white">MediCore<span className="text-blue-600"> PMS</span> System</CardTitle>
                     <CardDescription>Enter your credentials to access the dashboard</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -52,7 +52,7 @@ export default function LoginPage() {
                                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     type="email"
-                                    placeholder="test@PharmPro.com"
+                                    placeholder="test@MediCore.com"
                                     className="pl-9"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}

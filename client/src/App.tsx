@@ -10,7 +10,6 @@ import SuppliersPage from "./modules/suppliers/SuppliersPage";
 import PurchasesPage from "./modules/purchases/PurchasesPage";
 import CustomersPage from "./modules/customers/CustomersPage";
 import ReportsPage from "./modules/reports/ReportsPage";
-import AdminPage from "./modules/admin/AdminPage";
 import SuperAdminDashboard from "./modules/super-admin/SuperAdminDashboard";
 import ManagedPharmacies from "./modules/super-admin/ManagedPharmacies";
 import TerminalControl from "./modules/super-admin/TerminalControl";
@@ -21,6 +20,9 @@ import ProfilePage from "./modules/profile/ProfilePage";
 import SystemLogsPage from "./modules/logs/SystemLogsPage";
 import LicenseLockPage from "./modules/auth/LicenseLockPage";
 import SettingsPage from "./modules/settings/SettingsPage";
+import PrivacyPolicy from "./modules/public/PrivacyPolicy";
+import TermsOfService from "./modules/public/TermsOfService";
+import Documentation from "./modules/public/Documentation";
 import { Toaster } from "@/components/ui/toaster";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -195,8 +197,11 @@ function App() {
       <LicenseGuard>
         <RealTimeGuard>
           <Routes>
-            {/* Public Route - Always accessible */}
+            {/* Public Routes - Always accessible */}
             <Route path="/login" element={<LandingPage />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/docs" element={<Documentation />} />
 
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>

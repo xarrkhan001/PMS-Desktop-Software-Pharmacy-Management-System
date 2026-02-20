@@ -96,14 +96,16 @@ export default function MasterDatabase() {
     return (
         <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700 h-full flex flex-col">
             {/* Header */}
-            <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border dark:border-slate-800 shadow-sm">
-                <div className="flex items-center gap-5">
-                    <div className="h-14 w-14 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+            <div className="flex justify-between items-center bg-white border border-slate-100 p-8 rounded-[2.5rem] shadow-sm">
+                <div className="flex items-center gap-6">
+                    <div className="h-14 w-14 rounded-2xl bg-zinc-950 flex items-center justify-center shadow-xl shadow-slate-200">
                         <Database className="h-7 w-7 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-black italic tracking-tighter uppercase text-slate-900 border-b-4 border-indigo-600 inline-block mb-1">System <span className="text-indigo-600">Vault</span></h1>
-                        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Master Database Explorer & Raw Data Access</p>
+                        <h1 className="text-3xl font-black italic tracking-tighter uppercase text-slate-950 border-b-4 border-zinc-950 inline-block mb-1">
+                            MediCore <span className="text-zinc-500">Registry</span>
+                        </h1>
+                        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Master Database Explorer & Infrastructure Registry</p>
                     </div>
                 </div>
                 <div className="flex gap-4">
@@ -135,10 +137,10 @@ export default function MasterDatabase() {
                             key={table.id}
                             onClick={() => setSelectedTable(table)}
                             className={cn(
-                                "w-full text-left p-4 rounded-2xl transition-all border text-slate-600 hover:border-indigo-200 group flex items-center justify-between",
+                                "w-full text-left p-5 rounded-[1.8rem] transition-all border text-slate-600 group flex items-center justify-between",
                                 selectedTable.id === table.id
-                                    ? "bg-indigo-600 border-indigo-600 shadow-xl shadow-indigo-100 scale-[1.02]"
-                                    : "bg-white border-slate-100 hover:bg-indigo-50/30"
+                                    ? "bg-zinc-950 border-zinc-950 shadow-2xl scale-[1.02] text-white"
+                                    : "bg-white border-slate-100 hover:bg-slate-50"
                             )}
                         >
                             <div className="space-y-1">
@@ -149,8 +151,8 @@ export default function MasterDatabase() {
                                     {table.name}
                                 </p>
                                 <p className={cn(
-                                    "text-[9px] font-bold uppercase tracking-widest leading-none",
-                                    selectedTable.id === table.id ? "text-indigo-100" : "text-slate-400"
+                                    "text-[9px] font-black uppercase tracking-widest leading-none",
+                                    selectedTable.id === table.id ? "text-zinc-500" : "text-slate-400"
                                 )}>
                                     {table.description}
                                 </p>
@@ -164,27 +166,27 @@ export default function MasterDatabase() {
                 </div>
 
                 {/* Right Area - Data Grid */}
-                <Card className="col-span-9 rounded-[2.5rem] border-none shadow-2xl bg-white overflow-hidden flex flex-col border-2 border-indigo-50">
-                    <div className="bg-slate-950 p-6 flex justify-between items-center text-white">
+                <Card className="col-span-9 rounded-[2.5rem] border border-slate-200 shadow-sm bg-white overflow-hidden flex flex-col">
+                    <div className="bg-zinc-950 p-6 flex justify-between items-center text-white">
                         <div className="flex items-center gap-3">
-                            <TableIcon className="h-5 w-5 text-indigo-400" />
-                            <h2 className="text-xl font-black italic tracking-tighter uppercase">{selectedTable.name} <span className="text-indigo-400 ml-2">[{data.length} Records]</span></h2>
+                            <TableIcon className="h-5 w-5 text-zinc-500" />
+                            <h2 className="text-xl font-black italic tracking-tighter uppercase">{selectedTable.name} <span className="text-zinc-500 ml-2 tracking-widest text-xs">[{data.length} Nodes]</span></h2>
                         </div>
                         <div className="relative">
                             <Input
-                                placeholder="Search everything..."
-                                className="h-10 w-64 bg-slate-900 border-slate-800 text-xs font-bold rounded-lg pl-10 focus:ring-indigo-500"
+                                placeholder="Filter registry..."
+                                className="h-10 w-64 bg-white/5 border-white/10 text-xs font-bold rounded-xl pl-10 focus:ring-zinc-500 placeholder:text-zinc-600"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600" />
                         </div>
                     </div>
                     <CardContent className="p-0 flex-1 overflow-auto bg-slate-50">
                         {loading ? (
-                            <div className="flex flex-col items-center justify-center h-full gap-4 text-indigo-500 animate-pulse">
+                            <div className="flex flex-col items-center justify-center h-full gap-4 text-zinc-300 animate-pulse">
                                 <RefreshCcw className="h-12 w-12 animate-spin" />
-                                <p className="text-[10px] font-black uppercase tracking-[0.5em]">Loading Master Registry...</p>
+                                <p className="text-[10px] font-black uppercase tracking-[0.5em]">Synchronizing Registry...</p>
                             </div>
                         ) : filteredData.length > 0 ? (
                             <div className="overflow-x-auto h-full">

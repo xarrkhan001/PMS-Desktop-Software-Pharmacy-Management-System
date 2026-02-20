@@ -93,7 +93,7 @@ export default function LoginModal({ open, onOpenChange, trigger, message }: Log
                                 <div className="h-10 w-10 bg-blue-600/20 backdrop-blur-2xl rounded-xl flex items-center justify-center border border-white/20 shadow-2xl">
                                     <Pill className="h-6 w-6 text-blue-400" />
                                 </div>
-                                <span className="text-xl font-bold tracking-tight text-white drop-shadow-lg">Pharm<span className="text-blue-400">Pro</span></span>
+                                <span className="text-xl font-bold tracking-tight text-white drop-shadow-lg">MediCore<span className="text-blue-400"> PMS</span></span>
                             </div>
 
                             <div className="space-y-6">
@@ -147,7 +147,7 @@ export default function LoginModal({ open, onOpenChange, trigger, message }: Log
 
                         <div className="max-w-sm mx-auto w-full space-y-8 relative z-10 uppercase-titles">
                             <DialogHeader className="text-center md:text-left space-y-2">
-                                <DialogTitle className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Login to <span className="text-blue-600">Pro</span> Portal</DialogTitle>
+                                <DialogTitle className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Login to <span className="text-blue-600">MediCore</span> Portal</DialogTitle>
                                 <DialogDescription className="text-slate-500 dark:text-slate-400 font-medium text-sm">
                                     Access pharmacy inventory & tools.
                                 </DialogDescription>
