@@ -4,10 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
-    Trash, Search, Printer,
-    CreditCard, Receipt, HandCoins,
-    Loader2, User as UserIcon, Activity, Package, TrendingUp,
-    Save, ChevronLeft, ChevronRight, UserPlus, Calculator, History, XCircle, Trash2, ExternalLink
+    Trash, Search, Printer, Receipt,
+    Loader2, User as UserIcon, Activity, Package, TrendingUp, TrendingDown,
+    ChevronLeft, ChevronRight, UserPlus, Calculator, History, XCircle, Trash2, ExternalLink
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";

@@ -12,7 +12,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron:build": "npm run build && electron-builder",
+    "electron:build": "npm run build && electron-builder --win",
     "electron:package": "npm run build && electron-packager . MediCore-PMS --platform=win32 --arch=x64 --out=dist_electron --overwrite"
   },
   "build": {
@@ -26,16 +26,36 @@
       "electron/**/*",
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": "../server/prisma",
+        "to": "server/prisma"
+      },
+      {
+        "from": "../server/dist",
+        "to": "server/dist"
+      },
+      {
+        "from": "../server/node_modules/@prisma",
+        "to": "server/node_modules/@prisma"
+      },
+      {
+        "from": "../server/node_modules/.prisma",
+        "to": "server/node_modules/.prisma"
+      }
+    ],
     "win": {
       "target": "nsis",
-      "icon": "public/medicore_icon.svg"
+      "icon": "public/medicore_icon.ico"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "MediCore PMS"
+      "shortcutName": "MediCore PMS",
+      "installerIcon": "public/medicore_icon.ico",
+      "uninstallerIcon": "public/medicore_icon.ico"
     }
   },
   "dependencies": {

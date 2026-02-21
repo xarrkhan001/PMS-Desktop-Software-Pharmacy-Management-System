@@ -1,4 +1,4 @@
-import { Menu, ShieldCheck, Zap, User, Settings, LogOut } from "lucide-react";
+import { Menu, ShieldCheck, Zap, User, Settings, LogOut, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -52,6 +52,16 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             </div>
 
             <div className="flex items-center gap-5 ml-auto">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-xl h-11 w-11 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all border border-transparent hover:border-indigo-100"
+                    onClick={() => window.location.reload()}
+                    title="Refresh Application"
+                >
+                    <RefreshCw className="h-5 w-5" />
+                </Button>
+
                 <NotificationDropdown />
 
                 <div className="h-8 w-[1px] bg-slate-100 mx-1" />

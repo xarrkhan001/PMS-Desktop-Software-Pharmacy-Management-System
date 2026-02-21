@@ -4,10 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
-    Plus,
     ShieldCheck,
     Clock,
-    Power,
     Search,
     RefreshCw,
     FilePenLine,
@@ -75,7 +73,7 @@ function EditPharmacyModal({ pharmacy, onUpdate }: EditPharmacyModalProps) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-indigo-600 rounded-lg">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-purple-600 rounded-lg">
                     <FilePenLine className="h-4 w-4" />
                 </Button>
             </DialogTrigger>
@@ -149,7 +147,7 @@ interface ManageLicenseModalProps {
 function ManageLicenseModal({ pharmacy, onUpdate, disabled }: ManageLicenseModalProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [months, setMonths] = useState(12);
-    const [isActive, setIsActive] = useState(pharmacy.isActive);
+    const [isActive] = useState(pharmacy.isActive);
     const [paidAmount, setPaidAmount] = useState(0);
     const [machineId, setMachineId] = useState("");
     const [generatedKey, setGeneratedKey] = useState("");
@@ -214,7 +212,7 @@ function ManageLicenseModal({ pharmacy, onUpdate, disabled }: ManageLicenseModal
                     disabled={disabled}
                     className={`rounded-lg font-bold transition-all active:scale-95 ${disabled
                         ? 'opacity-40 grayscale cursor-not-allowed bg-slate-50 text-slate-400 border-slate-100'
-                        : 'text-indigo-600 hover:bg-indigo-50 border-indigo-100 shadow-sm'
+                        : 'text-purple-600 hover:bg-purple-50 border-purple-100 shadow-sm'
                         }`}
                 >
                     Renew / Manage
@@ -235,30 +233,29 @@ function ManageLicenseModal({ pharmacy, onUpdate, disabled }: ManageLicenseModal
                     </DialogHeader>
                 </div>
 
-                <div className="p-6 space-y-5 bg-white max-h-[80vh] overflow-y-auto">
+                <div className="p-5 space-y-4 bg-white max-h-[85vh] overflow-y-auto">
                     {generatedKey ? (
                         <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
                             <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col items-center text-center">
-                                <div className="h-12 w-12 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-2">
-                                    <ShieldCheck size={24} />
+                                <div className="h-10 w-10 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-2">
+                                    <ShieldCheck size={20} />
                                 </div>
-                                <h3 className="font-black text-slate-900">New License Key Generated</h3>
-                                <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider">Valid until {previewDate.toLocaleDateString()}</p>
+                                <h3 className="font-black text-slate-900 text-sm italic uppercase tracking-tighter">License Key Ready</h3>
+                                <p className="text-[9px] text-slate-500 mt-0.5 uppercase tracking-widest">Valid until: {previewDate.toLocaleDateString()}</p>
 
-                                <div className="mt-4 w-full relative">
+                                <div className="mt-3 w-full relative group">
                                     <textarea
                                         readOnly
                                         value={generatedKey}
-                                        className="w-full h-32 p-3 bg-zinc-950 text-emerald-400 font-mono text-[10px] rounded-xl border border-zinc-800 resize-none focus:outline-none"
+                                        className="w-full h-24 p-2.5 bg-zinc-950 text-emerald-400 font-mono text-[9px] rounded-xl border border-zinc-800 resize-none focus:outline-none"
                                     />
                                     <button
                                         onClick={copyKey}
-                                        className="absolute bottom-3 right-3 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                                        className="absolute bottom-2 right-2 bg-zinc-800 hover:bg-zinc-700 text-white px-2.5 py-1 rounded-lg text-[9px] font-bold transition-colors"
                                     >
-                                        Copy Key
+                                        Copy
                                     </button>
                                 </div>
-                                <p className="text-[10px] text-slate-400 mt-3 italic">Copy this key and send it to the pharmacy owner.</p>
                             </div>
                             <Button
                                 onClick={() => {
@@ -266,99 +263,153 @@ function ManageLicenseModal({ pharmacy, onUpdate, disabled }: ManageLicenseModal
                                     setGeneratedKey("");
                                     onUpdate();
                                 }}
-                                className="w-full h-12 bg-[#0f172a] hover:bg-slate-800 font-black rounded-xl"
+                                className="w-full h-11 bg-slate-900 hover:bg-emerald-600 text-white font-black rounded-xl text-xs transition-all uppercase tracking-widest"
                             >
-                                Close & Update List
+                                Done
                             </Button>
                         </div>
                     ) : (
                         <>
                             <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 ml-1">Client Machine ID (Optional for Lock)</Label>
+                                {/* Machine ID */}
+                                <div className="space-y-1">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Client Machine Identifier</Label>
                                     <Input
-                                        placeholder="Paste Machine ID from client node..."
+                                        placeholder="Paste ID here..."
                                         value={machineId}
                                         onChange={e => setMachineId(e.target.value)}
-                                        className="h-11 rounded-xl border-slate-100 font-mono text-xs focus:ring-indigo-500"
+                                        className="h-10 rounded-xl border-slate-100 font-mono text-[10px] focus:ring-purple-500 font-bold"
                                     />
-                                    <p className="text-[9px] text-slate-400 italic font-medium ml-1">Provide ID to generate a hardware-locked license key.</p>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Renew From</p>
-                                        <p className="font-black text-slate-900 text-sm">Now / Expiry</p>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                                    {/* Status */}
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Current Status</Label>
+                                        <div className="h-11 flex flex-col justify-center px-4 bg-slate-50 rounded-xl border border-slate-100">
+                                            <p className="text-[10px] font-black text-slate-900 leading-none">Standard / Active</p>
+                                        </div>
                                     </div>
-                                    <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100/50">
-                                        <Label className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest mb-0.5">Payment (Rs.)</Label>
-                                        <input
-                                            type="number"
-                                            value={paidAmount}
-                                            onChange={e => setPaidAmount(Number(e.target.value))}
-                                            className="w-full bg-transparent border-none p-0 focus:ring-0 font-black text-indigo-700 text-sm placeholder:text-indigo-200"
-                                            placeholder="0.00"
-                                        />
+
+                                    {/* Extension Toggle */}
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Extension Protocol</Label>
+                                        <div className="flex bg-slate-100 p-0.5 rounded-xl h-11 border border-slate-200/50">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setMonths(12);
+                                                    setTestMinutes(null);
+                                                }}
+                                                className={`flex-1 rounded-lg text-[9px] font-black uppercase transition-all duration-300 ${!testMinutes ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                            >
+                                                Standard
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setMonths(0);
+                                                    setTestMinutes(3);
+                                                }}
+                                                className={`flex-1 rounded-lg text-[9px] font-black uppercase transition-all duration-300 ${testMinutes ? 'bg-white text-red-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                            >
+                                                Trial
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Duration */}
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Span ({testMinutes !== null ? "Min" : "Months"})</Label>
+                                        <div className="relative group">
+                                            <Input
+                                                type="number"
+                                                value={testMinutes !== null ? testMinutes : (months || "")}
+                                                onChange={e => {
+                                                    const val = e.target.value === "" ? 0 : Math.max(0, Number(e.target.value));
+                                                    if (testMinutes !== null) setTestMinutes(val);
+                                                    else setMonths(val);
+                                                }}
+                                                className={`rounded-xl h-11 border-slate-100 font-black text-slate-700 text-sm transition-all focus:ring-4 ${testMinutes ? 'focus:ring-red-500/10' : 'focus:ring-purple-500/10'}`}
+                                            />
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 font-black text-[8px] text-slate-300 uppercase tracking-widest pointer-events-none">
+                                                {testMinutes ? "Min" : "Months"}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Payment */}
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Payment (PKR)</Label>
+                                        <div className="relative group">
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                placeholder="0"
+                                                value={paidAmount || ""}
+                                                onChange={e => {
+                                                    const value = e.target.value === "" ? 0 : Math.max(0, Number(e.target.value));
+                                                    setPaidAmount(value);
+                                                }}
+                                                className="rounded-xl h-11 border-slate-100 font-black text-emerald-600 text-sm transition-all focus:ring-4 focus:ring-emerald-500/10"
+                                            />
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 font-black text-[8px] text-slate-300 uppercase tracking-widest pointer-events-none">Rs.</div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 ml-1">Extension Plan</Label>
+                                {/* Presets */}
+                                <div className="space-y-1">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Quick Extension</Label>
                                     <div className="flex gap-2">
-                                        {[1, 6, 12].map((m) => (
+                                        {!testMinutes ? [1, 6, 12].map((m) => (
                                             <button
                                                 key={m}
                                                 type="button"
-                                                className={`flex-1 h-11 rounded-xl font-bold text-xs transition-all border-2 ${months === m && !testMinutes
-                                                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100'
-                                                    : 'bg-white border-slate-100 text-slate-500 hover:border-indigo-100'
+                                                className={`flex-1 h-9 rounded-xl font-black text-[9px] uppercase transition-all border ${months === m
+                                                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                                                    : 'bg-white border-slate-100 text-slate-400 hover:border-purple-100'
                                                     }`}
-                                                onClick={() => {
-                                                    setMonths(m);
-                                                    setTestMinutes(null);
-                                                }}
+                                                onClick={() => setMonths(m)}
                                             >
                                                 {m === 12 ? "1 Year" : `${m}M`}
                                             </button>
+                                        )) : [3, 15, 60].map((min) => (
+                                            <button
+                                                key={min}
+                                                type="button"
+                                                className={`flex-1 h-9 rounded-xl font-black text-[9px] uppercase transition-all border ${testMinutes === min
+                                                    ? 'bg-red-600 border-red-600 text-white shadow-sm'
+                                                    : 'bg-red-50 border-red-100 text-red-500 hover:bg-red-200'
+                                                    }`}
+                                                onClick={() => setTestMinutes(min)}
+                                            >
+                                                {min}m
+                                            </button>
                                         ))}
-                                        {/* Testing Option */}
-                                        <button
-                                            type="button"
-                                            className={`flex-1 h-11 rounded-xl font-bold text-[10px] transition-all border-2 border-dashed ${testMinutes === 3
-                                                ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-100'
-                                                : 'bg-red-50 border-red-100 text-red-500 hover:bg-red-100'
-                                                }`}
-                                            onClick={() => {
-                                                setTestMinutes(3);
-                                                setMonths(0);
-                                            }}
-                                        >
-                                            🧪 3 MIN
-                                        </button>
                                     </div>
                                 </div>
 
-                                <div className="p-4 bg-indigo-50 rounded-2xl border-2 border-indigo-100 border-dashed relative">
-                                    <p className="text-center text-[9px] font-bold text-indigo-400 uppercase tracking-[0.2em] mb-1">New Expiration Date</p>
-                                    <p className="text-center text-sm font-black text-indigo-900">
+                                <div className="p-3.5 bg-indigo-50/50 rounded-2xl border border-purple-100/30 border-dashed text-center">
+                                    <p className="text-[8px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">Deployment Expiry</p>
+                                    <p className="text-[10px] font-black text-indigo-900 uppercase italic">
                                         {testMinutes
-                                            ? previewDate.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                                            ? previewDate.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' })
                                             : previewDate.toLocaleDateString('en-PK', {
                                                 day: 'numeric',
                                                 month: 'short',
                                                 year: 'numeric'
                                             })
                                         }
-                                        {testMinutes && <span className="block text-[9px] text-red-500 mt-1 italic uppercase tracking-wider">(Today)</span>}
                                     </p>
                                 </div>
 
                                 <Button
                                     onClick={handleUpdate}
                                     disabled={loading}
-                                    className="w-full h-14 bg-[#0f172a] hover:bg-indigo-600 font-black text-sm rounded-2xl transition-all shadow-xl shadow-slate-200 uppercase tracking-widest active:scale-95"
+                                    className="w-full h-11 bg-slate-900 hover:bg-purple-100/50 text-white font-black text-[10px] rounded-xl transition-all shadow-lg uppercase tracking-widest active:scale-95"
                                 >
-                                    {loading ? "Processing..." : "Generate & Renew"}
+                                    {loading ? "Renewing..." : "Generate New Key"}
                                 </Button>
                             </div>
                         </>
@@ -438,20 +489,8 @@ export default function ManagedPharmacies() {
         setValidationErrors(prev => ({ ...prev, [field]: error }));
         return error === "";
     };
-    const [suggestions, setSuggestions] = useState<string[]>([]);
 
-    const generateSuggestions = (name: string) => {
-        if (!name || name.length < 3) {
-            setSuggestions([]);
-            return;
-        }
-        const base = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-        const s1 = base;
-        const s2 = `${base}${new Date().getFullYear()}`;
-        const s3 = `pms-${base}`;
-        // Unique suggestions
-        setSuggestions(Array.from(new Set([s1, s2, s3])).slice(0, 3));
-    };
+
 
     const fetchPharmacies = async () => {
         try {
@@ -555,13 +594,18 @@ export default function ManagedPharmacies() {
 
     return (
         <div className="p-8 bg-[#fafafa] min-h-screen space-y-8 pb-12">
-            <div className="flex justify-between items-center bg-zinc-950 px-12 py-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl transition-all duration-500"></div>
+            <div className="flex justify-between items-center bg-zinc-950 px-12 py-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden border border-white/5">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/10 rounded-full -mr-48 -mt-48 blur-[100px] animate-pulse"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600/5 rounded-full -ml-32 -mb-32 blur-[80px]"></div>
+
                 <div className="relative z-10">
-                    <h1 className="text-4xl font-black tracking-tight uppercase italic">
-                        Managed <span className="text-zinc-500 italic">Entities</span>
+                    <h1 className="text-4xl font-black tracking-tight uppercase italic flex items-center gap-3">
+                        Managed <span className="text-purple-500 italic drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]">Entities</span>
                     </h1>
-                    <p className="text-zinc-500 font-bold mt-1 text-[10px] uppercase tracking-[0.3em]">Core Node Registry & Subscription Management</p>
+                    <p className="text-zinc-500 font-bold mt-1 text-[10px] uppercase tracking-[0.3em] flex items-center gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-pulse" />
+                        Core Node Registry & Subscription Management
+                    </p>
                 </div>
 
                 {/* Onboarding Success Modal */}
@@ -615,25 +659,22 @@ export default function ManagedPharmacies() {
 
                 <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
                     <DialogTrigger asChild>
-                        <Button className="bg-indigo-500 hover:bg-white hover:text-indigo-900 h-16 px-8 rounded-2xl font-black shadow-xl shadow-indigo-500/20 gap-3 text-lg transition-all active:scale-95 border-none">
-                            <Plus className="h-6 w-6" /> onboard node
+                        <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-purple-600 hover:to-indigo-600 text-white h-14 px-7 rounded-2xl font-black shadow-xl shadow-purple-500/20 gap-3 text-base transition-all active:scale-95 border-none">
+                            <ShieldCheck className="h-5 w-5" /> onboard node
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
-                        <div className="bg-gradient-to-br from-indigo-600 to-indigo-900 p-8 text-white">
+                    <DialogContent className="sm:max-w-[480px] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl">
+                        <div className="bg-gradient-to-br from-indigo-600 to-purple-800 p-5 text-white text-center">
                             <DialogHeader>
-                                <DialogTitle className="text-2xl font-black flex items-center gap-2 text-white">
-                                    <Plus className="h-8 w-8" /> Register Pharmacy
+                                <DialogTitle className="text-lg font-black flex items-center justify-center gap-2 text-white uppercase italic tracking-tighter">
+                                    <ShieldCheck className="h-5 w-5" /> onboard node
                                 </DialogTitle>
-                                <CardDescription className="text-indigo-100 font-medium opacity-80 italic">
-                                    Initialize a new pharmacy instance and owner account.
-                                </CardDescription>
                             </DialogHeader>
                         </div>
 
-                        <form onSubmit={handleCreatePharmacy} className="p-8 space-y-5 bg-white">
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Pharmacy Information</Label>
+                        <form onSubmit={handleCreatePharmacy} className="p-5 space-y-3.5 bg-white">
+                            <div className="space-y-1">
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Pharmacy Information</Label>
                                 <Input
                                     placeholder="e.g. Al-Shifa Pharmacy"
                                     value={newPharmacy.name}
@@ -645,15 +686,18 @@ export default function ManagedPharmacies() {
                                         }
                                     }}
                                     required
-                                    className={`rounded-xl h-12 border-slate-100 focus:ring-indigo-500 ${validationErrors.name ? 'border-red-300 focus:ring-red-500' : ''}`}
+                                    className={`rounded-xl h-10 border-slate-100 focus:ring-purple-500 font-bold text-xs ${validationErrors.name ? 'border-red-300 focus:ring-red-500' : ''}`}
                                 />
-                                {validationErrors.name && <p className="text-xs text-red-500 font-medium mt-1">{validationErrors.name}</p>}
-                                <p className="text-[9px] text-slate-400 font-medium">{newPharmacy.name.length}/50 characters</p>
+                                <div className="flex justify-between items-center px-1">
+                                    {validationErrors.name ? <p className="text-[8px] text-red-500 font-medium">{validationErrors.name}</p> : <div />}
+                                    <p className="text-[8px] text-slate-400 font-medium uppercase tracking-tighter">{newPharmacy.name.length}/50 chars</p>
+                                </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Owner Name</Label>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
+                                {/* Owner Name */}
+                                <div className="space-y-1">
+                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Owner Name</Label>
                                     <Input
                                         placeholder="Full Name"
                                         value={newPharmacy.ownerName}
@@ -665,93 +709,101 @@ export default function ManagedPharmacies() {
                                             }
                                         }}
                                         required
-                                        className={`rounded-xl h-12 border-slate-100 ${validationErrors.ownerName ? 'border-red-300 focus:ring-red-500' : ''}`}
+                                        className={`rounded-xl h-10 border-slate-100 font-bold text-xs ${validationErrors.ownerName ? 'border-red-300 focus:ring-red-500' : ''}`}
                                     />
-                                    {validationErrors.ownerName && <p className="text-xs text-red-500 font-medium mt-1">{validationErrors.ownerName}</p>}
-                                    <p className="text-[9px] text-slate-400 font-medium">{newPharmacy.ownerName.length}/50 characters</p>
+                                    <div className="flex justify-between items-center px-1">
+                                        {validationErrors.ownerName ? <p className="text-[8px] text-red-500 font-medium">{validationErrors.ownerName}</p> : <div />}
+                                        <p className="text-[8px] text-slate-400 font-medium uppercase tracking-tighter">{newPharmacy.ownerName.length}/50 chars</p>
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Subscription Details</Label>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="flex gap-2 items-center">
-                                            <div className="relative flex-1">
-                                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs text uppercase font-bold">M</div>
-                                                <Input
-                                                    type="number"
-                                                    value={newPharmacy.months}
-                                                    onChange={e => {
-                                                        const val = Number(e.target.value);
-                                                        setNewPharmacy({ ...newPharmacy, months: val, minutes: 0 });
-                                                        validateField("months", val);
-                                                    }}
-                                                    className="pl-8 rounded-xl h-12 border-slate-100 font-bold text-indigo-600 focus:ring-indigo-500"
-                                                />
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    const isTest = newPharmacy.minutes > 0;
-                                                    setNewPharmacy({ ...newPharmacy, minutes: isTest ? 0 : 3, months: isTest ? 12 : 0 });
-                                                    // Clear month error if switching to trial
-                                                    if (!isTest) {
-                                                        setValidationErrors(prev => ({ ...prev, months: "" }));
-                                                    }
-                                                }}
-                                                className={`h-12 px-3 rounded-xl font-black text-[10px] border-2 transition-all ${newPharmacy.minutes > 0
-                                                    ? 'bg-red-600 border-red-600 text-white'
-                                                    : 'bg-red-50 border-red-100 text-red-500 hover:bg-red-100'}`}
-                                            >
-                                                {newPharmacy.minutes > 0 ? "3 MIN" : "TRIAL"}
-                                            </button>
-                                        </div>
-                                        <div className="relative">
-                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">Rs.</div>
-                                            <Input
-                                                type="number"
-                                                min="0"
-                                                max="1000000"
-                                                placeholder="Payment Amount"
-                                                value={newPharmacy.paidAmount}
-                                                onChange={e => {
-                                                    const value = Number(e.target.value);
-                                                    if (value <= 1000000) {
-                                                        setNewPharmacy({ ...newPharmacy, paidAmount: value });
-                                                        validateField("paidAmount", value);
-                                                    }
-                                                }}
-                                                required
-                                                className={`pl-10 rounded-xl h-12 border-slate-100 font-bold text-emerald-600 ${validationErrors.paidAmount ? 'border-red-300' : ''}`}
-                                            />
-                                            {validationErrors.paidAmount && <p className="text-xs text-red-500 font-medium mt-1 absolute -bottom-5 left-0">{validationErrors.paidAmount}</p>}
+
+                                {/* Subscription Toggle */}
+                                <div className="space-y-1">
+                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Protocol</Label>
+                                    <div className="flex bg-slate-100 p-0.5 rounded-xl h-10 border border-slate-200/50">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setNewPharmacy({ ...newPharmacy, months: 12, minutes: 0 });
+                                                setValidationErrors(prev => ({ ...prev, months: "" }));
+                                            }}
+                                            className={`flex-1 rounded-lg text-[8px] font-black uppercase transition-all duration-300 ${newPharmacy.minutes === 0 ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                        >
+                                            Standard
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setNewPharmacy({ ...newPharmacy, months: 0, minutes: 3 });
+                                                setValidationErrors(prev => ({ ...prev, months: "" }));
+                                            }}
+                                            className={`flex-1 rounded-lg text-[8px] font-black uppercase transition-all duration-300 ${newPharmacy.minutes > 0 ? 'bg-white text-red-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                        >
+                                            Trial
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Duration */}
+                                <div className="space-y-1">
+                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                                        Duration ({newPharmacy.minutes > 0 ? "Min" : "Months"})
+                                    </Label>
+                                    <div className="relative group">
+                                        <Input
+                                            type="number"
+                                            value={newPharmacy.minutes > 0 ? newPharmacy.minutes : (newPharmacy.months || "")}
+                                            onChange={e => {
+                                                const val = e.target.value === "" ? 0 : Math.max(0, Number(e.target.value));
+                                                if (newPharmacy.minutes > 0) {
+                                                    setNewPharmacy({ ...newPharmacy, minutes: val, months: 0 });
+                                                } else {
+                                                    setNewPharmacy({ ...newPharmacy, months: val, minutes: 0 });
+                                                    validateField("months", val);
+                                                }
+                                            }}
+                                            className={`rounded-xl h-10 border-slate-100 font-black text-slate-700 text-xs transition-all focus:ring-4 ${newPharmacy.minutes > 0 ? 'focus:ring-red-500/10' : 'focus:ring-purple-500/10'}`}
+                                        />
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 font-black text-[7px] text-slate-300 uppercase tracking-widest pointer-events-none">
+                                            {newPharmacy.minutes > 0 ? "Min" : "Months"}
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Payment */}
+                                <div className="space-y-1">
+                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Payment (PKR)</Label>
+                                    <div className="relative group">
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            max="1000000"
+                                            placeholder="0"
+                                            value={newPharmacy.paidAmount || ""}
+                                            onChange={e => {
+                                                const value = e.target.value === "" ? 0 : Math.max(0, Number(e.target.value));
+                                                if (value <= 1000000) {
+                                                    setNewPharmacy({ ...newPharmacy, paidAmount: value });
+                                                    validateField("paidAmount", value);
+                                                }
+                                            }}
+                                            required
+                                            className={`rounded-xl h-10 border-slate-100 font-black text-emerald-600 text-xs transition-all focus:ring-4 focus:ring-emerald-500/10 ${validationErrors.paidAmount ? 'border-red-300' : ''}`}
+                                        />
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 font-black text-[7px] text-slate-300 uppercase tracking-widest pointer-events-none">Rs.</div>
+                                    </div>
+                                    {validationErrors.paidAmount && <p className="text-[8px] text-red-500 font-bold mt-1 ml-1">{validationErrors.paidAmount}</p>}
+                                </div>
                             </div>
 
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between ml-1">
-                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Credentials & Username</Label>
-                                    {suggestions.length > 0 && (
-                                        <div className="flex gap-2">
-                                            {suggestions.map((s, idx) => (
-                                                <button
-                                                    key={idx}
-                                                    type="button"
-                                                    onClick={() => setNewPharmacy({ ...newPharmacy, ownerEmail: s })}
-                                                    className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all animate-in fade-in slide-in-from-right-2"
-                                                >
-                                                    {s}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
+                            <div className="space-y-1">
+                                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Credentials</Label>
+                                <div className="grid grid-cols-2 gap-3.5">
+                                    <div className="space-y-1">
                                         <div className="relative">
                                             <Input
                                                 type="text"
-                                                placeholder="Email User"
+                                                placeholder="Username"
                                                 value={newPharmacy.ownerEmail}
                                                 onChange={e => {
                                                     const value = e.target.value.toLowerCase().replace(/\s/g, "");
@@ -761,19 +813,17 @@ export default function ManagedPharmacies() {
                                                     }
                                                 }}
                                                 required
-                                                className={`rounded-xl h-12 border-slate-100 pr-24 ${validationErrors.ownerEmail ? 'border-red-300 focus:ring-red-500' : ''}`}
+                                                className={`rounded-xl h-10 border-slate-100 pr-16 text-[10px] font-black ${validationErrors.ownerEmail ? 'border-red-300 focus:ring-purple-500' : ''}`}
                                             />
-                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400 pointer-events-none bg-slate-50 px-1.5 py-1 rounded-md border border-slate-100">
-                                                @pharmacy.com
+                                            <div className="absolute right-2 top-1/2 -translate-y-1/2 text-[7px] font-black text-slate-400 pointer-events-none bg-slate-50 px-1 py-0.5 rounded border border-slate-100">
+                                                @pms.com
                                             </div>
                                         </div>
-                                        {validationErrors.ownerEmail && <p className="text-xs text-red-500 font-medium">{validationErrors.ownerEmail}</p>}
-                                        <p className="text-[9px] text-slate-400 font-medium">{newPharmacy.ownerEmail.length}/30 characters</p>
                                     </div>
-                                    <div className="space-y-2">
+                                    <div className="space-y-1">
                                         <Input
                                             type="password"
-                                            placeholder="Password (8-20 chars)"
+                                            placeholder="Password"
                                             value={newPharmacy.ownerPassword}
                                             onChange={e => {
                                                 const value = e.target.value;
@@ -783,37 +833,34 @@ export default function ManagedPharmacies() {
                                                 }
                                             }}
                                             required
-                                            className={`rounded-xl h-12 border-slate-100 ${validationErrors.ownerPassword ? 'border-red-300 focus:ring-red-500' : ''}`}
+                                            className={`rounded-xl h-10 border-slate-100 text-[10px] font-black ${validationErrors.ownerPassword ? 'border-red-300 focus:ring-purple-500' : ''}`}
                                         />
-                                        {validationErrors.ownerPassword && <p className="text-xs text-red-500 font-medium">{validationErrors.ownerPassword}</p>}
-                                        <p className="text-[9px] text-slate-400 font-medium">{newPharmacy.ownerPassword.length}/20 characters</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="p-5 bg-indigo-50 rounded-3xl border-2 border-indigo-100 border-dashed relative">
-                                <p className="text-center text-[9px] font-bold text-indigo-400 uppercase tracking-[0.2em] mb-1">Live Subscription Preview</p>
-                                <div className="flex justify-between items-center mt-3">
-                                    <div className="text-center flex-1">
-                                        <p className="text-[8px] font-bold text-slate-400 uppercase">Starts</p>
-                                        <p className="font-bold text-slate-700 text-xs">{new Date().toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })}</p>
+                            <div className="p-3 bg-purple-50/50 rounded-2xl border border-purple-100/50 relative">
+                                <div className="flex justify-between items-center px-2">
+                                    <div className="text-center">
+                                        <p className="text-[6px] font-black text-slate-400 uppercase tracking-widest">Start</p>
+                                        <p className="font-black text-slate-700 text-[9px]">{new Date().toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })}</p>
                                     </div>
-                                    <div className="h-px bg-indigo-200 flex-1 mx-2 relative">
-                                        <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 bg-white px-2 py-0.5 rounded-full border border-indigo-100 text-[8px] font-black text-indigo-500">
-                                            {newPharmacy.minutes > 0 ? "3m" : `${newPharmacy.months}M`}
+                                    <div className="h-px bg-purple-200 flex-1 mx-4 relative">
+                                        <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 bg-white px-2 py-0.5 rounded-full border border-purple-100 text-[7px] font-black text-purple-500">
+                                            {newPharmacy.minutes > 0 ? `${newPharmacy.minutes}m` : `${newPharmacy.months}M`}
                                         </div>
                                     </div>
-                                    <div className="text-center flex-1">
-                                        <p className="text-[8px] font-bold text-slate-400 uppercase">Expires</p>
-                                        <p className="font-black text-indigo-600 text-[10px]">
+                                    <div className="text-center">
+                                        <p className="text-[6px] font-black text-slate-400 uppercase tracking-widest">Expiry</p>
+                                        <p className="font-black text-purple-600 text-[9px]">
                                             {(() => {
                                                 const d = new Date();
                                                 if (newPharmacy.minutes > 0) {
                                                     d.setMinutes(d.getMinutes() + newPharmacy.minutes);
-                                                    return d.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                                                    return d.toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' });
                                                 }
                                                 d.setMonth(d.getMonth() + (Number(newPharmacy.months) || 0));
-                                                return d.toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' });
+                                                return d.toLocaleDateString('en-PK', { day: 'numeric', month: 'short' });
                                             })()}
                                         </p>
                                     </div>
@@ -823,17 +870,17 @@ export default function ManagedPharmacies() {
                             <Button
                                 type="submit"
                                 disabled={!isFormValid()}
-                                className={`w-full h-16 font-black text-sm rounded-2xl mt-2 transition-all shadow-xl uppercase tracking-widest active:scale-95 ${isFormValid()
-                                    ? 'bg-[#0f172a] hover:bg-indigo-600 shadow-slate-200'
-                                    : 'bg-slate-300 cursor-not-allowed opacity-60'
+                                className={`w-full h-11 font-black text-[10px] rounded-xl transition-all shadow-lg uppercase tracking-widest active:scale-95 ${isFormValid()
+                                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-purple-100'
+                                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                                     }`}
                             >
-                                {isFormValid() ? 'Create Pharmacy & Account' : 'Please Fill All Required Fields'}
+                                {isFormValid() ? 'Activate Node Instance' : 'Incomplete Fields'}
                             </Button>
                         </form>
                     </DialogContent>
                 </Dialog>
-            </div>
+            </div >
 
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden">
                 <CardHeader className="p-8 border-b border-slate-100 flex flex-row items-center justify-between">
@@ -896,7 +943,7 @@ export default function ManagedPharmacies() {
                                     <TableRow key={p.id} className="group hover:bg-slate-50/50 transition-colors border-b border-slate-50">
                                         <TableCell className="pl-8 py-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="h-12 w-12 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600 font-black text-xl">
+                                                <div className="h-12 w-12 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600 font-black text-xl">
                                                     {p.name[0]}
                                                 </div>
                                                 <div>
@@ -928,7 +975,7 @@ export default function ManagedPharmacies() {
                                                     Started: {startDate}
                                                 </div>
                                                 <div className={`flex items-center gap-2 font-black ${isExpired ? 'text-red-600' : 'text-slate-900'}`}>
-                                                    <ShieldCheck className="h-4 w-4 text-blue-500" />
+                                                    <ShieldCheck className="h-4 w-4 text-purple-500" />
                                                     Expires: {expiryDate}
                                                 </div>
                                             </div>
@@ -1007,6 +1054,6 @@ export default function ManagedPharmacies() {
                     </div>
                 )}
             </Card>
-        </div>
+        </div >
     );
 }

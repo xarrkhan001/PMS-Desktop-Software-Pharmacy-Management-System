@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter, Download, Truck, Mail, Phone, MapPin, User, Trash2, Edit2, Loader2, ArrowUpRight, Scale, TrendingUp, BookText } from "lucide-react";
+import { Plus, Search, Download, Truck, Mail, Phone, MapPin, Trash2, Edit2, Loader2, ArrowUpRight, Scale, TrendingUp, BookText } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
     Dialog,
     DialogContent,
