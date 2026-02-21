@@ -81,17 +81,19 @@ export default function Sidebar({ isMobile }: SidebarProps) {
                 isSuperAdmin ? "border-white/5" : "dark:border-slate-800"
             )}>
                 <div className={cn(
-                    "h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0",
-                    isSuperAdmin ? "bg-white/5" : "bg-primary/10"
+                    "h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg",
+                    isSuperAdmin
+                        ? "bg-gradient-to-br from-indigo-600 to-purple-700 text-white"
+                        : "bg-gradient-to-br from-indigo-500 to-purple-600 text-white"
                 )}>
-                    <Pill className={cn("h-5 w-5", isSuperAdmin ? "text-zinc-400" : "text-primary")} />
+                    <ShieldCheck className="h-6 w-6 drop-shadow-md" />
                 </div>
                 {(isExpanded || isMobile) && (
                     <span className={cn(
-                        "ml-3 text-xl font-black uppercase italic tracking-tighter whitespace-nowrap overflow-hidden",
+                        "ml-3 text-xl font-black uppercase italic tracking-tighter whitespace-nowrap overflow-hidden transition-all duration-500",
                         isSuperAdmin ? "text-white" : "text-slate-900 dark:text-white"
                     )}>
-                        MediCore<span className={isSuperAdmin ? "text-zinc-500" : "text-blue-600"}> PMS</span>
+                        MediCore<span className="text-purple-500"> PMS</span>
                     </span>
                 )}
             </div>

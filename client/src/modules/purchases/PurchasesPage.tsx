@@ -40,7 +40,7 @@ export default function PurchasesPage() {
 
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+    const [pageSize] = useState(10);
 
     // Quick Add Medicine Dialog State
     const [isAddMedicineOpen, setIsAddMedicineOpen] = useState(false);

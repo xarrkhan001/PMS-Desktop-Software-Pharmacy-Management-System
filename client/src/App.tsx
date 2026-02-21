@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Navigate, Outlet, useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
 import DashboardPage from "./modules/dashboard/DashboardPage";
 import InventoryPage from "./modules/inventory/InventoryPage";
@@ -23,6 +23,7 @@ import SettingsPage from "./modules/settings/SettingsPage";
 import PrivacyPolicy from "./modules/public/PrivacyPolicy";
 import TermsOfService from "./modules/public/TermsOfService";
 import Documentation from "./modules/public/Documentation";
+import SplashScreen from "./components/layout/SplashScreen";
 import { Toaster } from "@/components/ui/toaster";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -191,6 +192,18 @@ const ProtectedRoute = ({ allowedRoles }: { allowedRoles?: string[] }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 function App() {
   const userRole = localStorage.getItem("userRole")?.toUpperCase();
+  const [showSplash, setShowSplash] = useState(() => {
+    return !sessionStorage.getItem("splashShown");
+  });
+
+  const handleSplashComplete = () => {
+    sessionStorage.setItem("splashShown", "true");
+    setShowSplash(false);
+  };
+
+  if (showSplash) {
+    return <SplashScreen onComplete={handleSplashComplete} />;
+  }
 
   return (
     <Router>

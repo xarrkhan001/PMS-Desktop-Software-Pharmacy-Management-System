@@ -16,7 +16,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { format } from "date-fns";
 
@@ -117,7 +116,7 @@ export default function ReportsPage() {
 
             // Pharmacy Name in Stamp
             doc.setFontSize(4.5);
-            const pName = (pharmacy?.name || "PHARMPRO CORE").toUpperCase();
+            const pName = (pharmacy?.name || "MEDICORE CORE").toUpperCase();
             doc.text(pName, stampX, stampY - 6, { align: "center" });
 
             doc.setFontSize(11);
@@ -138,7 +137,7 @@ export default function ReportsPage() {
             doc.setTextColor(148, 163, 184); doc.setFontSize(6.5);
             doc.text(`Official System Generated Document • ID-REF: ${Math.random().toString(36).substring(7).toUpperCase()}`, margin, pageHeight - 12);
 
-            doc.save(`PharmPro_Report_${format(new Date(), 'dd_MM_yy')}.pdf`);
+            doc.save(`MediCore_Report_${format(new Date(), 'dd_MM_yy')}.pdf`);
             console.log("PDF Generation Success!");
 
         } catch (error) {
@@ -212,7 +211,7 @@ export default function ReportsPage() {
                                 <ShieldCheck className="h-8 w-8 text-white" />
                             </div>
                             <div>
-                                <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">PHARMPRO</h2>
+                                <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">MEDICORE</h2>
                                 <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.4em] mt-1">Intelligence Report</p>
                             </div>
                         </div>

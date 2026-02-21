@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Download, User, Users, Calendar, CreditCard, Star, Trash2, Edit2, CheckCircle2, DollarSign, Wallet, History, Receipt } from "lucide-react";
+import { Plus, Search, Download, User, Users, Calendar, CreditCard, Star, Trash2, CheckCircle2, DollarSign, Wallet, History, Receipt } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import {

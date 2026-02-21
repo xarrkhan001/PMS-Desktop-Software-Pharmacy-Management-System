@@ -7,8 +7,6 @@ import {
     AlertTriangle,
     Users,
     ShoppingCart,
-    ArrowUpRight,
-    ArrowDownRight,
     Activity,
     Package,
     Loader2,

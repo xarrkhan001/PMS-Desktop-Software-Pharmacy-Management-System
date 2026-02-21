@@ -6,14 +6,10 @@ import {
     Wallet,
     TrendingUp,
     TrendingDown,
-    FileText,
     Plus,
-    CreditCard,
     DollarSign,
-    Landmark,
     Receipt,
     History,
-    ArrowUpRight,
     ArrowDownLeft,
     Search,
     Filter,
@@ -27,7 +23,6 @@ import {
     AreaChart,
     Area,
     XAxis,
-    YAxis,
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
@@ -41,7 +36,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 
@@ -52,7 +47,7 @@ export default function FinancePage() {
     const [categories, setCategories] = useState<any[]>([]);
     const [customerLedgers, setCustomerLedgers] = useState<any[]>([]);
     const [supplierLedgers, setSupplierLedgers] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [, setLoading] = useState(true);
     const [stats, setStats] = useState({
         totalIncome: 0,
         totalExpense: 0,
