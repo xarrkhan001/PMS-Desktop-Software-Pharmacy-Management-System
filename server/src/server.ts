@@ -19,6 +19,7 @@ import financeRoutes from './routes/financeRoutes';
 import reportRoutes from './routes/reportRoutes';
 import logRoutes from './routes/logRoutes';
 import settingRoutes from './routes/settingRoutes';
+import masterMedicineRoutes from './routes/masterMedicineRoutes';
 import { seedSystem } from './utils/seed';
 
 const app = express();
@@ -46,6 +47,7 @@ app.use('/api/finance', financeRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/settings', settingRoutes);
+app.use('/api/master-medicines', masterMedicineRoutes);
 
 // Health Check
 app.get('/', (req, res) => {

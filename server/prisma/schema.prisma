@@ -11,10 +11,12 @@ model Pharmacy {
   id               Int        @id @default(autoincrement())
   name             String
   location         String?
-  licenseNo        String?    @unique
+  licenseNo        String?    @unique // Software License Key
+  pharmacyLicense  String?    // Business/Drug License Number
+  ntn              String?    // National Tax Number / Tax ID
   contact          String?
   licenseStartedAt DateTime?  @default(now())
-  licenseExpiresAt DateTime?  // When the license will expire
+  licenseExpiresAt DateTime?  // When the software license will expire
   isActive         Boolean    @default(true) // For manual blocking if needed
   subscriptionFee  Float      @default(0)   // Amount paid for the initial/latest license
   totalPaid        Float      @default(0)   // Cumulative revenue from this pharmacy
@@ -93,6 +95,12 @@ model Medicine {
   unitPerPack Int      @default(1)  // e.g., 20 tablets in 1 pack
   unitType    String   @default("Tablet") // Tablet, Capsule, Syrup, etc.
   rackNo      String?  // Shelf/rack location
+  
+  // Tracking fields for pre-filling Edit Modals
+  initialBatchNo     String?
+  initialQuantity    String?
+  initialExpiryDate  String?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
@@ -254,6 +262,7 @@ model PharmacySettings {
   billFooter        String?  @default("Medicines once sold will not be returned or exchanged.")
   showPharmacyLogo  Boolean  @default(true)
   showTaxId         Boolean  @default(true)
+  showLicense       Boolean  @default(true)
   
   // Financials
   defaultTaxRate    Float    @default(0.0) // Percentage
@@ -264,4 +273,14 @@ model PharmacySettings {
   lowStockThreshold Int      @default(10)
   
   updatedAt         DateTime @updatedAt
+}
+
+model MasterMedicine {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  genericName String?
+  manufacturer String?
+  category    String?
+  unitType    String?  @default("Tablet")
+  createdAt   DateTime @default(now())
 }

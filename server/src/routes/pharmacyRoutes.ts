@@ -99,11 +99,11 @@ router.post("/license/activate", async (req, res) => {
     }
 });
 
-// Update Pharmacy Profile (Allow updating name, location, contact)
+// Update Pharmacy Profile (Allow updating name, location, contact, license, tax id)
 router.put("/profile", authenticateToken, async (req: any, res) => {
     try {
         const pharmacyId = req.user.pharmacyId;
-        const { name, location, contact } = req.body;
+        const { name, location, contact, pharmacyLicense, ntn } = req.body;
 
         if (!pharmacyId) {
             return res.status(404).json({ error: "Pharmacy not found for this user context." });
@@ -114,7 +114,9 @@ router.put("/profile", authenticateToken, async (req: any, res) => {
             data: {
                 name,
                 location,
-                contact
+                contact,
+                pharmacyLicense,
+                ntn
             }
         });
 

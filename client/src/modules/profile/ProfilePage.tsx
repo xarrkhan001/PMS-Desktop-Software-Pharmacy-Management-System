@@ -23,6 +23,9 @@ interface PharmacyProfile {
     isActive: boolean;
     subscriptionFee: number;
     totalPaid: number;
+    licenseNo: string | null;
+    pharmacyLicense: string | null;
+    ntn: string | null;
     users: Array<{
         id: number;
         name: string;
@@ -39,7 +42,9 @@ export default function ProfilePage() {
     const [editForm, setEditForm] = useState({
         name: "",
         location: "",
-        contact: ""
+        contact: "",
+        pharmacyLicense: "",
+        ntn: ""
     });
 
     const fetchProfile = async () => {
@@ -53,7 +58,9 @@ export default function ProfilePage() {
             setEditForm({
                 name: data.name,
                 location: data.location || "",
-                contact: data.contact || ""
+                contact: data.contact || "",
+                pharmacyLicense: data.pharmacyLicense || "",
+                ntn: data.ntn || ""
             });
         } catch (error) {
             console.error("Failed to fetch profile", error);
@@ -162,6 +169,24 @@ export default function ProfilePage() {
                                         placeholder="e.g. 0300-1234567"
                                     />
                                 </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black uppercase text-slate-400">Drug License No</label>
+                                    <input
+                                        className="w-full bg-slate-50 border-2 border-slate-100 p-3 rounded-2xl font-bold text-sm text-slate-700 focus:border-indigo-500 outline-none transition-all"
+                                        value={editForm.pharmacyLicense}
+                                        onChange={(e) => setEditForm({ ...editForm, pharmacyLicense: e.target.value })}
+                                        placeholder="e.g. DL-1234-XYZ"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black uppercase text-slate-400">Tax ID / NTN</label>
+                                    <input
+                                        className="w-full bg-slate-50 border-2 border-slate-100 p-3 rounded-2xl font-bold text-sm text-slate-700 focus:border-indigo-500 outline-none transition-all"
+                                        value={editForm.ntn}
+                                        onChange={(e) => setEditForm({ ...editForm, ntn: e.target.value })}
+                                        placeholder="e.g. 1234567-8"
+                                    />
+                                </div>
                             </div>
                         </div>
                     ) : (
@@ -183,8 +208,19 @@ export default function ProfilePage() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <ShieldCheck className="h-4 w-4 text-indigo-500" />
-                                    License: #{profile.id.toString().padStart(5, '0')}
+                                    Software License: #{profile.id.toString().padStart(5, '0')}
                                 </div>
+                                {profile.pharmacyLicense && (
+                                    <div className="flex items-center gap-2">
+                                        <FileText className="h-4 w-4 text-indigo-500" />
+                                        Drug License: {profile.pharmacyLicense}
+                                    </div>
+                                )}
+                                {profile.ntn && (
+                                    <div className="flex items-center gap-2">
+                                        <Badge className="bg-indigo-50 text-indigo-600 border-none font-bold text-[10px]">NTN: {profile.ntn}</Badge>
+                                    </div>
+                                )}
                             </div>
                         </>
                     )}

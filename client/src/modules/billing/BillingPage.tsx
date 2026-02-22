@@ -83,14 +83,30 @@ export default function BillingPage() {
     const [isReceiptOpen, setIsReceiptOpen] = useState(false);
     const [lastSale, setLastSale] = useState<any>(null);
     const [pmsSettings, setPmsSettings] = useState<any>(null);
+    const [pharmacyInfo, setPharmacyInfo] = useState<any>(null);
     const { toast } = useToast();
 
-    // Fetch initial data
     useEffect(() => {
         fetchRecentInvoices();
         fetchCustomers();
         fetchPmsSettings();
+        fetchPharmacyInfo();
     }, []);
+
+    const fetchPharmacyInfo = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch("http://localhost:5000/api/pharmacy/profile", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setPharmacyInfo(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch pharmacy info", error);
+        }
+    };
 
     const fetchPmsSettings = async () => {
         try {
@@ -840,11 +856,19 @@ export default function BillingPage() {
                                     <Receipt className="h-6 w-6" />
                                 </div>
                             )}
-                            <h2 className="text-2xl font-black italic tracking-tighter uppercase text-slate-900">{pharmacyName}</h2>
+                            <h2 className="text-2xl font-black italic tracking-tighter uppercase text-slate-900">{pharmacyInfo?.name || pharmacyName}</h2>
                             <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-2">{pmsSettings?.billHeader || "Quality Healthcare Services"}</p>
-                            {pmsSettings?.showTaxId && (
-                                <p className="text-[10px] font-bold text-slate-400">NTN: 1234567-8</p>
-                            )}
+                            <div className="flex flex-col items-center gap-0.5">
+                                {pmsSettings?.showLicense && pharmacyInfo?.pharmacyLicense && (
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Lic No: {pharmacyInfo.pharmacyLicense}</p>
+                                )}
+                                {pmsSettings?.showTaxId && pharmacyInfo?.ntn && (
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">NTN: {pharmacyInfo.ntn}</p>
+                                )}
+                                {pharmacyInfo?.location && (
+                                    <p className="text-[9px] font-medium text-slate-400">{pharmacyInfo.location}</p>
+                                )}
+                            </div>
                         </div>
 
                         <div className="border-t border-b border-dashed border-slate-200 py-3 my-4 space-y-2">
