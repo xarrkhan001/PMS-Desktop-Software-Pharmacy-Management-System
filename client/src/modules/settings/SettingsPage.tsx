@@ -28,6 +28,7 @@ export default function SettingsPage() {
         billFooter: "",
         showPharmacyLogo: true,
         showTaxId: true,
+        showLicense: true,
         defaultTaxRate: 0,
         nearExpiryDays: 30,
         lowStockThreshold: 10
@@ -174,6 +175,16 @@ export default function SettingsPage() {
                                             <Switch
                                                 checked={settings.showTaxId}
                                                 onCheckedChange={(val) => setSettings({ ...settings, showTaxId: val })}
+                                            />
+                                        </div>
+                                        <div className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm">
+                                            <div>
+                                                <p className="font-black text-slate-900 text-sm">Print Drug License</p>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase">Show license number on bills</p>
+                                            </div>
+                                            <Switch
+                                                checked={settings.showLicense}
+                                                onCheckedChange={(val) => setSettings({ ...settings, showLicense: val })}
                                             />
                                         </div>
                                     </div>

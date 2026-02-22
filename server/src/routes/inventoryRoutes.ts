@@ -174,41 +174,67 @@ router.get("/alerts", authenticateToken, async (req: any, res) => {
     }
 });
 
-// Add new medicine
+// Add new medicine (with optional initial stock)
 router.post("/medicines", authenticateToken, async (req: any, res) => {
     try {
-        const { name, category, genericName, manufacturer, price, salePrice, reorderLevel, rackNo, unitPerPack, unitType } = req.body;
+        const {
+            name, category, genericName, manufacturer, price, salePrice,
+            reorderLevel, rackNo, unitPerPack, unitType,
+            initialBatchNo, initialQuantity, initialExpiryDate
+        } = req.body;
         const pharmacyId = req.user.pharmacyId;
 
-        const medicine = await prisma.medicine.create({
-            data: {
-                name,
-                category,
-                genericName,
-                manufacturer,
-                price: parseFloat(price.toString()),
-                salePrice: parseFloat(salePrice.toString()),
-                reorderLevel: reorderLevel ? parseInt(reorderLevel.toString()) : 10,
-                unitPerPack: unitPerPack ? parseInt(unitPerPack.toString()) : 1,
-                unitType: unitType || "Tablet",
-                rackNo,
-                pharmacyId,
-                stock: 0
+        const result = await prisma.$transaction(async (tx) => {
+            // 1. Create the medicine
+            const medicine = await tx.medicine.create({
+                data: {
+                    name,
+                    category,
+                    genericName,
+                    manufacturer,
+                    price: parseFloat(price.toString()),
+                    salePrice: parseFloat(salePrice.toString()),
+                    reorderLevel: reorderLevel ? parseInt(reorderLevel.toString()) : 10,
+                    unitPerPack: unitPerPack ? parseInt(unitPerPack.toString()) : 1,
+                    unitType: unitType || "Tablet",
+                    rackNo,
+                    pharmacyId,
+                    stock: initialQuantity ? parseInt(initialQuantity.toString()) : 0,
+                    initialBatchNo,
+                    initialQuantity: initialQuantity?.toString(),
+                    initialExpiryDate
+                }
+            });
+
+            // 2. Create initial batch if stock data is provided
+            if (initialBatchNo && initialQuantity) {
+                await tx.stockBatch.create({
+                    data: {
+                        medicineId: medicine.id,
+                        batchNo: initialBatchNo,
+                        quantity: parseInt(initialQuantity.toString()),
+                        purchasePrice: parseFloat(price.toString()), // Default cost to trade price
+                        expiryDate: new Date(initialExpiryDate)
+                    }
+                });
             }
+
+            return medicine;
         });
 
         // Log medicine creation
         await logActivity({
             type: "inventory",
-            action: "Medicine Added",
-            detail: `${medicine.name} (${medicine.genericName}) was added to the master list.`,
+            action: "Medicine Registered",
+            detail: `${result.name} was registered with ${req.body.initialQuantity || 0} initial units.`,
             status: "success",
             userId: req.user.userId,
             pharmacyId: req.user.pharmacyId
         });
 
-        res.json(medicine);
+        res.json(result);
     } catch (error: any) {
+        console.error("Add medicine error:", error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -217,37 +243,67 @@ router.post("/medicines", authenticateToken, async (req: any, res) => {
 router.put("/medicines/:id", authenticateToken, async (req: any, res) => {
     try {
         const { id } = req.params;
-        const { name, category, genericName, manufacturer, price, salePrice, reorderLevel, rackNo, unitPerPack, unitType } = req.body;
+        const {
+            name, category, genericName, manufacturer, price, salePrice,
+            reorderLevel, rackNo, unitPerPack, unitType, stock,
+            initialBatchNo, initialQuantity, initialExpiryDate
+        } = req.body;
         const pharmacyId = req.user.pharmacyId;
 
-        const medicine = await prisma.medicine.update({
-            where: { id: Number(id), pharmacyId },
-            data: {
-                name,
-                category,
-                genericName,
-                manufacturer,
-                price: parseFloat(price.toString()),
-                salePrice: parseFloat(salePrice.toString()),
-                reorderLevel: parseInt(reorderLevel.toString()),
-                unitPerPack: parseInt(unitPerPack.toString()),
-                unitType: unitType,
-                rackNo
+        const result = await prisma.$transaction(async (tx) => {
+            // 1. Update the medicine (handling every single field)
+            const medicine = await tx.medicine.update({
+                where: { id: Number(id), pharmacyId },
+                data: {
+                    name,
+                    category,
+                    genericName,
+                    manufacturer,
+                    price: price !== undefined ? parseFloat(price.toString()) : undefined,
+                    salePrice: salePrice !== undefined ? parseFloat(salePrice.toString()) : undefined,
+                    reorderLevel: reorderLevel !== undefined ? parseInt(reorderLevel.toString()) : undefined,
+                    unitPerPack: unitPerPack !== undefined ? parseInt(unitPerPack.toString()) : undefined,
+                    unitType: unitType,
+                    rackNo: rackNo,
+                    initialBatchNo,
+                    initialQuantity: initialQuantity?.toString(),
+                    initialExpiryDate,
+                    // Handle both direct stock edit AND new batch increment
+                    stock: initialQuantity
+                        ? { increment: parseInt(initialQuantity.toString()) }
+                        : (stock !== undefined ? parseInt(stock.toString()) : undefined)
+                }
+            });
+
+            // 2. Create batch if new stock entry data is provided
+            if (initialBatchNo && initialQuantity && initialExpiryDate) {
+                await tx.stockBatch.create({
+                    data: {
+                        medicineId: medicine.id,
+                        batchNo: initialBatchNo,
+                        quantity: parseInt(initialQuantity.toString()),
+                        purchasePrice: price ? parseFloat(price.toString()) : medicine.price,
+                        expiryDate: new Date(initialExpiryDate)
+                    }
+                });
             }
+
+            return medicine;
         });
 
         // Log medicine update
         await logActivity({
             type: "inventory",
-            action: "Medicine Updated",
-            detail: `Information for ${medicine.name} was updated. Status: Active`,
+            action: "Medicine Proper Update",
+            detail: `Full update performed for ${result.name}. All fields synchronized.`,
             status: "info",
             userId: req.user.userId,
             pharmacyId: req.user.pharmacyId
         });
 
-        res.json(medicine);
+        res.json(result);
     } catch (error: any) {
+        console.error("Update medicine error:", error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -294,6 +350,117 @@ router.delete("/medicines/:id", authenticateToken, async (req: any, res) => {
         res.json({ message: "Medicine and all related records deleted successfully" });
     } catch (error: any) {
         console.error("Delete medicine error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all master medicines with already-owned status for current pharmacy
+router.get("/master-list", authenticateToken, async (req: any, res) => {
+    try {
+        const pharmacyId = req.user.pharmacyId;
+        const search = (req.query.search as string) || "";
+        const category = (req.query.category as string) || "";
+
+        const where: any = {};
+        if (search) {
+            where.OR = [
+                { name: { contains: search } },
+                { genericName: { contains: search } },
+                { manufacturer: { contains: search } }
+            ];
+        }
+        if (category) {
+            where.category = category;
+        }
+
+        const [masterMedicines, pharmacyMedicines] = await Promise.all([
+            prisma.masterMedicine.findMany({
+                where,
+                orderBy: [{ manufacturer: 'asc' }, { name: 'asc' }]
+            }),
+            prisma.medicine.findMany({
+                where: { pharmacyId },
+                select: { name: true }
+            })
+        ]);
+
+        const pharmacyMedicineNames = new Set(pharmacyMedicines.map((m: any) => m.name.toLowerCase()));
+
+        const result = masterMedicines.map((med: any) => ({
+            ...med,
+            alreadyImported: pharmacyMedicineNames.has(med.name.toLowerCase())
+        }));
+
+        res.json(result);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Import medicines from master database into pharmacy inventory
+router.post("/import-from-master", authenticateToken, async (req: any, res) => {
+    try {
+        const { medicineIds } = req.body; // Array of masterMedicine IDs to import
+        const pharmacyId = req.user.pharmacyId;
+
+        if (!medicineIds || !Array.isArray(medicineIds) || medicineIds.length === 0) {
+            return res.status(400).json({ error: "No medicines selected for import." });
+        }
+
+        // Fetch the selected master medicines
+        const masterMedicines = await prisma.masterMedicine.findMany({
+            where: { id: { in: medicineIds } }
+        });
+
+        // Get existing pharmacy medicines to avoid duplicates
+        const existingMedicines = await prisma.medicine.findMany({
+            where: { pharmacyId },
+            select: { name: true }
+        });
+        const existingNames = new Set(existingMedicines.map((m: any) => m.name.toLowerCase()));
+
+        const toImport = masterMedicines.filter((m: any) => !existingNames.has(m.name.toLowerCase()));
+
+        if (toImport.length === 0) {
+            return res.json({ imported: 0, skipped: medicineIds.length, message: "All selected medicines are already in your inventory." });
+        }
+
+        // Bulk create medicines
+        await prisma.medicine.createMany({
+            data: toImport.map((med: any) => ({
+                name: med.name,
+                genericName: med.genericName || "",
+                manufacturer: med.manufacturer || "",
+                category: med.category || "Tablet",
+                unitType: med.unitType || "Tablet",
+                price: 0,
+                salePrice: 0,
+                stock: 0,
+                reorderLevel: 10,
+                unitPerPack: 1,
+                rackNo: null,
+                pharmacyId
+            }))
+        });
+
+        // Log all imports
+        await logActivity({
+            type: "inventory",
+            action: "Bulk Import from Master",
+            detail: `${toImport.length} medicines imported from Master Database. ${medicineIds.length - toImport.length} skipped (already owned).`,
+            status: "success",
+            userId: req.user.userId,
+            pharmacyId: req.user.pharmacyId
+        });
+
+        res.json({
+            imported: toImport.length,
+            skipped: medicineIds.length - toImport.length,
+            importedNames: toImport.map((m: any) => m.name),
+            message: `${toImport.length} medicines imported successfully!`
+        });
+    } catch (error: any) {
+        console.error("Import from master error:", error);
         res.status(500).json({ error: error.message });
     }
 });

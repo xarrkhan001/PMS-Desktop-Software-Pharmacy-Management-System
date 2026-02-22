@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, Search, PackagePlus, Calendar, CreditCard, ChevronLeft, ChevronRight, Trash2, Loader2, Save, ShoppingBag, ArrowUpRight, CheckCircle2 } from "lucide-react";
+import { Plus, Search, PackagePlus, Calendar, CreditCard, ChevronLeft, ChevronRight, Trash2, Loader2, Save, ShoppingBag, ArrowUpRight, CheckCircle2, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
@@ -46,12 +45,24 @@ export default function PurchasesPage() {
     const [isAddMedicineOpen, setIsAddMedicineOpen] = useState(false);
     const [newMedicine, setNewMedicine] = useState({
         name: "",
-        category: "",
+        category: "Tablet",
+        genericName: "",
         manufacturer: "",
-        price: "",
-        salePrice: "",
-        genericName: ""
+        price: "0",
+        salePrice: "0",
+        unitPerPack: "1",
+        unitType: "Tablet",
+        reorderLevel: "10",
+        rackNo: "",
+        margin: "14.5",
+        initialBatchNo: "",
+        initialQuantity: "",
+        initialExpiryDate: ""
     });
+
+    const [masterSuggestions, setMasterSuggestions] = useState<any[]>([]);
+    const [isSearchingMaster, setIsSearchingMaster] = useState(false);
+    const [showSuggestions, setShowSuggestions] = useState(false);
 
     const fetchData = async () => {
         try {
@@ -80,6 +91,71 @@ export default function PurchasesPage() {
     useEffect(() => {
         fetchData();
     }, []);
+
+    const lookupMasterMedicine = async (query: string) => {
+        setNewMedicine(prev => ({ ...prev, name: query }));
+        if (query.length < 2) {
+            setMasterSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+
+        setIsSearchingMaster(true);
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(`http://localhost:5000/api/master-medicines/lookup?search=${encodeURIComponent(query)}`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await response.json();
+
+            // Enrich data for consistency
+            const enrichedData = data.map((med: any) => ({
+                ...med,
+                isLocal: medicines.some(m => m.name.toLowerCase() === med.name.toLowerCase())
+            }));
+
+            setMasterSuggestions(enrichedData);
+            setShowSuggestions(enrichedData.length > 0);
+        } catch (error) {
+            console.error("Master search failed", error);
+        } finally {
+            setIsSearchingMaster(false);
+        }
+    };
+
+    const handleSelectMaster = (med: any) => {
+        setNewMedicine(prev => ({
+            ...prev,
+            name: med.name,
+            genericName: med.genericName || "",
+            manufacturer: med.manufacturer || "",
+            category: med.category || "Tablet",
+            unitType: med.unitType || "Tablet"
+        }));
+        setShowSuggestions(false);
+    };
+
+    const calculateTradePrice = (mrp: string, margin: string) => {
+        const mrpValue = parseFloat(mrp);
+        const marginValue = parseFloat(margin);
+        if (!isNaN(mrpValue) && !isNaN(marginValue)) {
+            const tp = mrpValue * (1 - marginValue / 100);
+            setNewMedicine(prev => ({ ...prev, price: tp.toFixed(2), salePrice: mrp }));
+        } else {
+            setNewMedicine(prev => ({ ...prev, salePrice: mrp }));
+        }
+    };
+
+    const calculateMargin = (tp: string, mrp: string) => {
+        const tpValue = parseFloat(tp);
+        const mrpValue = parseFloat(mrp);
+        if (!isNaN(tpValue) && !isNaN(mrpValue) && mrpValue > 0) {
+            const margin = ((mrpValue - tpValue) / mrpValue) * 100;
+            setNewMedicine(prev => ({ ...prev, price: tp, margin: margin.toFixed(2) }));
+        } else {
+            setNewMedicine(prev => ({ ...prev, price: tp }));
+        }
+    };
 
     const addItem = (medicine: any) => {
         const exists = purchaseItems.find(i => i.medicineId === medicine.id);
@@ -212,7 +288,22 @@ export default function PurchasesPage() {
                 addItem(createdMedicine);
 
                 // Reset form and close
-                setNewMedicine({ name: "", category: "", manufacturer: "", price: "", salePrice: "", genericName: "" });
+                setNewMedicine({
+                    name: "",
+                    category: "Tablet",
+                    genericName: "",
+                    manufacturer: "",
+                    price: "0",
+                    salePrice: "0",
+                    unitPerPack: "1",
+                    unitType: "Tablet",
+                    reorderLevel: "10",
+                    rackNo: "",
+                    margin: "14.5",
+                    initialBatchNo: "",
+                    initialQuantity: "",
+                    initialExpiryDate: ""
+                });
                 setIsAddMedicineOpen(false);
                 setSearchTerm("");
             } else {
@@ -420,107 +511,235 @@ export default function PurchasesPage() {
 
                 {/* Quick Add Medicine Dialog */}
                 <Dialog open={isAddMedicineOpen} onOpenChange={setIsAddMedicineOpen}>
-                    <DialogContent className="max-w-2xl rounded-[2.5rem] border-none shadow-4xl p-0 overflow-hidden">
-                        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-6">
-                            <DialogHeader>
-                                <DialogTitle className="text-2xl font-black italic tracking-tighter text-white uppercase flex items-center gap-3">
-                                    <div className="h-12 w-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
-                                        <Plus className="h-6 w-6 text-white" />
-                                    </div>
-                                    Quick Add Medicine
-                                </DialogTitle>
-                                <DialogDescription className="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-50">
-                                    Add to inventory and use immediately
-                                </DialogDescription>
-                            </DialogHeader>
-                        </div>
+                    <DialogContent className="sm:max-w-[480px] rounded-[2.5rem] p-5 border-none shadow-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-xl font-black text-slate-900 flex items-center gap-3">
+                                <div className="h-10 w-10 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
+                                    <Plus className="h-5 w-5" />
+                                </div>
+                                Product Registration
+                            </DialogTitle>
+                        </DialogHeader>
 
-                        <div className="p-8 space-y-6 bg-white">
-                            <div className="grid grid-cols-2 gap-6">
-                                <div className="col-span-2 space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Medicine Name *</Label>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 py-1 font-medium">
+                            <div className="space-y-1.5 col-span-2 md:col-span-1 relative">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Brand Name</label>
+                                <Input
+                                    placeholder="e.g. Panadol"
+                                    className="h-10 rounded-xl border-slate-200"
+                                    value={newMedicine.name}
+                                    onChange={(e) => lookupMasterMedicine(e.target.value)}
+                                    onFocus={() => { if (masterSuggestions.length > 0) setShowSuggestions(true); }}
+                                />
+                                {showSuggestions && (
+                                    <div className="absolute z-50 w-full bg-white mt-1.5 rounded-[1.2rem] shadow-[0_15px_40px_rgba(0,0,0,0.12)] border border-slate-100 overflow-hidden max-h-[200px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Master Database Results</span>
+                                            <Badge className="bg-indigo-50 text-indigo-600 border-none text-[8px] h-3.5">Quick Find</Badge>
+                                        </div>
+                                        {masterSuggestions.map((med, index) => (
+                                            <div
+                                                key={index}
+                                                className="px-3 py-2 hover:bg-slate-50 cursor-pointer transition-all border-b border-slate-50 last:border-none group flex justify-between items-center"
+                                                onClick={() => handleSelectMaster(med)}
+                                            >
+                                                <div className="flex-1 min-w-0 pr-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="font-bold text-slate-800 text-xs truncate group-hover:text-indigo-600 transition-colors">
+                                                            {med.name}
+                                                        </div>
+                                                        {med.isLocal && <Badge className="text-[6px] h-3 px-1 bg-amber-50 text-amber-600 border-none">In Inventory</Badge>}
+                                                    </div>
+                                                    <div className="text-[9px] text-slate-400 font-medium truncate italic">
+                                                        {med.genericName || "Formula not listed"}
+                                                    </div>
+                                                </div>
+                                                <Badge variant="outline" className="text-[7px] h-3.5 px-1 border-none bg-indigo-50 text-indigo-600 uppercase">
+                                                    {med.category}
+                                                </Badge>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {isSearchingMaster && (
+                                    <div className="absolute right-3 top-10">
+                                        <RefreshCw className="h-3 w-3 animate-spin text-indigo-500" />
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="space-y-1.5 col-span-2 md:col-span-1">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
+                                <Select value={newMedicine.category} onValueChange={(val) => setNewMedicine({ ...newMedicine, category: val })}>
+                                    <SelectTrigger className="h-10 rounded-xl border-slate-200">
+                                        <SelectValue placeholder="Select" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-none shadow-xl">
+                                        {["Tablet", "Capsule", "Syrup", "Injection", "Ointment", "Drops", "Sachet", "Inhaler"].map(cat => (
+                                            <SelectItem key={cat} value={cat} className="rounded-xl font-bold">{cat}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-1.5 col-span-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Formula (Generic)</label>
+                                <Input
+                                    placeholder="e.g. Paracetamol"
+                                    className="h-10 rounded-xl border-slate-200"
+                                    value={newMedicine.genericName}
+                                    onChange={(e) => setNewMedicine({ ...newMedicine, genericName: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-1 col-span-2 md:col-span-1">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Manufacturer</label>
+                                <Input
+                                    placeholder="e.g. GSK"
+                                    className="h-10 rounded-xl border-slate-200"
+                                    value={newMedicine.manufacturer}
+                                    onChange={(e) => setNewMedicine({ ...newMedicine, manufacturer: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-1 col-span-2 md:col-span-1">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rack No (Storage)</label>
+                                <Input
+                                    placeholder="e.g. A-1"
+                                    className="h-10 rounded-xl border-slate-200"
+                                    value={newMedicine.rackNo}
+                                    onChange={(e) => setNewMedicine({ ...newMedicine, rackNo: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="col-span-2 grid grid-cols-3 gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-100 border-dashed mt-1">
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-indigo-500 uppercase tracking-widest ml-1">Retail Price (MRP)</label>
                                     <Input
-                                        className="h-14 bg-slate-50 border-none rounded-2xl text-sm font-bold"
-                                        placeholder="e.g. Panadol"
-                                        value={newMedicine.name}
-                                        onChange={(e) => setNewMedicine({ ...newMedicine, name: e.target.value })}
+                                        type="number"
+                                        placeholder="MRP"
+                                        className="h-10 rounded-lg border-slate-200 bg-white"
+                                        value={newMedicine.salePrice}
+                                        onChange={(e) => calculateTradePrice(e.target.value, newMedicine.margin)}
                                     />
                                 </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Category *</Label>
-                                    <Select value={newMedicine.category} onValueChange={(val) => setNewMedicine({ ...newMedicine, category: val })}>
-                                        <SelectTrigger className="h-14 bg-slate-50 border-none rounded-2xl text-sm font-bold">
-                                            <SelectValue placeholder="Select Category" />
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Margin %</label>
+                                    <div className="relative">
+                                        <Input
+                                            type="number"
+                                            className="h-10 rounded-lg border-slate-200 bg-white pr-6"
+                                            value={newMedicine.margin}
+                                            onChange={(e) => {
+                                                setNewMedicine({ ...newMedicine, margin: e.target.value });
+                                                calculateTradePrice(newMedicine.salePrice, e.target.value);
+                                            }}
+                                        />
+                                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">%</span>
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Trade Price (Cost)</label>
+                                    <Input
+                                        type="number"
+                                        placeholder="Cost Price"
+                                        className="h-10 rounded-lg border-slate-200 bg-white"
+                                        value={newMedicine.price}
+                                        onChange={(e) => calculateMargin(e.target.value, newMedicine.salePrice)}
+                                    />
+                                </div>
+                                <div className="space-y-1 col-span-3">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Unit Type</label>
+                                    <Select
+                                        value={newMedicine.unitType}
+                                        onValueChange={(val) => setNewMedicine({ ...newMedicine, unitType: val })}
+                                    >
+                                        <SelectTrigger className="h-10 rounded-lg border-slate-200">
+                                            <SelectValue />
                                         </SelectTrigger>
-                                        <SelectContent className="rounded-2xl">
-                                            {["Tablet", "Capsule", "Syrup", "Injection", "Ointment", "Drops", "Other"].map(cat => (
-                                                <SelectItem key={cat} value={cat} className="rounded-xl font-bold">{cat}</SelectItem>
-                                            ))}
+                                        <SelectContent className="rounded-xl border-none shadow-xl">
+                                            <SelectItem value="Tablet">Tablet</SelectItem>
+                                            <SelectItem value="Capsule">Capsule</SelectItem>
+                                            <SelectItem value="Bottle">Bottle (Syrup/Drops)</SelectItem>
+                                            <SelectItem value="Sachet">Sachet</SelectItem>
+                                            <SelectItem value="Injection">Injection (Vial/Ampule)</SelectItem>
+                                            <SelectItem value="Tube">Tube (Cream/Gel)</SelectItem>
+                                            <SelectItem value="Inhaler">Inhaler</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
+                            </div>
+                        </div>
 
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Manufacturer</Label>
+                        <div className="space-y-2 py-0.5 px-1">
+                            <div className="flex items-center gap-2">
+                                <div className="h-[1px] flex-1 bg-slate-100"></div>
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2">Initial Stock Entry (Optional)</span>
+                                <div className="h-[1px] flex-1 bg-slate-100"></div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="space-y-0.5">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Batch No</label>
                                     <Input
-                                        className="h-14 bg-slate-50 border-none rounded-2xl text-sm font-bold"
-                                        placeholder="e.g. GSK"
-                                        value={newMedicine.manufacturer}
-                                        onChange={(e) => setNewMedicine({ ...newMedicine, manufacturer: e.target.value })}
+                                        placeholder="e.g. B-101"
+                                        className="h-9 rounded-lg border-slate-200"
+                                        value={newMedicine.initialBatchNo}
+                                        onChange={(e) => setNewMedicine({ ...newMedicine, initialBatchNo: e.target.value })}
                                     />
                                 </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Generic Name</Label>
-                                    <Input
-                                        className="h-14 bg-slate-50 border-none rounded-2xl text-sm font-bold"
-                                        placeholder="e.g. Paracetamol"
-                                        value={newMedicine.genericName}
-                                        onChange={(e) => setNewMedicine({ ...newMedicine, genericName: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Purchase Price (Rs.) *</Label>
+                                <div className="space-y-0.5">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity</label>
                                     <Input
                                         type="number"
-                                        className="h-14 bg-slate-50 border-none rounded-2xl text-sm font-bold"
-                                        placeholder="0.00"
-                                        value={newMedicine.price}
-                                        onChange={(e) => setNewMedicine({ ...newMedicine, price: e.target.value })}
+                                        placeholder="0"
+                                        className="h-9 rounded-lg border-slate-200"
+                                        value={newMedicine.initialQuantity}
+                                        onChange={(e) => setNewMedicine({ ...newMedicine, initialQuantity: e.target.value })}
                                     />
                                 </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Sale Price (Rs.) *</Label>
+                                <div className="space-y-0.5">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Expiry Date</label>
                                     <Input
-                                        type="number"
-                                        className="h-14 bg-slate-50 border-none rounded-2xl text-sm font-bold"
-                                        placeholder="0.00"
-                                        value={newMedicine.salePrice}
-                                        onChange={(e) => setNewMedicine({ ...newMedicine, salePrice: e.target.value })}
+                                        type="date"
+                                        className="h-9 rounded-lg border-slate-200"
+                                        value={newMedicine.initialExpiryDate}
+                                        onChange={(e) => setNewMedicine({ ...newMedicine, initialExpiryDate: e.target.value })}
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        <DialogFooter className="p-6 bg-slate-50/50 border-t border-slate-100">
+                        <DialogFooter className="mt-4 flex gap-2">
                             <Button
                                 variant="outline"
-                                className="h-12 px-6 rounded-xl border-slate-200 font-bold uppercase text-xs"
+                                className="flex-1 h-10 rounded-xl border-slate-200 font-bold uppercase text-[10px] tracking-widest"
                                 onClick={() => {
                                     setIsAddMedicineOpen(false);
-                                    setNewMedicine({ name: "", category: "", manufacturer: "", price: "", salePrice: "", genericName: "" });
+                                    setNewMedicine({
+                                        name: "",
+                                        category: "Tablet",
+                                        genericName: "",
+                                        manufacturer: "",
+                                        price: "0",
+                                        salePrice: "0",
+                                        unitPerPack: "1",
+                                        unitType: "Tablet",
+                                        reorderLevel: "10",
+                                        rackNo: "",
+                                        margin: "14.5",
+                                        initialBatchNo: "",
+                                        initialQuantity: "",
+                                        initialExpiryDate: ""
+                                    });
                                 }}
                             >
                                 Cancel
                             </Button>
                             <Button
-                                className="h-12 px-8 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-black uppercase text-xs tracking-wider shadow-lg"
+                                className="flex-[2] h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[11px] tracking-widest shadow-lg shadow-indigo-100 transition-all"
                                 onClick={handleQuickAddMedicine}
                             >
-                                <Save className="h-4 w-4 mr-2" /> Save & Add to Purchase
+                                <Save className="h-4 w-4 mr-2" /> Register Product
                             </Button>
                         </DialogFooter>
                     </DialogContent>
@@ -709,107 +928,235 @@ export default function PurchasesPage() {
 
             {/* Quick Add Medicine Dialog */}
             <Dialog open={isAddMedicineOpen} onOpenChange={setIsAddMedicineOpen}>
-                <DialogContent className="max-w-2xl rounded-[2.5rem] border-none shadow-4xl p-0 overflow-hidden">
-                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-6">
-                        <DialogHeader>
-                            <DialogTitle className="text-2xl font-black italic tracking-tighter text-white uppercase flex items-center gap-3">
-                                <div className="h-12 w-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
-                                    <Plus className="h-6 w-6 text-white" />
-                                </div>
-                                Quick Add Medicine
-                            </DialogTitle>
-                            <DialogDescription className="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-50">
-                                Add to inventory and use immediately
-                            </DialogDescription>
-                        </DialogHeader>
-                    </div>
+                <DialogContent className="sm:max-w-[480px] rounded-[2.5rem] p-5 border-none shadow-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-black text-slate-900 flex items-center gap-3">
+                            <div className="h-10 w-10 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
+                                <Plus className="h-5 w-5" />
+                            </div>
+                            Product Registration
+                        </DialogTitle>
+                    </DialogHeader>
 
-                    <div className="p-8 space-y-6 bg-white">
-                        <div className="grid grid-cols-2 gap-6">
-                            <div className="col-span-2 space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Medicine Name *</Label>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 py-1 font-medium">
+                        <div className="space-y-1.5 col-span-2 md:col-span-1 relative">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Brand Name</label>
+                            <Input
+                                placeholder="e.g. Panadol"
+                                className="h-10 rounded-xl border-slate-200"
+                                value={newMedicine.name}
+                                onChange={(e) => lookupMasterMedicine(e.target.value)}
+                                onFocus={() => { if (masterSuggestions.length > 0) setShowSuggestions(true); }}
+                            />
+                            {showSuggestions && (
+                                <div className="absolute z-50 w-full bg-white mt-1.5 rounded-[1.2rem] shadow-[0_15px_40px_rgba(0,0,0,0.12)] border border-slate-100 overflow-hidden max-h-[200px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Master Database Results</span>
+                                        <Badge className="bg-indigo-50 text-indigo-600 border-none text-[8px] h-3.5">Quick Find</Badge>
+                                    </div>
+                                    {masterSuggestions.map((med, index) => (
+                                        <div
+                                            key={index}
+                                            className="px-3 py-2 hover:bg-slate-50 cursor-pointer transition-all border-b border-slate-50 last:border-none group flex justify-between items-center"
+                                            onClick={() => handleSelectMaster(med)}
+                                        >
+                                            <div className="flex-1 min-w-0 pr-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="font-bold text-slate-800 text-xs truncate group-hover:text-indigo-600 transition-colors">
+                                                        {med.name}
+                                                    </div>
+                                                    {med.isLocal && <Badge className="text-[6px] h-3 px-1 bg-amber-50 text-amber-600 border-none">In Inventory</Badge>}
+                                                </div>
+                                                <div className="text-[9px] text-slate-400 font-medium truncate italic">
+                                                    {med.genericName || "Formula not listed"}
+                                                </div>
+                                            </div>
+                                            <Badge variant="outline" className="text-[7px] h-3.5 px-1 border-none bg-indigo-50 text-indigo-600 uppercase">
+                                                {med.category}
+                                            </Badge>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {isSearchingMaster && (
+                                <div className="absolute right-3 top-10">
+                                    <RefreshCw className="h-3 w-3 animate-spin text-indigo-500" />
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="space-y-1.5 col-span-2 md:col-span-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
+                            <Select value={newMedicine.category} onValueChange={(val) => setNewMedicine({ ...newMedicine, category: val })}>
+                                <SelectTrigger className="h-10 rounded-xl border-slate-200">
+                                    <SelectValue placeholder="Select" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl border-none shadow-xl">
+                                    {["Tablet", "Capsule", "Syrup", "Injection", "Ointment", "Drops", "Sachet", "Inhaler"].map(cat => (
+                                        <SelectItem key={cat} value={cat} className="rounded-xl font-bold">{cat}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-1.5 col-span-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Formula (Generic)</label>
+                            <Input
+                                placeholder="e.g. Paracetamol"
+                                className="h-10 rounded-xl border-slate-200"
+                                value={newMedicine.genericName}
+                                onChange={(e) => setNewMedicine({ ...newMedicine, genericName: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="space-y-1 col-span-2 md:col-span-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Manufacturer</label>
+                            <Input
+                                placeholder="e.g. GSK"
+                                className="h-10 rounded-xl border-slate-200"
+                                value={newMedicine.manufacturer}
+                                onChange={(e) => setNewMedicine({ ...newMedicine, manufacturer: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="space-y-1 col-span-2 md:col-span-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rack No (Storage)</label>
+                            <Input
+                                placeholder="e.g. A-1"
+                                className="h-10 rounded-xl border-slate-200"
+                                value={newMedicine.rackNo}
+                                onChange={(e) => setNewMedicine({ ...newMedicine, rackNo: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="col-span-2 grid grid-cols-3 gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-100 border-dashed mt-1">
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-black text-indigo-500 uppercase tracking-widest ml-1">Retail Price (MRP)</label>
                                 <Input
-                                    className="h-14 bg-slate-50 border-none rounded-2xl text-sm font-bold"
-                                    placeholder="e.g. Panadol"
-                                    value={newMedicine.name}
-                                    onChange={(e) => setNewMedicine({ ...newMedicine, name: e.target.value })}
+                                    type="number"
+                                    placeholder="MRP"
+                                    className="h-10 rounded-lg border-slate-200 bg-white"
+                                    value={newMedicine.salePrice}
+                                    onChange={(e) => calculateTradePrice(e.target.value, newMedicine.margin)}
                                 />
                             </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Category *</Label>
-                                <Select value={newMedicine.category} onValueChange={(val) => setNewMedicine({ ...newMedicine, category: val })}>
-                                    <SelectTrigger className="h-14 bg-slate-50 border-none rounded-2xl text-sm font-bold">
-                                        <SelectValue placeholder="Select Category" />
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Margin %</label>
+                                <div className="relative">
+                                    <Input
+                                        type="number"
+                                        className="h-10 rounded-lg border-slate-200 bg-white pr-6"
+                                        value={newMedicine.margin}
+                                        onChange={(e) => {
+                                            setNewMedicine({ ...newMedicine, margin: e.target.value });
+                                            calculateTradePrice(newMedicine.salePrice, e.target.value);
+                                        }}
+                                    />
+                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">%</span>
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Trade Price (Cost)</label>
+                                <Input
+                                    type="number"
+                                    placeholder="Cost Price"
+                                    className="h-10 rounded-lg border-slate-200 bg-white"
+                                    value={newMedicine.price}
+                                    onChange={(e) => calculateMargin(e.target.value, newMedicine.salePrice)}
+                                />
+                            </div>
+                            <div className="space-y-1 col-span-3">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Unit Type</label>
+                                <Select
+                                    value={newMedicine.unitType}
+                                    onValueChange={(val) => setNewMedicine({ ...newMedicine, unitType: val })}
+                                >
+                                    <SelectTrigger className="h-10 rounded-lg border-slate-200">
+                                        <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="rounded-2xl">
-                                        {["Tablet", "Capsule", "Syrup", "Injection", "Ointment", "Drops", "Other"].map(cat => (
-                                            <SelectItem key={cat} value={cat} className="rounded-xl font-bold">{cat}</SelectItem>
-                                        ))}
+                                    <SelectContent className="rounded-xl border-none shadow-xl">
+                                        <SelectItem value="Tablet">Tablet</SelectItem>
+                                        <SelectItem value="Capsule">Capsule</SelectItem>
+                                        <SelectItem value="Bottle">Bottle (Syrup/Drops)</SelectItem>
+                                        <SelectItem value="Sachet">Sachet</SelectItem>
+                                        <SelectItem value="Injection">Injection (Vial/Ampule)</SelectItem>
+                                        <SelectItem value="Tube">Tube (Cream/Gel)</SelectItem>
+                                        <SelectItem value="Inhaler">Inhaler</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
+                        </div>
+                    </div>
 
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Manufacturer</Label>
+                    <div className="space-y-2 py-0.5 px-1">
+                        <div className="flex items-center gap-2">
+                            <div className="h-[1px] flex-1 bg-slate-100"></div>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2">Initial Stock Entry (Optional)</span>
+                            <div className="h-[1px] flex-1 bg-slate-100"></div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="space-y-0.5">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Batch No</label>
                                 <Input
-                                    className="h-14 bg-slate-50 border-none rounded-2xl text-sm font-bold"
-                                    placeholder="e.g. GSK"
-                                    value={newMedicine.manufacturer}
-                                    onChange={(e) => setNewMedicine({ ...newMedicine, manufacturer: e.target.value })}
+                                    placeholder="e.g. B-101"
+                                    className="h-9 rounded-lg border-slate-200"
+                                    value={newMedicine.initialBatchNo}
+                                    onChange={(e) => setNewMedicine({ ...newMedicine, initialBatchNo: e.target.value })}
                                 />
                             </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Generic Name</Label>
-                                <Input
-                                    className="h-14 bg-slate-50 border-none rounded-2xl text-sm font-bold"
-                                    placeholder="e.g. Paracetamol"
-                                    value={newMedicine.genericName}
-                                    onChange={(e) => setNewMedicine({ ...newMedicine, genericName: e.target.value })}
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Purchase Price (Rs.) *</Label>
+                            <div className="space-y-0.5">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity</label>
                                 <Input
                                     type="number"
-                                    className="h-14 bg-slate-50 border-none rounded-2xl text-sm font-bold"
-                                    placeholder="0.00"
-                                    value={newMedicine.price}
-                                    onChange={(e) => setNewMedicine({ ...newMedicine, price: e.target.value })}
+                                    placeholder="0"
+                                    className="h-9 rounded-lg border-slate-200"
+                                    value={newMedicine.initialQuantity}
+                                    onChange={(e) => setNewMedicine({ ...newMedicine, initialQuantity: e.target.value })}
                                 />
                             </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Sale Price (Rs.) *</Label>
+                            <div className="space-y-0.5">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Expiry Date</label>
                                 <Input
-                                    type="number"
-                                    className="h-14 bg-slate-50 border-none rounded-2xl text-sm font-bold"
-                                    placeholder="0.00"
-                                    value={newMedicine.salePrice}
-                                    onChange={(e) => setNewMedicine({ ...newMedicine, salePrice: e.target.value })}
+                                    type="date"
+                                    className="h-9 rounded-lg border-slate-200"
+                                    value={newMedicine.initialExpiryDate}
+                                    onChange={(e) => setNewMedicine({ ...newMedicine, initialExpiryDate: e.target.value })}
                                 />
                             </div>
                         </div>
                     </div>
 
-                    <DialogFooter className="p-6 bg-slate-50/50 border-t border-slate-100">
+                    <DialogFooter className="mt-4 flex gap-2">
                         <Button
                             variant="outline"
-                            className="h-12 px-6 rounded-xl border-slate-200 font-bold uppercase text-xs"
+                            className="flex-1 h-10 rounded-xl border-slate-200 font-bold uppercase text-[10px] tracking-widest"
                             onClick={() => {
                                 setIsAddMedicineOpen(false);
-                                setNewMedicine({ name: "", category: "", manufacturer: "", price: "", salePrice: "", genericName: "" });
+                                setNewMedicine({
+                                    name: "",
+                                    category: "Tablet",
+                                    genericName: "",
+                                    manufacturer: "",
+                                    price: "0",
+                                    salePrice: "0",
+                                    unitPerPack: "1",
+                                    unitType: "Tablet",
+                                    reorderLevel: "10",
+                                    rackNo: "",
+                                    margin: "14.5",
+                                    initialBatchNo: "",
+                                    initialQuantity: "",
+                                    initialExpiryDate: ""
+                                });
                             }}
                         >
                             Cancel
                         </Button>
                         <Button
-                            className="h-12 px-8 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-black uppercase text-xs tracking-wider shadow-lg"
+                            className="flex-[2] h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[11px] tracking-widest shadow-lg shadow-indigo-100 transition-all"
                             onClick={handleQuickAddMedicine}
                         >
-                            <Save className="h-4 w-4 mr-2" /> Save & Add to Purchase
+                            <Save className="h-4 w-4 mr-2" /> Register Product
                         </Button>
                     </DialogFooter>
                 </DialogContent>

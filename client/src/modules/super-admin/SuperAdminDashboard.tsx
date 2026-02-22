@@ -8,7 +8,8 @@ import {
     ShieldAlert,
     TrendingUp,
     BarChart3,
-    CircleDashed
+    CircleDashed,
+    RefreshCw
 } from "lucide-react";
 import {
     ResponsiveContainer,
@@ -54,8 +55,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function SuperAdminDashboard() {
     const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
+    const [refreshing, setRefreshing] = useState(false);
 
     const fetchPharmacies = async () => {
+        setRefreshing(true);
         try {
             const response = await fetch("http://localhost:5000/api/super/pharmacies", {
                 headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
@@ -64,6 +67,8 @@ export default function SuperAdminDashboard() {
             if (response.ok) setPharmacies(data);
         } catch (err: any) {
             console.error("Failed to fetch pharmacies", err);
+        } finally {
+            setTimeout(() => setRefreshing(false), 800);
         }
     };
 
@@ -118,9 +123,21 @@ export default function SuperAdminDashboard() {
                         </p>
                     </div>
 
-                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 px-8 py-4 rounded-3xl text-center">
-                        <p className="text-[10px] font-black text-zinc-500 uppercase mb-0.5 tracking-[0.2em]">Network Health</p>
-                        <p className="text-3xl font-black tabular-nums tracking-tighter text-emerald-500">98.4<span className="text-xs opacity-50 ml-1">%</span></p>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={fetchPharmacies}
+                            disabled={refreshing}
+                            className={`h-14 px-6 rounded-3xl border border-white/10 backdrop-blur-xl flex items-center gap-3 font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 ${refreshing ? 'bg-white/20 text-white cursor-wait' : 'bg-white/5 hover:bg-white/10 text-zinc-400'
+                                }`}
+                        >
+                            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                            {refreshing ? 'Refreshing...' : 'Sync Data'}
+                        </button>
+
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 px-8 py-4 rounded-3xl text-center">
+                            <p className="text-[10px] font-black text-zinc-500 uppercase mb-0.5 tracking-[0.2em]">Network Health</p>
+                            <p className="text-3xl font-black tabular-nums tracking-tighter text-emerald-500">98.4<span className="text-xs opacity-50 ml-1">%</span></p>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -38,6 +38,7 @@ router.put("/", authenticateToken, async (req: any, res) => {
             billFooter,
             showPharmacyLogo,
             showTaxId,
+            showLicense,
             defaultTaxRate,
             nearExpiryDays,
             lowStockThreshold
@@ -52,6 +53,7 @@ router.put("/", authenticateToken, async (req: any, res) => {
                 billFooter,
                 showPharmacyLogo,
                 showTaxId,
+                showLicense,
                 defaultTaxRate: parseFloat(defaultTaxRate) || 0,
                 nearExpiryDays: parseInt(nearExpiryDays) || 30,
                 lowStockThreshold: parseInt(lowStockThreshold) || 10
@@ -62,6 +64,7 @@ router.put("/", authenticateToken, async (req: any, res) => {
                 billFooter,
                 showPharmacyLogo,
                 showTaxId,
+                showLicense,
                 defaultTaxRate: parseFloat(defaultTaxRate) || 0,
                 nearExpiryDays: parseInt(nearExpiryDays) || 30,
                 lowStockThreshold: parseInt(lowStockThreshold) || 10
