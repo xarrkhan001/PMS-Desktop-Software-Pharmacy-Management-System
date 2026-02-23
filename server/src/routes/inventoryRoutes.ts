@@ -179,7 +179,7 @@ router.get("/alerts", authenticateToken, async (req: any, res) => {
 router.post("/medicines", authenticateToken, async (req: any, res) => {
     try {
         const {
-            name, category, genericName, manufacturer, price, salePrice,
+            name, category, genericName, manufacturer, price, salePrice, taxRate,
             reorderLevel, rackNo, unitPerPack, unitType,
             initialBatchNo, initialQuantity, initialExpiryDate
         } = req.body;
@@ -195,6 +195,7 @@ router.post("/medicines", authenticateToken, async (req: any, res) => {
                     manufacturer,
                     price: parseFloat(price.toString()),
                     salePrice: parseFloat(salePrice.toString()),
+                    taxRate: taxRate ? parseFloat(taxRate.toString()) : 0,
                     reorderLevel: reorderLevel ? parseInt(reorderLevel.toString()) : 10,
                     unitPerPack: unitPerPack ? parseInt(unitPerPack.toString()) : 1,
                     unitType: unitType || "Tablet",
@@ -245,7 +246,7 @@ router.put("/medicines/:id", authenticateToken, async (req: any, res) => {
     try {
         const { id } = req.params;
         const {
-            name, category, genericName, manufacturer, price, salePrice,
+            name, category, genericName, manufacturer, price, salePrice, taxRate,
             reorderLevel, rackNo, unitPerPack, unitType, stock,
             initialBatchNo, initialQuantity, initialExpiryDate
         } = req.body;
@@ -262,6 +263,7 @@ router.put("/medicines/:id", authenticateToken, async (req: any, res) => {
                     manufacturer,
                     price: price !== undefined ? parseFloat(price.toString()) : undefined,
                     salePrice: salePrice !== undefined ? parseFloat(salePrice.toString()) : undefined,
+                    taxRate: taxRate !== undefined ? parseFloat(taxRate.toString()) : undefined,
                     reorderLevel: reorderLevel !== undefined ? parseInt(reorderLevel.toString()) : undefined,
                     unitPerPack: unitPerPack !== undefined ? parseInt(unitPerPack.toString()) : undefined,
                     unitType: unitType,

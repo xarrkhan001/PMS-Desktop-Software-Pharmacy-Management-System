@@ -610,19 +610,19 @@ export default function ManagedPharmacies() {
 
                 {/* Onboarding Success Modal */}
                 <Dialog open={showKeyModal} onOpenChange={setShowKeyModal}>
-                    <DialogContent className="sm:max-w-[450px] rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
-                        <div className="bg-emerald-600 p-8 text-white text-center">
-                            <div className="h-20 w-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-white/30">
-                                <ShieldCheck className="h-10 w-10 text-white" />
+                    <DialogContent className="sm:max-w-[400px] rounded-[1.5rem] p-0 overflow-hidden border-none shadow-2xl">
+                        <div className="bg-emerald-600 p-5 text-white text-center">
+                            <div className="h-14 w-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-white/30">
+                                <ShieldCheck className="h-7 w-7 text-white" />
                             </div>
-                            <DialogTitle className="text-2xl font-black mb-1">Registration Successful!</DialogTitle>
-                            <p className="text-emerald-100 text-sm font-medium">Pharmacy has been onboarded as restricted.</p>
+                            <DialogTitle className="text-xl font-black mb-0.5">Registration Successful!</DialogTitle>
+                            <p className="text-emerald-100 text-[11px] font-medium">Pharmacy has been onboarded as restricted.</p>
                         </div>
-                        <div className="p-8 space-y-6 bg-white">
-                            <div className="space-y-3">
-                                <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 ml-1">Universal Activation Key</Label>
-                                <div className="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200 relative group">
-                                    <p className="font-mono text-center text-sm font-black text-slate-700 break-all select-all leading-relaxed">
+                        <div className="p-5 space-y-4 bg-white">
+                            <div className="space-y-2">
+                                <Label className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400 ml-1">Universal Activation Key</Label>
+                                <div className="bg-slate-50 p-4 rounded-xl border-2 border-dashed border-slate-200 relative group">
+                                    <p className="font-mono text-center text-[11px] font-black text-slate-700 break-all select-all leading-relaxed">
                                         {onboardedKey}
                                     </p>
                                     <Button
@@ -631,25 +631,25 @@ export default function ManagedPharmacies() {
                                             navigator.clipboard.writeText(onboardedKey);
                                             alert("Key copied to clipboard!");
                                         }}
-                                        className="mt-4 w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl h-10 border-none shadow-none text-xs"
+                                        className="mt-3 w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg h-8 border-none shadow-none text-[10px]"
                                     >
                                         Copy Activation Key
                                     </Button>
                                 </div>
                             </div>
 
-                            <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
-                                <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                                    <Clock className="h-3.3 w-3.3" /> Instructions for Owner
+                            <div className="p-3 bg-amber-50 rounded-lg border border-amber-100">
+                                <p className="text-[9px] font-bold text-amber-700 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                                    <Clock className="h-3 w-3" /> Instructions for Owner
                                 </p>
-                                <p className="text-[11px] text-amber-600 font-medium leading-relaxed">
-                                    Provide this key to the pharmacy owner. They must enter it on their system's lock screen to activate and bind the license to their hardware.
+                                <p className="text-[10px] text-amber-600 font-medium leading-relaxed">
+                                    Provide this key to the pharmacy owner. They must enter it on their system's lock screen to activate and bind the license.
                                 </p>
                             </div>
 
                             <Button
                                 onClick={() => setShowKeyModal(false)}
-                                className="w-full h-12 bg-slate-900 hover:bg-slate-800 font-black rounded-xl uppercase tracking-widest text-xs text-white"
+                                className="w-full h-10 bg-slate-900 hover:bg-slate-800 font-black rounded-lg uppercase tracking-widest text-[10px] text-white"
                             >
                                 I Have Saved the Key
                             </Button>

@@ -102,51 +102,73 @@ function startServer() {
   }
 }
 
-function createWindow() {
-  const iconPath = isDev
-    ? path.join(__dirname, '../public/medicore_icon.ico')
-    : path.join(__dirname, '../dist/medicore_icon.ico');
+const gotTheLock = app.requestSingleInstanceLock();
+let mainWindow = null;
 
-  const win = new BrowserWindow({
-    width: 1280,
-    height: 800,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-    },
-    icon: fs.existsSync(iconPath) ? nativeImage.createFromPath(iconPath) : undefined,
-    title: 'MediCore PMS - Pharmacy Management System',
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Someone tried to run a second instance, we should focus our window.
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
   });
 
-  startServer();
+  function createWindow() {
+    const iconPath = isDev
+      ? path.join(__dirname, '../public/medicore_icon.ico')
+      : path.join(__dirname, '../dist/medicore_icon.ico');
 
-  if (isDev) {
-    win.loadURL('http://localhost:5173');
-    win.webContents.openDevTools();
-  } else {
-    const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
-    win.loadFile(indexPath).catch(err => {
-      console.error('UI Load Error:', err);
+    mainWindow = new BrowserWindow({
+      width: 1280,
+      height: 800,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false,
+      },
+      icon: fs.existsSync(iconPath) ? nativeImage.createFromPath(iconPath) : undefined,
+      title: 'MediCore PMS - Pharmacy Management System',
+    });
+
+    startServer();
+
+    if (isDev) {
+      mainWindow.loadURL('http://localhost:5173');
+      mainWindow.webContents.openDevTools();
+    } else {
+      const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
+      mainWindow.loadFile(indexPath).catch(err => {
+        console.error('UI Load Error:', err);
+      });
+    }
+
+    mainWindow.setMenu(null);
+    
+    mainWindow.on('closed', () => {
+      mainWindow = null;
     });
   }
 
-  win.setMenu(null);
-}
-
-app.whenReady().then(() => {
-  if (process.platform === 'win32') {
-    app.setAppUserModelId('com.medicore.pms');
-  }
-  createWindow();
-});
-
-app.on('window-all-closed', () => {
-  if (backendProcess) backendProcess.kill();
-  if (process.platform !== 'darwin') app.quit();
-});
-
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
+  app.whenReady().then(() => {
+    if (process.platform === 'win32') {
+      app.setAppUserModelId('com.medicore.pms');
+    }
     createWindow();
-  }
-});
+  });
+
+  app.on('window-all-closed', () => {
+    if (backendProcess) {
+      backendProcess.kill();
+      backendProcess = null;
+    }
+    if (process.platform !== 'darwin') app.quit();
+  });
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
+}

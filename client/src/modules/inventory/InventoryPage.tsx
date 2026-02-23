@@ -59,6 +59,7 @@ interface Medicine {
     reorderLevel: number;
     price: number;
     salePrice: number;
+    taxRate: number;
     unitPerPack: number;
     unitType: string;
     rackNo?: string;
@@ -144,6 +145,7 @@ export default function InventoryPage() {
         manufacturer: "",
         price: "", // Trade Price
         salePrice: "", // Retail Price (MRP)
+        taxRate: "0", // Tax Rate (GST %)
         unitPerPack: "1",
         unitType: "Tablet",
         reorderLevel: "10",
@@ -435,6 +437,7 @@ export default function InventoryPage() {
                     manufacturer: "",
                     price: "",
                     salePrice: "",
+                    taxRate: "0",
                     unitPerPack: "1",
                     unitType: "Tablet",
                     reorderLevel: "10",
@@ -726,21 +729,21 @@ export default function InventoryPage() {
                                 New Medicine
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[480px] rounded-[2.5rem] p-5 border-none shadow-2xl">
+                        <DialogContent className="sm:max-w-[460px] rounded-2xl p-4 border-none shadow-2xl">
                             <DialogHeader>
-                                <DialogTitle className="text-xl font-black text-slate-900 flex items-center gap-3">
-                                    <div className="h-10 w-10 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
-                                        <Plus className="h-5 w-5" />
+                                <DialogTitle className="text-base font-black text-slate-900 flex items-center gap-2">
+                                    <div className="h-7 w-7 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                                        <Plus className="h-3.5 w-3.5" />
                                     </div>
                                     Product Registration
                                 </DialogTitle>
                             </DialogHeader>
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-2 py-1 font-medium">
-                                <div className="space-y-1.5 col-span-2 md:col-span-1 relative">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Brand Name</label>
+                            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 py-0.5 font-medium">
+                                <div className="space-y-1 col-span-2 md:col-span-1 relative">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Brand Name</label>
                                     <Input
                                         placeholder="e.g. Panadol CF"
-                                        className="h-10 rounded-xl border-slate-200"
+                                        className="h-8 text-xs rounded-lg border-slate-200"
                                         value={newMedicine.name}
                                         onChange={(e) => lookupMasterMedicine(e.target.value)}
                                         onFocus={() => { if (masterSuggestions.length > 0) setShowSuggestions(true); }}
@@ -789,13 +792,13 @@ export default function InventoryPage() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="space-y-1.5 col-span-2 md:col-span-1">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
+                                <div className="space-y-1 col-span-2 md:col-span-1">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
                                     <Select
                                         value={newMedicine.category}
                                         onValueChange={(val) => setNewMedicine({ ...newMedicine, category: val })}
                                     >
-                                        <SelectTrigger className="h-10 rounded-xl border-slate-200 focus:ring-2 ring-indigo-500/10">
+                                        <SelectTrigger className="h-8 text-xs rounded-lg border-slate-200">
                                             <SelectValue placeholder="Select Category" />
                                         </SelectTrigger>
                                         <SelectContent className="rounded-xl border-none shadow-xl">
@@ -812,52 +815,52 @@ export default function InventoryPage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="space-y-1.5 col-span-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Formula (Generic)</label>
+                                <div className="space-y-1 col-span-2">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Formula (Generic)</label>
                                     <Input
                                         placeholder="Paracetamol..."
-                                        className="h-10 rounded-xl border-slate-200 focus:ring-2 ring-indigo-500/10"
+                                        className="h-8 text-xs rounded-lg border-slate-200"
                                         value={newMedicine.genericName}
                                         onChange={(e) => setNewMedicine({ ...newMedicine, genericName: e.target.value })}
                                     />
                                 </div>
                                 <div className="space-y-1 col-span-2 md:col-span-1">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Company</label>
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Company</label>
                                     <Input
                                         placeholder="Manufacturer Name"
-                                        className="h-10 rounded-xl border-slate-200 focus:ring-2 ring-indigo-500/10"
+                                        className="h-8 text-xs rounded-lg border-slate-200"
                                         value={newMedicine.manufacturer}
                                         onChange={(e) => setNewMedicine({ ...newMedicine, manufacturer: e.target.value })}
                                     />
                                 </div>
                                 <div className="space-y-1 col-span-2 md:col-span-1">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rack No (Storage)</label>
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Rack No (Storage)</label>
                                     <Input
                                         placeholder="e.g. A-1"
-                                        className="h-10 rounded-xl border-slate-200 focus:ring-2 ring-indigo-500/10"
+                                        className="h-8 text-xs rounded-lg border-slate-200"
                                         value={newMedicine.rackNo}
                                         onChange={(e) => setNewMedicine({ ...newMedicine, rackNo: e.target.value })}
                                     />
                                 </div>
 
                                 {/* Pricing Section with Logic */}
-                                <div className="col-span-2 grid grid-cols-3 gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-100 border-dashed">
-                                    <div className="space-y-1">
+                                <div className="col-span-2 grid grid-cols-3 gap-1.5 p-2 bg-slate-50 rounded-lg border border-slate-100 border-dashed">
+                                    <div className="space-y-0.5">
                                         <label className="text-[9px] font-black text-indigo-500 uppercase tracking-widest ml-1">Retail Price (MRP)</label>
                                         <Input
                                             type="number"
                                             placeholder="MRP"
-                                            className="h-10 rounded-lg border-slate-200 bg-white"
+                                            className="h-8 text-xs rounded-md border-slate-200 bg-white"
                                             value={newMedicine.salePrice}
                                             onChange={(e) => calculateTradePrice(e.target.value, newMedicine.margin)}
                                         />
                                     </div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-0.5">
                                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Margin %</label>
                                         <div className="relative">
                                             <Input
                                                 type="number"
-                                                className="h-10 rounded-lg border-slate-200 bg-white pr-6"
+                                                className="h-8 text-xs rounded-md border-slate-200 bg-white pr-5"
                                                 value={newMedicine.margin}
                                                 onChange={(e) => {
                                                     setNewMedicine({ ...newMedicine, margin: e.target.value });
@@ -867,23 +870,40 @@ export default function InventoryPage() {
                                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">%</span>
                                         </div>
                                     </div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-0.5">
                                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Trade Price (Cost)</label>
                                         <Input
                                             type="number"
                                             placeholder="Cost Price"
-                                            className="h-10 rounded-lg border-slate-200 bg-white"
+                                            className="h-8 text-xs rounded-md border-slate-200 bg-white"
                                             value={newMedicine.price}
                                             onChange={(e) => calculateMargin(e.target.value, newMedicine.salePrice)}
                                         />
                                     </div>
-                                    <div className="space-y-1 col-span-3">
+                                    <div className="space-y-0.5">
+                                        <label className="text-[9px] font-black text-amber-600 uppercase tracking-widest ml-1">GST / Tax Rate</label>
+                                        <Select
+                                            value={newMedicine.taxRate}
+                                            onValueChange={(val) => setNewMedicine({ ...newMedicine, taxRate: val })}
+                                        >
+                                            <SelectTrigger className="h-8 text-xs rounded-md border-amber-200 bg-amber-50">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-xl border-none shadow-xl">
+                                                <SelectItem value="0">0% — Exempt (Medicines)</SelectItem>
+                                                <SelectItem value="5">5% — Reduced Rate</SelectItem>
+                                                <SelectItem value="12">12% — Standard</SelectItem>
+                                                <SelectItem value="18">18% — Full GST (Supplements/Cosmetics)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-0.5 col-span-2">
                                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Unit Type</label>
                                         <Select
                                             value={newMedicine.unitType}
                                             onValueChange={(val) => setNewMedicine({ ...newMedicine, unitType: val })}
                                         >
-                                            <SelectTrigger className="h-10 rounded-lg border-slate-200 focus:ring-2 ring-indigo-500/10">
+                                            <SelectTrigger className="h-8 text-xs rounded-md border-slate-200">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-xl border-none shadow-xl">
@@ -904,18 +924,18 @@ export default function InventoryPage() {
                                 </div>
                             </div>
                             {/* Initial Stock Section */}
-                            <div className="space-y-2 py-0.5 px-1">
+                            <div className="space-y-1 py-0.5 px-0.5">
                                 <div className="flex items-center gap-2">
                                     <div className="h-[1px] flex-1 bg-slate-100"></div>
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2">Initial Stock Entry (Optional)</span>
+                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-2">Initial Stock Entry (Optional)</span>
                                     <div className="h-[1px] flex-1 bg-slate-100"></div>
                                 </div>
-                                <div className="grid grid-cols-3 gap-3">
+                                <div className="grid grid-cols-3 gap-2">
                                     <div className="space-y-0.5">
                                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Batch No</label>
                                         <Input
                                             placeholder="e.g. B-101"
-                                            className="h-9 rounded-lg border-slate-200"
+                                            className="h-7 text-xs rounded-md border-slate-200"
                                             value={newMedicine.initialBatchNo}
                                             onChange={(e) => setNewMedicine({ ...newMedicine, initialBatchNo: e.target.value })}
                                         />
@@ -925,7 +945,7 @@ export default function InventoryPage() {
                                         <Input
                                             type="number"
                                             placeholder="0"
-                                            className="h-9 rounded-lg border-slate-200"
+                                            className="h-7 text-xs rounded-md border-slate-200"
                                             value={newMedicine.initialQuantity}
                                             onChange={(e) => setNewMedicine({ ...newMedicine, initialQuantity: e.target.value })}
                                         />
@@ -934,17 +954,17 @@ export default function InventoryPage() {
                                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Expiry Date</label>
                                         <Input
                                             type="date"
-                                            className="h-9 rounded-lg border-slate-200 text-xs"
+                                            className="h-7 text-xs rounded-md border-slate-200"
                                             value={newMedicine.initialExpiryDate}
                                             onChange={(e) => setNewMedicine({ ...newMedicine, initialExpiryDate: e.target.value })}
                                         />
                                     </div>
                                 </div>
                             </div>
-                            <DialogFooter className="mt-1.5">
+                            <DialogFooter className="mt-1">
                                 <Button
                                     onClick={handleAddMedicine}
-                                    className="w-full h-10 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-black text-base shadow-xl shadow-indigo-100"
+                                    className="w-full h-8 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-black text-sm shadow-xl shadow-indigo-100"
                                 >
                                     Register Product
                                 </Button>
@@ -1276,54 +1296,54 @@ export default function InventoryPage() {
             </Card >
 
             {/* Edit Medicine Modal */}
-            < Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen} >
-                <DialogContent className="sm:max-w-[600px] rounded-[2.5rem] p-8 border-none shadow-2xl">
+            <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen} >
+                <DialogContent className="sm:max-w-[520px] rounded-2xl p-4 border-none shadow-2xl">
                     <DialogHeader>
                         <div className="flex items-center justify-between pr-6">
-                            <DialogTitle className="text-3xl font-black text-slate-900 flex items-center gap-3">
-                                <div className="h-12 w-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600">
-                                    <Edit2 className="h-6 w-6" />
+                            <DialogTitle className="text-base font-black text-slate-900 flex items-center gap-2">
+                                <div className="h-7 w-7 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600">
+                                    <Edit2 className="h-3.5 w-3.5" />
                                 </div>
                                 Update Product
                             </DialogTitle>
                             {selectedMedicine && (
                                 <div className="flex flex-col items-end">
-                                    <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-xs px-3 py-1.5 rounded-xl gap-2 shadow-sm">
-                                        <Layers className="h-3 w-3" />
-                                        Current Stock: {selectedMedicine.stock}
+                                    <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[10px] px-2 py-1 rounded-lg gap-1 shadow-sm">
+                                        <Layers className="h-2.5 w-2.5" />
+                                        Stock: {selectedMedicine.stock}
                                     </Badge>
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 mr-1">Units In-Hand</span>
+                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5 mr-0.5">Units In-Hand</span>
                                 </div>
                             )}
                         </div>
                     </DialogHeader>
                     {selectedMedicine && (
-                        <div className="space-y-6 py-4 scroll-smooth overflow-y-auto max-h-[65vh] pr-2 custom-scrollbar">
+                        <div className="space-y-3 py-1 overflow-y-auto max-h-[72vh] pr-1 custom-scrollbar">
                             {/* Basic Info Section */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Brand Name</label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Brand Name</label>
                                     <Input
-                                        className="h-11 rounded-xl border-slate-200 font-bold bg-white"
+                                        className="h-8 text-xs rounded-lg border-slate-200 font-bold bg-white"
                                         value={selectedMedicine.name}
                                         onChange={(e) => setSelectedMedicine(prev => prev ? { ...prev, name: e.target.value } : null)}
                                     />
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Formula (Generic)</label>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Formula (Generic)</label>
                                     <Input
-                                        className="h-11 rounded-xl border-slate-200 bg-white"
+                                        className="h-8 text-xs rounded-lg border-slate-200 bg-white"
                                         value={selectedMedicine.genericName}
                                         onChange={(e) => setSelectedMedicine(prev => prev ? { ...prev, genericName: e.target.value } : null)}
                                     />
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
                                     <Select
                                         value={selectedMedicine.category}
                                         onValueChange={(val) => setSelectedMedicine(prev => prev ? { ...prev, category: val } : null)}
                                     >
-                                        <SelectTrigger className="h-11 rounded-xl border-slate-200 bg-white">
+                                        <SelectTrigger className="h-8 text-xs rounded-lg border-slate-200 bg-white">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="rounded-xl">
@@ -1340,81 +1360,99 @@ export default function InventoryPage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Company</label>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Company</label>
                                     <Input
-                                        className="h-11 rounded-xl border-slate-200 bg-white"
+                                        className="h-8 text-xs rounded-lg border-slate-200 bg-white"
                                         value={selectedMedicine.manufacturer}
                                         onChange={(e) => setSelectedMedicine(prev => prev ? { ...prev, manufacturer: e.target.value } : null)}
                                     />
                                 </div>
                             </div>
 
-                            {/* Pricing Section (Screenshot Style) */}
-                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <div className="h-1 w-8 bg-amber-500 rounded-full"></div>
-                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Pricing & Profit Margin</span>
+                            {/* Pricing Section */}
+                            <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <div className="h-0.5 w-6 bg-amber-500 rounded-full"></div>
+                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Pricing &amp; Profit Margin</span>
                                 </div>
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div className="space-y-2">
+                                <div className="grid grid-cols-3 gap-1.5">
+                                    <div className="space-y-0.5">
                                         <label className="text-[9px] font-black text-indigo-600 uppercase tracking-widest ml-1">Retail Price (MRP)</label>
                                         <Input
                                             type="number"
-                                            className="h-11 rounded-xl border-slate-200 bg-white font-bold text-sm"
+                                            className="h-8 text-xs rounded-md border-slate-200 bg-white font-bold"
                                             placeholder="MRP"
                                             value={selectedMedicine.salePrice}
                                             onChange={(e) => calculateEditTradePrice(e.target.value, (selectedMedicine.margin || "14.5").toString())}
                                         />
                                     </div>
-                                    <div className="space-y-2">
+                                    <div className="space-y-0.5">
                                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Margin %</label>
                                         <div className="relative">
                                             <Input
                                                 type="number"
-                                                className="h-11 rounded-xl border-slate-200 bg-white font-bold text-sm"
+                                                className="h-8 text-xs rounded-md border-slate-200 bg-white font-bold pr-5"
                                                 value={selectedMedicine.margin || 14.5}
                                                 onChange={(e) => calculateEditTradePrice(selectedMedicine.salePrice.toString(), e.target.value)}
                                             />
-                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">%</span>
+                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[10px]">%</span>
                                         </div>
                                     </div>
-                                    <div className="space-y-2">
+                                    <div className="space-y-0.5">
                                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Trade Price (Cost)</label>
                                         <Input
                                             type="number"
-                                            className="h-11 rounded-xl border-slate-200 bg-white font-bold text-sm"
+                                            className="h-8 text-xs rounded-md border-slate-200 bg-white font-bold"
                                             placeholder="Cost Price"
                                             value={selectedMedicine.price}
                                             onChange={(e) => calculateEditMargin(e.target.value, selectedMedicine.salePrice.toString())}
                                         />
                                     </div>
                                 </div>
+                                {/* Tax Rate Row */}
+                                <div className="space-y-0.5">
+                                    <label className="text-[9px] font-black text-amber-600 uppercase tracking-widest ml-1">GST / Tax Rate</label>
+                                    <Select
+                                        value={String(selectedMedicine.taxRate ?? 0)}
+                                        onValueChange={(val) => setSelectedMedicine(prev => prev ? { ...prev, taxRate: parseFloat(val) } : null)}
+                                    >
+                                        <SelectTrigger className="h-8 text-xs rounded-md border-amber-200 bg-amber-50">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-xl border-none shadow-xl">
+                                            <SelectItem value="0">0% — Exempt (Medicines)</SelectItem>
+                                            <SelectItem value="5">5% — Reduced Rate</SelectItem>
+                                            <SelectItem value="12">12% — Standard</SelectItem>
+                                            <SelectItem value="18">18% — Full GST (Supplements/Cosmetics)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
 
-                            {/* Stock & Storage Section (Screenshot Style) */}
-                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <div className="h-1 w-8 bg-blue-500 rounded-full"></div>
-                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Stock & Storage Info</span>
+                            {/* Stock & Storage Section */}
+                            <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <div className="h-0.5 w-6 bg-blue-500 rounded-full"></div>
+                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Stock &amp; Storage Info</span>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Stock (Manual Edit)</label>
+                                <div className="grid grid-cols-2 gap-1.5">
+                                    <div className="space-y-0.5">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Stock (Manual Edit)</label>
                                         <Input
                                             type="number"
-                                            className="h-11 rounded-xl border-slate-200 bg-white font-bold text-blue-600"
+                                            className="h-8 text-xs rounded-md border-slate-200 bg-white font-bold text-blue-600"
                                             value={selectedMedicine.stock}
                                             onChange={(e) => setSelectedMedicine(prev => prev ? { ...prev, stock: parseInt(e.target.value) || 0 } : null)}
                                         />
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Unit Type</label>
+                                    <div className="space-y-0.5">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Unit Type</label>
                                         <Select
                                             value={selectedMedicine.unitType}
                                             onValueChange={(val) => setSelectedMedicine(prev => prev ? { ...prev, unitType: val } : null)}
                                         >
-                                            <SelectTrigger className="h-11 rounded-xl border-slate-200 bg-white">
+                                            <SelectTrigger className="h-8 text-xs rounded-md border-slate-200 bg-white">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-xl">
@@ -1432,28 +1470,28 @@ export default function InventoryPage() {
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Units Per Pack</label>
+                                    <div className="space-y-0.5">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Units Per Pack</label>
                                         <Input
                                             type="number"
-                                            className="h-11 rounded-xl border-slate-200 bg-white"
+                                            className="h-8 text-xs rounded-md border-slate-200 bg-white"
                                             value={selectedMedicine.unitPerPack}
                                             onChange={(e) => setSelectedMedicine(prev => prev ? { ...prev, unitPerPack: parseInt(e.target.value) } : null)}
                                         />
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Reorder Level</label>
+                                    <div className="space-y-0.5">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Reorder Level</label>
                                         <Input
                                             type="number"
-                                            className="h-11 rounded-xl border-slate-200 bg-white"
+                                            className="h-8 text-xs rounded-md border-slate-200 bg-white"
                                             value={selectedMedicine.reorderLevel}
                                             onChange={(e) => setSelectedMedicine(prev => prev ? { ...prev, reorderLevel: parseInt(e.target.value) } : null)}
                                         />
                                     </div>
-                                    <div className="space-y-1.5 col-span-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rack Location</label>
+                                    <div className="space-y-0.5 col-span-2">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Rack Location</label>
                                         <Input
-                                            className="h-11 rounded-xl border-slate-200 bg-white"
+                                            className="h-8 text-xs rounded-md border-slate-200 bg-white"
                                             placeholder="e.g. A-1"
                                             value={selectedMedicine.rackNo || ""}
                                             onChange={(e) => setSelectedMedicine(prev => prev ? { ...prev, rackNo: e.target.value } : null)}
@@ -1462,38 +1500,38 @@ export default function InventoryPage() {
                                 </div>
                             </div>
 
-                            {/* Initial Stock Section (New for Edit Modal) */}
-                            <div className="space-y-4 pt-2">
-                                <div className="flex items-center gap-4">
+                            {/* Initial Stock Section */}
+                            <div className="space-y-1.5">
+                                <div className="flex items-center gap-2">
                                     <div className="h-[1px] flex-1 bg-slate-100"></div>
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Initial Stock Entry (Optional)</span>
+                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Initial Stock Entry (Optional)</span>
                                     <div className="h-[1px] flex-1 bg-slate-100"></div>
                                 </div>
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Batch No</label>
+                                <div className="grid grid-cols-3 gap-1.5">
+                                    <div className="space-y-0.5">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Batch No</label>
                                         <Input
                                             placeholder="e.g. B-101"
-                                            className="h-11 rounded-xl border-slate-200 bg-white"
+                                            className="h-7 text-xs rounded-md border-slate-200 bg-white"
                                             value={selectedMedicine.initialBatchNo || ""}
                                             onChange={(e) => setSelectedMedicine(prev => prev ? { ...prev, initialBatchNo: e.target.value } : null)}
                                         />
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity</label>
+                                    <div className="space-y-0.5">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity</label>
                                         <Input
                                             type="number"
                                             placeholder="0"
-                                            className="h-11 rounded-xl border-slate-200 bg-white"
+                                            className="h-7 text-xs rounded-md border-slate-200 bg-white"
                                             value={selectedMedicine.initialQuantity || ""}
                                             onChange={(e) => setSelectedMedicine(prev => prev ? { ...prev, initialQuantity: e.target.value } : null)}
                                         />
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Expiry Date</label>
+                                    <div className="space-y-0.5">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Expiry Date</label>
                                         <Input
                                             type="date"
-                                            className="h-11 rounded-xl border-slate-200 bg-white"
+                                            className="h-7 text-xs rounded-md border-slate-200 bg-white"
                                             value={selectedMedicine.initialExpiryDate || ""}
                                             onChange={(e) => setSelectedMedicine(prev => prev ? { ...prev, initialExpiryDate: e.target.value } : null)}
                                         />
@@ -1502,17 +1540,18 @@ export default function InventoryPage() {
                             </div>
                         </div>
                     )}
-                    <DialogFooter className="pt-4 border-t border-slate-100">
+                    <DialogFooter className="pt-2 border-t border-slate-100">
                         <Button
                             onClick={handleEditMedicine}
-                            className="w-full h-12 bg-amber-500 hover:bg-amber-600 rounded-2xl font-black text-sm shadow-lg shadow-amber-100 gap-2 transition-all active:scale-95"
+                            className="w-full h-8 bg-amber-500 hover:bg-amber-600 rounded-lg font-black text-xs shadow-lg shadow-amber-100 gap-2 transition-all active:scale-95"
                         >
-                            <RefreshCw className="h-4 w-4" />
-                            Update Product & Add Stock
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            Update Product &amp; Add Stock
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog >
+
 
             {/* Import from Master Modal */}
             < Dialog open={isImportModalOpen} onOpenChange={(open) => { setIsImportModalOpen(open); if (!open) { setImportResult(null); setSelectedImportIds([]); setMasterSearch(""); setMasterCategory("all"); } }
@@ -1679,53 +1718,53 @@ export default function InventoryPage() {
             </Dialog >
 
             {/* Batch Modal */}
-            < Dialog open={isAddBatchModalOpen} onOpenChange={setIsAddBatchModalOpen} >
-                <DialogContent className="sm:max-w-[450px] rounded-[3rem] p-10 border-none shadow-2xl">
+            <Dialog open={isAddBatchModalOpen} onOpenChange={setIsAddBatchModalOpen} >
+                <DialogContent className="sm:max-w-[400px] rounded-2xl p-4 border-none shadow-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-4xl font-black text-slate-900 flex items-center gap-4">
-                            <div className="h-14 w-14 bg-emerald-100 rounded-[1.5rem] flex items-center justify-center text-emerald-600">
-                                <Layers className="h-8 w-8" />
+                        <DialogTitle className="text-base font-black text-slate-900 flex items-center gap-2">
+                            <div className="h-7 w-7 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600">
+                                <Layers className="h-4 w-4" />
                             </div>
                             New Batch
                         </DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-6 py-8">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Batch Number</label>
+                    <div className="space-y-3 py-2">
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Batch Number</label>
                             <Input
                                 placeholder="X-0012-PK..."
-                                className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:bg-white text-lg font-bold"
+                                className="h-8 rounded-lg border-slate-200 bg-white text-xs font-bold"
                                 value={newBatch.batchNo}
                                 onChange={(e) => setNewBatch({ ...newBatch, batchNo: e.target.value })}
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity</label>
                                 <Input
                                     type="number"
                                     placeholder="0"
-                                    className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:bg-white text-lg font-bold"
+                                    className="h-8 rounded-lg border-slate-200 bg-white text-xs font-bold"
                                     value={newBatch.quantity}
                                     onChange={(e) => setNewBatch({ ...newBatch, quantity: e.target.value })}
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cost / Unit</label>
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Cost / Unit</label>
                                 <Input
                                     type="number"
                                     placeholder="0.00"
-                                    className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:bg-white text-lg font-bold"
+                                    className="h-8 rounded-lg border-slate-200 bg-white text-xs font-bold"
                                     value={newBatch.purchasePrice}
                                     onChange={(e) => setNewBatch({ ...newBatch, purchasePrice: e.target.value })}
                                 />
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Expiry Date</label>
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Expiry Date</label>
                             <Input
                                 type="date"
-                                className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:bg-white text-lg font-bold"
+                                className="h-8 rounded-lg border-slate-200 bg-white text-xs"
                                 value={newBatch.expiryDate}
                                 onChange={(e) => setNewBatch({ ...newBatch, expiryDate: e.target.value })}
                             />
@@ -1734,7 +1773,7 @@ export default function InventoryPage() {
                     <DialogFooter>
                         <Button
                             onClick={handleAddBatch}
-                            className="w-full h-16 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-black text-xl shadow-xl shadow-emerald-100 tracking-tight"
+                            className="w-full h-8 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-black text-sm shadow-xl shadow-emerald-100 tracking-tight"
                         >
                             Confirm Stock Entry
                         </Button>
@@ -1744,28 +1783,28 @@ export default function InventoryPage() {
 
             {/* Delete Confirmation Modal */}
             <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
-                <DialogContent className="sm:max-w-[400px] rounded-[2.5rem] p-8 border-none shadow-2xl">
+                <DialogContent className="sm:max-w-[360px] rounded-2xl p-4 border-none shadow-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-black text-slate-900 flex items-center gap-3">
-                            <div className="h-12 w-12 bg-red-100 rounded-2xl flex items-center justify-center text-red-600">
-                                <AlertTriangle className="h-6 w-6" />
+                        <DialogTitle className="text-lg font-black text-slate-900 flex items-center gap-2">
+                            <div className="h-7 w-7 bg-red-100 rounded-lg flex items-center justify-center text-red-600">
+                                <AlertTriangle className="h-4 w-4" />
                             </div>
                             Are you sure?
                         </DialogTitle>
                     </DialogHeader>
-                    <div className="py-4 text-slate-500 font-medium">
+                    <div className="py-2 text-slate-500 font-medium text-xs">
                         This item will be moved to the Recycle Bin. You can restore it later if needed.
                     </div>
-                    <DialogFooter className="gap-2 sm:gap-0">
+                    <DialogFooter className="gap-2 pt-2">
                         <Button
                             variant="outline"
-                            className="rounded-xl h-12 flex-1 font-bold"
+                            className="rounded-lg h-8 flex-1 font-bold text-xs"
                             onClick={() => setIsDeleteConfirmOpen(false)}
                         >
                             Cancel
                         </Button>
                         <Button
-                            className="bg-red-600 hover:bg-red-700 rounded-xl h-12 flex-1 font-black shadow-lg shadow-red-100"
+                            className="bg-red-600 hover:bg-red-700 rounded-lg h-8 flex-1 font-black shadow-lg shadow-red-100 text-xs"
                             onClick={handleDeleteMedicine}
                         >
                             Move to Trash
@@ -1776,28 +1815,28 @@ export default function InventoryPage() {
 
             {/* Bulk Delete Confirmation Modal */}
             <Dialog open={isBulkDeleteConfirmOpen} onOpenChange={setIsBulkDeleteConfirmOpen}>
-                <DialogContent className="sm:max-w-[400px] rounded-[2.5rem] p-8 border-none shadow-2xl">
+                <DialogContent className="sm:max-w-[360px] rounded-2xl p-4 border-none shadow-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-black text-slate-900 flex items-center gap-3">
-                            <div className="h-12 w-12 bg-red-100 rounded-2xl flex items-center justify-center text-red-600">
-                                <Trash2 className="h-6 w-6" />
+                        <DialogTitle className="text-lg font-black text-slate-900 flex items-center gap-2">
+                            <div className="h-7 w-7 bg-red-100 rounded-lg flex items-center justify-center text-red-600">
+                                <Trash2 className="h-4 w-4" />
                             </div>
                             Bulk Delete?
                         </DialogTitle>
                     </DialogHeader>
-                    <div className="py-4 text-slate-500 font-medium">
+                    <div className="py-2 text-slate-500 font-medium text-xs">
                         You are about to move <span className="text-red-600 font-black">{selectedMedicines.length} items</span> to the Recycle Bin.
                     </div>
-                    <DialogFooter className="gap-2 sm:gap-0">
+                    <DialogFooter className="gap-2 pt-2">
                         <Button
                             variant="outline"
-                            className="rounded-xl h-12 flex-1 font-bold"
+                            className="rounded-lg h-8 flex-1 font-bold text-xs"
                             onClick={() => setIsBulkDeleteConfirmOpen(false)}
                         >
                             Cancel
                         </Button>
                         <Button
-                            className="bg-red-600 hover:bg-red-700 rounded-xl h-12 flex-1 font-black shadow-lg shadow-red-100"
+                            className="bg-red-600 hover:bg-red-700 rounded-lg h-8 flex-1 font-black shadow-lg shadow-red-100 text-xs"
                             onClick={handleBulkDelete}
                         >
                             Move All to Trash
@@ -1808,20 +1847,20 @@ export default function InventoryPage() {
 
             {/* Recycle Bin Modal */}
             <Dialog open={isRecycleBinOpen} onOpenChange={setIsRecycleBinOpen}>
-                <DialogContent className="sm:max-w-[520px] rounded-[2rem] p-6 border-none shadow-2xl">
-                    <DialogHeader className="flex flex-row items-center justify-between pr-4 pb-4 border-b border-slate-50">
-                        <DialogTitle className="text-xl font-black text-slate-900 flex items-center gap-3">
-                            <div className="h-10 w-10 bg-red-100 rounded-xl flex items-center justify-center text-red-600">
-                                <Trash2 className="h-5 w-5" />
+                <DialogContent className="sm:max-w-[480px] rounded-2xl p-4 border-none shadow-2xl">
+                    <DialogHeader className="flex flex-row items-center justify-between pr-2 pb-3 border-b border-slate-50">
+                        <DialogTitle className="text-base font-black text-slate-900 flex items-center gap-2">
+                            <div className="h-7 w-7 bg-red-100 rounded-lg flex items-center justify-center text-red-600">
+                                <Trash2 className="h-4 w-4" />
                             </div>
                             Recycle Bin
                         </DialogTitle>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                             {selectedDeletedIds.length > 0 && (
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-8 px-3 rounded-lg font-black bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all text-[11px] gap-2"
+                                    className="h-7 px-2 rounded-lg font-black bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all text-[9px] gap-1.5"
                                     onClick={handleBulkRestore}
                                 >
                                     <RefreshCw className="h-3 w-3" />
@@ -1832,7 +1871,7 @@ export default function InventoryPage() {
                                 <Button
                                     variant="destructive"
                                     size="sm"
-                                    className="h-8 px-3 rounded-lg font-bold bg-red-600/10 text-red-600 hover:bg-red-600 hover:text-white border-none transition-all text-[11px]"
+                                    className="h-7 px-2 rounded-lg font-bold bg-red-600/10 text-red-600 hover:bg-red-600 hover:text-white border-none transition-all text-[9px]"
                                     onClick={handleClearTrash}
                                 >
                                     Empty Bin
@@ -1934,52 +1973,52 @@ export default function InventoryPage() {
 
             {/* Batch Modal */}
             <Dialog open={isAddBatchModalOpen} onOpenChange={setIsAddBatchModalOpen}>
-                <DialogContent className="sm:max-w-[450px] rounded-[3rem] p-10 border-none shadow-2xl">
+                <DialogContent className="sm:max-w-[400px] rounded-2xl p-4 border-none shadow-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-4xl font-black text-slate-900 flex items-center gap-4">
-                            <div className="h-14 w-14 bg-emerald-100 rounded-[1.5rem] flex items-center justify-center text-emerald-600">
-                                <Layers className="h-8 w-8" />
+                        <DialogTitle className="text-base font-black text-slate-900 flex items-center gap-2">
+                            <div className="h-7 w-7 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600">
+                                <Layers className="h-4 w-4" />
                             </div>
                             New Batch
                         </DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-6 py-8">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Batch Number</label>
+                    <div className="space-y-3 py-2">
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Batch Number</label>
                             <Input
                                 placeholder="X-0012-PK..."
-                                className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:bg-white text-lg font-bold"
+                                className="h-8 rounded-lg border-slate-200 bg-white text-xs font-bold"
                                 value={newBatch.batchNo}
                                 onChange={(e) => setNewBatch({ ...newBatch, batchNo: e.target.value })}
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity</label>
                                 <Input
                                     type="number"
                                     placeholder="0"
-                                    className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:bg-white text-lg font-bold"
+                                    className="h-8 rounded-lg border-slate-200 bg-white text-xs font-bold"
                                     value={newBatch.quantity}
                                     onChange={(e) => setNewBatch({ ...newBatch, quantity: e.target.value })}
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cost / Unit</label>
+                            <div className="space-y-1">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Cost / Unit</label>
                                 <Input
                                     type="number"
                                     placeholder="0.00"
-                                    className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:bg-white text-lg font-bold"
+                                    className="h-8 rounded-lg border-slate-200 bg-white text-xs font-bold"
                                     value={newBatch.purchasePrice}
                                     onChange={(e) => setNewBatch({ ...newBatch, purchasePrice: e.target.value })}
                                 />
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Expiry Date</label>
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Expiry Date</label>
                             <Input
                                 type="date"
-                                className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:bg-white text-lg font-bold"
+                                className="h-8 rounded-lg border-slate-200 bg-white text-xs"
                                 value={newBatch.expiryDate}
                                 onChange={(e) => setNewBatch({ ...newBatch, expiryDate: e.target.value })}
                             />
@@ -1988,7 +2027,7 @@ export default function InventoryPage() {
                     <DialogFooter>
                         <Button
                             onClick={handleAddBatch}
-                            className="w-full h-16 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-black text-xl shadow-xl shadow-emerald-100 tracking-tight"
+                            className="w-full h-8 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-black text-sm shadow-xl shadow-emerald-100 tracking-tight"
                         >
                             Confirm Stock Entry
                         </Button>

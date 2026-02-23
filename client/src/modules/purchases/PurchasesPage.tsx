@@ -50,6 +50,7 @@ export default function PurchasesPage() {
         manufacturer: "",
         price: "0",
         salePrice: "0",
+        taxRate: "0",
         unitPerPack: "1",
         unitType: "Tablet",
         reorderLevel: "10",
@@ -295,6 +296,7 @@ export default function PurchasesPage() {
                     manufacturer: "",
                     price: "0",
                     salePrice: "0",
+                    taxRate: "0",
                     unitPerPack: "1",
                     unitType: "Tablet",
                     reorderLevel: "10",
@@ -511,36 +513,36 @@ export default function PurchasesPage() {
 
                 {/* Quick Add Medicine Dialog */}
                 <Dialog open={isAddMedicineOpen} onOpenChange={setIsAddMedicineOpen}>
-                    <DialogContent className="sm:max-w-[480px] rounded-[2.5rem] p-5 border-none shadow-2xl">
+                    <DialogContent className="sm:max-w-[460px] rounded-2xl p-4 border-none shadow-2xl">
                         <DialogHeader>
-                            <DialogTitle className="text-xl font-black text-slate-900 flex items-center gap-3">
-                                <div className="h-10 w-10 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
-                                    <Plus className="h-5 w-5" />
+                            <DialogTitle className="text-base font-black text-slate-900 flex items-center gap-2">
+                                <div className="h-7 w-7 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                                    <Plus className="h-3.5 w-3.5" />
                                 </div>
                                 Product Registration
                             </DialogTitle>
                         </DialogHeader>
 
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 py-1 font-medium">
-                            <div className="space-y-1.5 col-span-2 md:col-span-1 relative">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Brand Name</label>
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 py-0.5 font-medium">
+                            <div className="space-y-1 col-span-2 md:col-span-1 relative">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Brand Name</label>
                                 <Input
                                     placeholder="e.g. Panadol"
-                                    className="h-10 rounded-xl border-slate-200"
+                                    className="h-8 text-xs rounded-lg border-slate-200"
                                     value={newMedicine.name}
                                     onChange={(e) => lookupMasterMedicine(e.target.value)}
                                     onFocus={() => { if (masterSuggestions.length > 0) setShowSuggestions(true); }}
                                 />
                                 {showSuggestions && (
-                                    <div className="absolute z-50 w-full bg-white mt-1.5 rounded-[1.2rem] shadow-[0_15px_40px_rgba(0,0,0,0.12)] border border-slate-100 overflow-hidden max-h-[200px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-300">
-                                        <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                                    <div className="absolute z-50 w-full bg-white mt-1 rounded-xl shadow-[0_15px_40px_rgba(0,0,0,0.12)] border border-slate-100 overflow-hidden max-h-[180px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div className="px-3 py-1 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
                                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Master Database Results</span>
                                             <Badge className="bg-indigo-50 text-indigo-600 border-none text-[8px] h-3.5">Quick Find</Badge>
                                         </div>
                                         {masterSuggestions.map((med, index) => (
                                             <div
                                                 key={index}
-                                                className="px-3 py-2 hover:bg-slate-50 cursor-pointer transition-all border-b border-slate-50 last:border-none group flex justify-between items-center"
+                                                className="px-3 py-1.5 hover:bg-slate-50 cursor-pointer transition-all border-b border-slate-50 last:border-none group flex justify-between items-center"
                                                 onClick={() => handleSelectMaster(med)}
                                             >
                                                 <div className="flex-1 min-w-0 pr-2">
@@ -562,16 +564,16 @@ export default function PurchasesPage() {
                                     </div>
                                 )}
                                 {isSearchingMaster && (
-                                    <div className="absolute right-3 top-10">
+                                    <div className="absolute right-3 top-8">
                                         <RefreshCw className="h-3 w-3 animate-spin text-indigo-500" />
                                     </div>
                                 )}
                             </div>
 
-                            <div className="space-y-1.5 col-span-2 md:col-span-1">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
+                            <div className="space-y-1 col-span-2 md:col-span-1">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
                                 <Select value={newMedicine.category} onValueChange={(val) => setNewMedicine({ ...newMedicine, category: val })}>
-                                    <SelectTrigger className="h-10 rounded-xl border-slate-200">
+                                    <SelectTrigger className="h-8 text-xs rounded-lg border-slate-200">
                                         <SelectValue placeholder="Select" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl border-none shadow-xl">
@@ -582,53 +584,53 @@ export default function PurchasesPage() {
                                 </Select>
                             </div>
 
-                            <div className="space-y-1.5 col-span-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Formula (Generic)</label>
+                            <div className="space-y-1 col-span-2">
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Formula (Generic)</label>
                                 <Input
                                     placeholder="e.g. Paracetamol"
-                                    className="h-10 rounded-xl border-slate-200"
+                                    className="h-8 text-xs rounded-lg border-slate-200"
                                     value={newMedicine.genericName}
                                     onChange={(e) => setNewMedicine({ ...newMedicine, genericName: e.target.value })}
                                 />
                             </div>
 
                             <div className="space-y-1 col-span-2 md:col-span-1">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Manufacturer</label>
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Manufacturer</label>
                                 <Input
                                     placeholder="e.g. GSK"
-                                    className="h-10 rounded-xl border-slate-200"
+                                    className="h-8 text-xs rounded-lg border-slate-200"
                                     value={newMedicine.manufacturer}
                                     onChange={(e) => setNewMedicine({ ...newMedicine, manufacturer: e.target.value })}
                                 />
                             </div>
 
                             <div className="space-y-1 col-span-2 md:col-span-1">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rack No (Storage)</label>
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Rack No (Storage)</label>
                                 <Input
                                     placeholder="e.g. A-1"
-                                    className="h-10 rounded-xl border-slate-200"
+                                    className="h-8 text-xs rounded-lg border-slate-200"
                                     value={newMedicine.rackNo}
                                     onChange={(e) => setNewMedicine({ ...newMedicine, rackNo: e.target.value })}
                                 />
                             </div>
 
-                            <div className="col-span-2 grid grid-cols-3 gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-100 border-dashed mt-1">
-                                <div className="space-y-1">
+                            <div className="col-span-2 grid grid-cols-3 gap-1.5 p-2 bg-slate-50 rounded-lg border border-slate-100 border-dashed">
+                                <div className="space-y-0.5">
                                     <label className="text-[9px] font-black text-indigo-500 uppercase tracking-widest ml-1">Retail Price (MRP)</label>
                                     <Input
                                         type="number"
                                         placeholder="MRP"
-                                        className="h-10 rounded-lg border-slate-200 bg-white"
+                                        className="h-8 text-xs rounded-md border-slate-200 bg-white"
                                         value={newMedicine.salePrice}
                                         onChange={(e) => calculateTradePrice(e.target.value, newMedicine.margin)}
                                     />
                                 </div>
-                                <div className="space-y-1">
+                                <div className="space-y-0.5">
                                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Margin %</label>
                                     <div className="relative">
                                         <Input
                                             type="number"
-                                            className="h-10 rounded-lg border-slate-200 bg-white pr-6"
+                                            className="h-8 text-xs rounded-md border-slate-200 bg-white pr-5"
                                             value={newMedicine.margin}
                                             onChange={(e) => {
                                                 setNewMedicine({ ...newMedicine, margin: e.target.value });
@@ -638,23 +640,40 @@ export default function PurchasesPage() {
                                         <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">%</span>
                                     </div>
                                 </div>
-                                <div className="space-y-1">
+                                <div className="space-y-0.5">
                                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Trade Price (Cost)</label>
                                     <Input
                                         type="number"
                                         placeholder="Cost Price"
-                                        className="h-10 rounded-lg border-slate-200 bg-white"
+                                        className="h-8 text-xs rounded-md border-slate-200 bg-white"
                                         value={newMedicine.price}
                                         onChange={(e) => calculateMargin(e.target.value, newMedicine.salePrice)}
                                     />
                                 </div>
-                                <div className="space-y-1 col-span-3">
+                                <div className="space-y-0.5 col-span-3">
+                                    <label className="text-[9px] font-black text-amber-600 uppercase tracking-widest ml-1">GST / Tax Rate</label>
+                                    <Select
+                                        value={newMedicine.taxRate}
+                                        onValueChange={(val) => setNewMedicine({ ...newMedicine, taxRate: val })}
+                                    >
+                                        <SelectTrigger className="h-8 text-xs rounded-md border-amber-200 bg-amber-50">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-xl border-none shadow-xl">
+                                            <SelectItem value="0">0% — Exempt (Medicines)</SelectItem>
+                                            <SelectItem value="5">5% — Reduced Rate</SelectItem>
+                                            <SelectItem value="12">12% — Standard</SelectItem>
+                                            <SelectItem value="18">18% — Full GST (Supplements/Cosmetics)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-0.5 col-span-3">
                                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Unit Type</label>
                                     <Select
                                         value={newMedicine.unitType}
                                         onValueChange={(val) => setNewMedicine({ ...newMedicine, unitType: val })}
                                     >
-                                        <SelectTrigger className="h-10 rounded-lg border-slate-200">
+                                        <SelectTrigger className="h-8 text-xs rounded-md border-slate-200">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="rounded-xl border-none shadow-xl">
@@ -671,18 +690,18 @@ export default function PurchasesPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-2 py-0.5 px-1">
+                        <div className="space-y-1 py-0.5 px-0.5">
                             <div className="flex items-center gap-2">
                                 <div className="h-[1px] flex-1 bg-slate-100"></div>
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2">Initial Stock Entry (Optional)</span>
+                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-2">Initial Stock Entry (Optional)</span>
                                 <div className="h-[1px] flex-1 bg-slate-100"></div>
                             </div>
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-3 gap-2">
                                 <div className="space-y-0.5">
                                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Batch No</label>
                                     <Input
                                         placeholder="e.g. B-101"
-                                        className="h-9 rounded-lg border-slate-200"
+                                        className="h-7 text-xs rounded-md border-slate-200"
                                         value={newMedicine.initialBatchNo}
                                         onChange={(e) => setNewMedicine({ ...newMedicine, initialBatchNo: e.target.value })}
                                     />
@@ -692,7 +711,7 @@ export default function PurchasesPage() {
                                     <Input
                                         type="number"
                                         placeholder="0"
-                                        className="h-9 rounded-lg border-slate-200"
+                                        className="h-7 text-xs rounded-md border-slate-200"
                                         value={newMedicine.initialQuantity}
                                         onChange={(e) => setNewMedicine({ ...newMedicine, initialQuantity: e.target.value })}
                                     />
@@ -701,7 +720,7 @@ export default function PurchasesPage() {
                                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Expiry Date</label>
                                     <Input
                                         type="date"
-                                        className="h-9 rounded-lg border-slate-200"
+                                        className="h-7 text-xs rounded-md border-slate-200"
                                         value={newMedicine.initialExpiryDate}
                                         onChange={(e) => setNewMedicine({ ...newMedicine, initialExpiryDate: e.target.value })}
                                     />
@@ -709,10 +728,10 @@ export default function PurchasesPage() {
                             </div>
                         </div>
 
-                        <DialogFooter className="mt-4 flex gap-2">
+                        <DialogFooter className="mt-2 flex gap-2">
                             <Button
                                 variant="outline"
-                                className="flex-1 h-10 rounded-xl border-slate-200 font-bold uppercase text-[10px] tracking-widest"
+                                className="flex-1 h-8 rounded-lg border-slate-200 font-bold uppercase text-[10px] tracking-widest"
                                 onClick={() => {
                                     setIsAddMedicineOpen(false);
                                     setNewMedicine({
@@ -722,6 +741,7 @@ export default function PurchasesPage() {
                                         manufacturer: "",
                                         price: "0",
                                         salePrice: "0",
+                                        taxRate: "0",
                                         unitPerPack: "1",
                                         unitType: "Tablet",
                                         reorderLevel: "10",
@@ -736,10 +756,10 @@ export default function PurchasesPage() {
                                 Cancel
                             </Button>
                             <Button
-                                className="flex-[2] h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[11px] tracking-widest shadow-lg shadow-indigo-100 transition-all"
+                                className="flex-[2] h-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[10px] tracking-widest shadow-lg shadow-indigo-100 transition-all"
                                 onClick={handleQuickAddMedicine}
                             >
-                                <Save className="h-4 w-4 mr-2" /> Register Product
+                                <Save className="h-3.5 w-3.5 mr-1.5" /> Register Product
                             </Button>
                         </DialogFooter>
                     </DialogContent>
@@ -928,36 +948,36 @@ export default function PurchasesPage() {
 
             {/* Quick Add Medicine Dialog */}
             <Dialog open={isAddMedicineOpen} onOpenChange={setIsAddMedicineOpen}>
-                <DialogContent className="sm:max-w-[480px] rounded-[2.5rem] p-5 border-none shadow-2xl">
+                <DialogContent className="sm:max-w-[460px] rounded-2xl p-4 border-none shadow-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-xl font-black text-slate-900 flex items-center gap-3">
-                            <div className="h-10 w-10 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
-                                <Plus className="h-5 w-5" />
+                        <DialogTitle className="text-base font-black text-slate-900 flex items-center gap-2">
+                            <div className="h-7 w-7 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                                <Plus className="h-3.5 w-3.5" />
                             </div>
                             Product Registration
                         </DialogTitle>
                     </DialogHeader>
 
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 py-1 font-medium">
-                        <div className="space-y-1.5 col-span-2 md:col-span-1 relative">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Brand Name</label>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 py-0.5 font-medium">
+                        <div className="space-y-1 col-span-2 md:col-span-1 relative">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Brand Name</label>
                             <Input
                                 placeholder="e.g. Panadol"
-                                className="h-10 rounded-xl border-slate-200"
+                                className="h-8 text-xs rounded-lg border-slate-200"
                                 value={newMedicine.name}
                                 onChange={(e) => lookupMasterMedicine(e.target.value)}
                                 onFocus={() => { if (masterSuggestions.length > 0) setShowSuggestions(true); }}
                             />
                             {showSuggestions && (
-                                <div className="absolute z-50 w-full bg-white mt-1.5 rounded-[1.2rem] shadow-[0_15px_40px_rgba(0,0,0,0.12)] border border-slate-100 overflow-hidden max-h-[200px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                                <div className="absolute z-50 w-full bg-white mt-1 rounded-xl shadow-[0_15px_40px_rgba(0,0,0,0.12)] border border-slate-100 overflow-hidden max-h-[180px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="px-3 py-1 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
                                         <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Master Database Results</span>
                                         <Badge className="bg-indigo-50 text-indigo-600 border-none text-[8px] h-3.5">Quick Find</Badge>
                                     </div>
                                     {masterSuggestions.map((med, index) => (
                                         <div
                                             key={index}
-                                            className="px-3 py-2 hover:bg-slate-50 cursor-pointer transition-all border-b border-slate-50 last:border-none group flex justify-between items-center"
+                                            className="px-3 py-1.5 hover:bg-slate-50 cursor-pointer transition-all border-b border-slate-50 last:border-none group flex justify-between items-center"
                                             onClick={() => handleSelectMaster(med)}
                                         >
                                             <div className="flex-1 min-w-0 pr-2">
@@ -979,16 +999,16 @@ export default function PurchasesPage() {
                                 </div>
                             )}
                             {isSearchingMaster && (
-                                <div className="absolute right-3 top-10">
+                                <div className="absolute right-3 top-8">
                                     <RefreshCw className="h-3 w-3 animate-spin text-indigo-500" />
                                 </div>
                             )}
                         </div>
 
-                        <div className="space-y-1.5 col-span-2 md:col-span-1">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
+                        <div className="space-y-1 col-span-2 md:col-span-1">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
                             <Select value={newMedicine.category} onValueChange={(val) => setNewMedicine({ ...newMedicine, category: val })}>
-                                <SelectTrigger className="h-10 rounded-xl border-slate-200">
+                                <SelectTrigger className="h-8 text-xs rounded-lg border-slate-200">
                                     <SelectValue placeholder="Select" />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-xl border-none shadow-xl">
@@ -999,53 +1019,53 @@ export default function PurchasesPage() {
                             </Select>
                         </div>
 
-                        <div className="space-y-1.5 col-span-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Formula (Generic)</label>
+                        <div className="space-y-1 col-span-2">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Formula (Generic)</label>
                             <Input
                                 placeholder="e.g. Paracetamol"
-                                className="h-10 rounded-xl border-slate-200"
+                                className="h-8 text-xs rounded-lg border-slate-200"
                                 value={newMedicine.genericName}
                                 onChange={(e) => setNewMedicine({ ...newMedicine, genericName: e.target.value })}
                             />
                         </div>
 
                         <div className="space-y-1 col-span-2 md:col-span-1">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Manufacturer</label>
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Manufacturer</label>
                             <Input
                                 placeholder="e.g. GSK"
-                                className="h-10 rounded-xl border-slate-200"
+                                className="h-8 text-xs rounded-lg border-slate-200"
                                 value={newMedicine.manufacturer}
                                 onChange={(e) => setNewMedicine({ ...newMedicine, manufacturer: e.target.value })}
                             />
                         </div>
 
                         <div className="space-y-1 col-span-2 md:col-span-1">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rack No (Storage)</label>
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Rack No (Storage)</label>
                             <Input
                                 placeholder="e.g. A-1"
-                                className="h-10 rounded-xl border-slate-200"
+                                className="h-8 text-xs rounded-lg border-slate-200"
                                 value={newMedicine.rackNo}
                                 onChange={(e) => setNewMedicine({ ...newMedicine, rackNo: e.target.value })}
                             />
                         </div>
 
-                        <div className="col-span-2 grid grid-cols-3 gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-100 border-dashed mt-1">
-                            <div className="space-y-1">
+                        <div className="col-span-2 grid grid-cols-3 gap-1.5 p-2 bg-slate-50 rounded-lg border border-slate-100 border-dashed">
+                            <div className="space-y-0.5">
                                 <label className="text-[9px] font-black text-indigo-500 uppercase tracking-widest ml-1">Retail Price (MRP)</label>
                                 <Input
                                     type="number"
                                     placeholder="MRP"
-                                    className="h-10 rounded-lg border-slate-200 bg-white"
+                                    className="h-8 text-xs rounded-md border-slate-200 bg-white"
                                     value={newMedicine.salePrice}
                                     onChange={(e) => calculateTradePrice(e.target.value, newMedicine.margin)}
                                 />
                             </div>
-                            <div className="space-y-1">
+                            <div className="space-y-0.5">
                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Margin %</label>
                                 <div className="relative">
                                     <Input
                                         type="number"
-                                        className="h-10 rounded-lg border-slate-200 bg-white pr-6"
+                                        className="h-8 text-xs rounded-md border-slate-200 bg-white pr-5"
                                         value={newMedicine.margin}
                                         onChange={(e) => {
                                             setNewMedicine({ ...newMedicine, margin: e.target.value });
@@ -1055,23 +1075,40 @@ export default function PurchasesPage() {
                                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">%</span>
                                 </div>
                             </div>
-                            <div className="space-y-1">
+                            <div className="space-y-0.5">
                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Trade Price (Cost)</label>
                                 <Input
                                     type="number"
                                     placeholder="Cost Price"
-                                    className="h-10 rounded-lg border-slate-200 bg-white"
+                                    className="h-8 text-xs rounded-md border-slate-200 bg-white"
                                     value={newMedicine.price}
                                     onChange={(e) => calculateMargin(e.target.value, newMedicine.salePrice)}
                                 />
                             </div>
-                            <div className="space-y-1 col-span-3">
+                            <div className="space-y-0.5 col-span-3">
+                                <label className="text-[9px] font-black text-amber-600 uppercase tracking-widest ml-1">GST / Tax Rate</label>
+                                <Select
+                                    value={newMedicine.taxRate}
+                                    onValueChange={(val) => setNewMedicine({ ...newMedicine, taxRate: val })}
+                                >
+                                    <SelectTrigger className="h-8 text-xs rounded-md border-amber-200 bg-amber-50">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-none shadow-xl">
+                                        <SelectItem value="0">0% — Exempt (Medicines)</SelectItem>
+                                        <SelectItem value="5">5% — Reduced Rate</SelectItem>
+                                        <SelectItem value="12">12% — Standard</SelectItem>
+                                        <SelectItem value="18">18% — Full GST (Supplements/Cosmetics)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-0.5 col-span-3">
                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Unit Type</label>
                                 <Select
                                     value={newMedicine.unitType}
                                     onValueChange={(val) => setNewMedicine({ ...newMedicine, unitType: val })}
                                 >
-                                    <SelectTrigger className="h-10 rounded-lg border-slate-200">
+                                    <SelectTrigger className="h-8 text-xs rounded-md border-slate-200">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl border-none shadow-xl">
@@ -1088,18 +1125,18 @@ export default function PurchasesPage() {
                         </div>
                     </div>
 
-                    <div className="space-y-2 py-0.5 px-1">
+                    <div className="space-y-1 py-0.5 px-0.5">
                         <div className="flex items-center gap-2">
                             <div className="h-[1px] flex-1 bg-slate-100"></div>
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2">Initial Stock Entry (Optional)</span>
+                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest px-2">Initial Stock Entry (Optional)</span>
                             <div className="h-[1px] flex-1 bg-slate-100"></div>
                         </div>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-3 gap-2">
                             <div className="space-y-0.5">
                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Batch No</label>
                                 <Input
                                     placeholder="e.g. B-101"
-                                    className="h-9 rounded-lg border-slate-200"
+                                    className="h-7 text-xs rounded-md border-slate-200"
                                     value={newMedicine.initialBatchNo}
                                     onChange={(e) => setNewMedicine({ ...newMedicine, initialBatchNo: e.target.value })}
                                 />
@@ -1109,7 +1146,7 @@ export default function PurchasesPage() {
                                 <Input
                                     type="number"
                                     placeholder="0"
-                                    className="h-9 rounded-lg border-slate-200"
+                                    className="h-7 text-xs rounded-md border-slate-200"
                                     value={newMedicine.initialQuantity}
                                     onChange={(e) => setNewMedicine({ ...newMedicine, initialQuantity: e.target.value })}
                                 />
@@ -1118,7 +1155,7 @@ export default function PurchasesPage() {
                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Expiry Date</label>
                                 <Input
                                     type="date"
-                                    className="h-9 rounded-lg border-slate-200"
+                                    className="h-7 text-xs rounded-md border-slate-200"
                                     value={newMedicine.initialExpiryDate}
                                     onChange={(e) => setNewMedicine({ ...newMedicine, initialExpiryDate: e.target.value })}
                                 />
@@ -1126,10 +1163,10 @@ export default function PurchasesPage() {
                         </div>
                     </div>
 
-                    <DialogFooter className="mt-4 flex gap-2">
+                    <DialogFooter className="mt-2 flex gap-2">
                         <Button
                             variant="outline"
-                            className="flex-1 h-10 rounded-xl border-slate-200 font-bold uppercase text-[10px] tracking-widest"
+                            className="flex-1 h-8 rounded-lg border-slate-200 font-bold uppercase text-[10px] tracking-widest"
                             onClick={() => {
                                 setIsAddMedicineOpen(false);
                                 setNewMedicine({
@@ -1139,6 +1176,7 @@ export default function PurchasesPage() {
                                     manufacturer: "",
                                     price: "0",
                                     salePrice: "0",
+                                    taxRate: "0",
                                     unitPerPack: "1",
                                     unitType: "Tablet",
                                     reorderLevel: "10",
@@ -1153,10 +1191,10 @@ export default function PurchasesPage() {
                             Cancel
                         </Button>
                         <Button
-                            className="flex-[2] h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[11px] tracking-widest shadow-lg shadow-indigo-100 transition-all"
+                            className="flex-[2] h-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-[10px] tracking-widest shadow-lg shadow-indigo-100 transition-all"
                             onClick={handleQuickAddMedicine}
                         >
-                            <Save className="h-4 w-4 mr-2" /> Register Product
+                            <Save className="h-3.5 w-3.5 mr-1.5" /> Register Product
                         </Button>
                     </DialogFooter>
                 </DialogContent>

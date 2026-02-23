@@ -311,42 +311,42 @@ export default function CustomersPage() {
                                 <Plus className="h-5 w-5" /> Add New Customer
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none shadow-4xl">
-                            <div className="bg-gradient-to-br from-indigo-600 to-purple-700 p-8 text-white">
+                        <DialogContent className="max-w-sm rounded-2xl p-0 overflow-hidden border-none shadow-4xl">
+                            <div className="bg-gradient-to-br from-indigo-600 to-purple-700 p-4 text-white">
                                 <DialogHeader>
-                                    <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter">Register Customer</DialogTitle>
-                                    <DialogDescription className="text-indigo-50 font-bold uppercase text-[10px] tracking-[0.3em] opacity-80">Sync profiles for loyalty and credit</DialogDescription>
+                                    <DialogTitle className="text-base font-black uppercase italic tracking-tighter">Register Customer</DialogTitle>
+                                    <DialogDescription className="text-indigo-50 font-bold uppercase text-[8px] tracking-[0.3em] opacity-80">Sync profiles for loyalty and credit</DialogDescription>
                                 </DialogHeader>
                             </div>
-                            <div className="p-8 space-y-6 bg-white">
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Full Name *</Label>
+                            <div className="p-4 space-y-3 bg-white">
+                                <div className="space-y-1">
+                                    <Label className="text-[9px] font-black uppercase text-slate-500 tracking-widest ml-1">Full Name *</Label>
                                     <Input
-                                        className="h-14 bg-slate-50 border-none rounded-2xl font-bold"
+                                        className="h-8 bg-slate-50 border-none rounded-lg font-bold text-xs"
                                         placeholder="Enter name..."
                                         value={newCustomer.name}
                                         onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Phone Number</Label>
+                                <div className="space-y-1">
+                                    <Label className="text-[9px] font-black uppercase text-slate-500 tracking-widest ml-1">Phone Number</Label>
                                     <Input
-                                        className="h-14 bg-slate-50 border-none rounded-2xl font-bold"
+                                        className="h-8 bg-slate-50 border-none rounded-lg font-bold text-xs"
                                         placeholder="03XX-XXXXXXX"
                                         value={newCustomer.phone}
                                         onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Address (Optional)</Label>
+                                <div className="space-y-1">
+                                    <Label className="text-[9px] font-black uppercase text-slate-500 tracking-widest ml-1">Address (Optional)</Label>
                                     <Input
-                                        className="h-14 bg-slate-50 border-none rounded-2xl font-bold"
+                                        className="h-8 bg-slate-50 border-none rounded-lg font-bold text-xs"
                                         placeholder="Locality, City"
                                         value={newCustomer.address}
                                         onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
                                     />
                                 </div>
-                                <Button className="w-full h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-700 font-black uppercase italic tracking-tighter text-white transition-all shadow-lg" onClick={handleAddCustomer}>
+                                <Button className="w-full h-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 font-black uppercase italic tracking-tighter text-white transition-all shadow-lg text-xs" onClick={handleAddCustomer}>
                                     Save Profile
                                 </Button>
                             </div>
@@ -444,93 +444,92 @@ export default function CustomersPage() {
 
             {/* Payment Recording Dialog */}
             <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
-                <DialogContent className="max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none shadow-4xl">
-                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-8 text-white">
+                <DialogContent className="max-w-sm rounded-2xl p-0 overflow-hidden border-none shadow-4xl">
+                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 text-white">
                         <DialogHeader>
-                            <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter">Record Payment</DialogTitle>
-                            <DialogDescription className="text-emerald-50 font-bold uppercase text-[10px] tracking-[0.3em] opacity-80">Clearing accounts receivable</DialogDescription>
+                            <DialogTitle className="text-base font-black uppercase italic tracking-tighter">Record Payment</DialogTitle>
+                            <DialogDescription className="text-emerald-50 font-bold uppercase text-[8px] tracking-[0.3em] opacity-80">Clearing accounts receivable</DialogDescription>
                         </DialogHeader>
                     </div>
-                    <div className="p-8 space-y-6 bg-white">
-                        <div className="p-6 bg-slate-50 rounded-2xl space-y-1">
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Current Balance Due</h4>
-                            <p className="text-2xl font-black text-rose-600 italic tracking-tighter">Rs. {selectedCustomer?.totalDue?.toLocaleString()}</p>
+                    <div className="p-4 space-y-4 bg-white">
+                        <div className="p-4 bg-slate-50 rounded-xl space-y-0.5">
+                            <h4 className="text-[8px] font-black uppercase tracking-widest text-slate-400">Current Balance Due</h4>
+                            <p className="text-xl font-black text-rose-600 italic tracking-tighter">Rs. {selectedCustomer?.totalDue?.toLocaleString()}</p>
                         </div>
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Amount Received (Rs.) *</Label>
+                        <div className="space-y-1">
+                            <Label className="text-[9px] font-black uppercase text-slate-500 tracking-widest ml-1">Amount Received (Rs.) *</Label>
                             <Input
                                 type="number"
-                                className="h-16 bg-slate-50 border-none rounded-2xl font-black text-xl italic text-slate-900"
+                                className="h-10 bg-slate-50 border-none rounded-lg font-black text-lg italic text-slate-900"
                                 placeholder="0.00"
                                 value={paymentAmount}
                                 onChange={(e) => setPaymentAmount(e.target.value)}
                             />
                         </div>
-                        <Button className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 font-black uppercase italic tracking-tighter text-white transition-all shadow-lg flex items-center justify-center gap-2" onClick={handleRecordPayment}>
-                            <CheckCircle2 className="h-5 w-5" /> Confirm Payment
+                        <Button className="w-full h-10 rounded-lg bg-emerald-600 hover:bg-emerald-700 font-black uppercase italic tracking-tighter text-white transition-all shadow-lg flex items-center justify-center gap-2 text-xs" onClick={handleRecordPayment}>
+                            <CheckCircle2 className="h-4 w-4" /> Confirm Payment
                         </Button>
                     </div>
                 </DialogContent>
             </Dialog>
             {/* Sales History Ledger Dialog */}
             <Dialog open={isHistoryOpen} onOpenChange={(open) => { setIsHistoryOpen(open); if (!open) setHistoryPage(1); }}>
-                <DialogContent className="max-w-3xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-5xl">
-                    <div className="bg-slate-950 p-8 text-white relative">
+                <DialogContent className="max-w-2xl rounded-2xl p-0 overflow-hidden border-none shadow-5xl">
+                    <div className="bg-slate-950 p-4 text-white relative">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl -mr-16 -mt-16" />
                         <DialogHeader>
-                            <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter flex items-center gap-3">
-                                <History className="h-6 w-6 text-indigo-400" />
+                            <DialogTitle className="text-base font-black uppercase italic tracking-tighter flex items-center gap-2">
+                                <History className="h-4 w-4 text-indigo-400" />
                                 Sales History / Ledger
                             </DialogTitle>
-                            <DialogDescription className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em] opacity-80 mt-1">
+                            <DialogDescription className="text-slate-500 font-bold uppercase text-[8px] tracking-[0.3em] opacity-80 mt-1 ml-6">
                                 {selectedCustomer?.name} • Profile ID: {selectedCustomer?.id}
                             </DialogDescription>
                         </DialogHeader>
                     </div>
-                    <div className="p-8 space-y-6 bg-white max-h-[700px] overflow-y-auto custom-scrollbar">
+                    <div className="p-4 space-y-4 bg-white max-h-[600px] overflow-y-auto custom-scrollbar">
                         {customers.find(c => c.id === selectedCustomer?.id)?.sales?.length > 0 ? (
                             <>
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                     {customers.find(c => c.id === selectedCustomer?.id).sales
                                         .slice((historyPage - 1) * historyLimit, historyPage * historyLimit)
                                         .map((sale: any, idx: number) => (
-                                            <div key={idx} className="p-5 bg-slate-50/50 rounded-[2rem] border border-slate-100 hover:border-indigo-100 transition-all group relative overflow-hidden">
-                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-indigo-600 border border-slate-100">
-                                                            <Receipt className="h-6 w-6" />
+                                            <div key={idx} className="p-3 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-indigo-100 transition-all group relative overflow-hidden">
+                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-9 w-9 rounded-lg bg-white shadow-sm flex items-center justify-center text-indigo-600 border border-slate-100">
+                                                            <Receipt className="h-4 w-4" />
                                                         </div>
                                                         <div className="flex flex-col leading-tight">
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Order ID # {sale.id}</span>
-                                                            <span className="text-sm font-black text-slate-900 italic tracking-tight uppercase">
-                                                                {new Date(sale.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'long', year: 'numeric' })}
+                                                            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Order ID # {sale.id}</span>
+                                                            <span className="text-xs font-black text-slate-900 italic tracking-tight uppercase">
+                                                                {new Date(sale.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
                                                             </span>
-                                                            <span className="text-[9px] font-bold text-slate-400 uppercase">{new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-6">
+                                                    <div className="flex items-center gap-4">
                                                         <div className="flex flex-col items-end">
-                                                            <span className="text-xl font-black italic tracking-tighter text-slate-900 leading-none">Rs. {sale.netAmount?.toLocaleString()}</span>
-                                                            <Badge className="bg-emerald-50 text-emerald-600 border-none rounded-lg text-[9px] font-black uppercase mt-1">Paid / Completed</Badge>
+                                                            <span className="text-lg font-black italic tracking-tighter text-slate-900 leading-none">Rs. {sale.netAmount?.toLocaleString()}</span>
+                                                            <Badge className="bg-emerald-50 text-emerald-600 border-none rounded-md text-[7px] font-black uppercase mt-0.5">Paid</Badge>
                                                         </div>
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-10 w-10 rounded-xl hover:bg-rose-50 hover:text-rose-500 text-slate-300 transition-all opacity-0 group-hover:opacity-100"
+                                                            className="h-8 w-8 rounded-lg hover:bg-rose-50 hover:text-rose-500 text-slate-300 transition-all opacity-0 group-hover:opacity-100"
                                                             onClick={() => handleDeleteSale(sale.id)}
                                                         >
-                                                            <Trash2 className="h-4 w-4" />
+                                                            <Trash2 className="h-3.5 w-3.5" />
                                                         </Button>
                                                     </div>
                                                 </div>
 
                                                 {/* Item Summary (What they bought) */}
-                                                <div className="bg-white/80 rounded-2xl p-4 border border-slate-100/50">
-                                                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Itemized Breakdown</p>
-                                                    <div className="flex flex-wrap gap-2">
+                                                <div className="bg-white/80 rounded-xl p-2.5 border border-slate-100/50">
+                                                    <p className="text-[7px] font-black uppercase tracking-widest text-slate-400 mb-1.5 ml-1">Itemized Breakdown</p>
+                                                    <div className="flex flex-wrap gap-1.5">
                                                         {sale.items?.map((item: any, i: number) => (
-                                                            <Badge key={i} variant="outline" className="bg-white text-slate-700 border-slate-100 px-3 py-1 rounded-xl font-bold text-[10px] uppercase gap-2">
-                                                                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                                                            <Badge key={i} variant="outline" className="bg-white text-slate-700 border-slate-100 px-2 py-0.5 rounded-lg font-bold text-[9px] uppercase gap-1.5">
+                                                                <span className="h-1 w-1 rounded-full bg-indigo-500" />
                                                                 {item.medicine?.name} <span className="text-slate-400">×{item.quantity}</span>
                                                             </Badge>
                                                         ))}
@@ -541,44 +540,44 @@ export default function CustomersPage() {
                                 </div>
 
                                 {/* Pagination UI */}
-                                <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                                    <p className="text-[10px] font-black uppercase text-slate-400">Showing page {historyPage} of {Math.ceil(customers.find(c => c.id === selectedCustomer?.id).sales.length / historyLimit)}</p>
-                                    <div className="flex gap-2">
+                                <div className="flex items-center justify-between pt-3 border-t border-slate-50">
+                                    <p className="text-[8px] font-black uppercase text-slate-400">Page {historyPage} of {Math.ceil(customers.find(c => c.id === selectedCustomer?.id).sales.length / historyLimit)}</p>
+                                    <div className="flex gap-1.5">
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="h-10 rounded-xl font-black uppercase italic tracking-tighter text-[10px]"
+                                            className="h-8 rounded-lg font-black uppercase italic tracking-tighter text-[9px]"
                                             disabled={historyPage === 1}
                                             onClick={() => setHistoryPage(p => p - 1)}
                                         >
-                                            Previous
+                                            Prev
                                         </Button>
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="h-10 rounded-xl font-black uppercase italic tracking-tighter text-[10px]"
+                                            className="h-8 rounded-lg font-black uppercase italic tracking-tighter text-[9px]"
                                             disabled={historyPage >= Math.ceil(customers.find(c => c.id === selectedCustomer?.id).sales.length / historyLimit)}
                                             onClick={() => setHistoryPage(p => p + 1)}
                                         >
-                                            Next Page
+                                            Next
                                         </Button>
                                     </div>
                                 </div>
                             </>
                         ) : (
-                            <div className="py-24 text-center space-y-6">
-                                <div className="h-20 w-20 bg-slate-50 rounded-[2.5rem] flex items-center justify-center mx-auto">
-                                    <History className="h-10 w-10 text-slate-200" />
+                            <div className="py-16 text-center space-y-4">
+                                <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto">
+                                    <History className="h-8 w-8 text-slate-200" />
                                 </div>
-                                <div className="space-y-2">
-                                    <p className="text-lg font-black text-slate-900 uppercase italic tracking-tighter">Empty Ledger</p>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">This customer has no past transaction history <br /> recorded in the terminal.</p>
+                                <div className="space-y-1">
+                                    <p className="text-base font-black text-slate-900 uppercase italic tracking-tighter">Empty Ledger</p>
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">No past transactions found.</p>
                                 </div>
                             </div>
                         )}
                         <Button
                             variant="ghost"
-                            className="w-full h-14 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-500 font-black uppercase tracking-[0.2em] text-[10px] transition-all"
+                            className="w-full h-10 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-500 font-black uppercase tracking-[0.2em] text-[8px] transition-all"
                             onClick={() => setIsHistoryOpen(false)}
                         >
                             Dismiss Ledger
