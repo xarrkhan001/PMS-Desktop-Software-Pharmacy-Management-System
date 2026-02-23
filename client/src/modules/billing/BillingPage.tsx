@@ -31,6 +31,7 @@ interface Medicine {
     id: number;
     name: string;
     salePrice: number;
+    taxRate: number;
     unitPerPack: number;
     unitType: string;
     batches: Batch[];
@@ -53,6 +54,7 @@ interface CartItem {
     unitType: string;
     itemDiscount: number; // percentage
     purchasePrice: number;
+    taxRate: number; // GST %
 }
 
 export default function BillingPage() {
@@ -224,7 +226,8 @@ export default function BillingPage() {
                     unitPerPack: med.unitPerPack || 1,
                     unitType: med.unitType || "Unit",
                     itemDiscount: 0,
-                    purchasePrice: batch.purchasePrice || 0
+                    purchasePrice: batch.purchasePrice || 0,
+                    taxRate: med.taxRate || 0
                 }];
             }
         });
@@ -260,8 +263,14 @@ export default function BillingPage() {
         return gross - discountVal;
     };
 
+    const calculateItemTax = (item: CartItem) => {
+        const base = calculateItemTotal(item);
+        return (base * (item.taxRate || 0)) / 100;
+    };
+
     const subtotal = cart.reduce((acc, item) => acc + calculateItemTotal(item), 0);
-    const total = subtotal - totalDiscount;
+    const taxTotal = cart.reduce((acc, item) => acc + calculateItemTax(item), 0);
+    const total = subtotal + taxTotal - totalDiscount;
     const changeDue = cashReceived !== "" ? Math.max(0, Number(cashReceived) - total) : 0;
 
     const handleCheckout = async () => {
@@ -278,9 +287,12 @@ export default function BillingPage() {
                     medicineId: item.medicineId,
                     batchId: item.batchId,
                     quantity: item.qty,
-                    price: item.unitPrice
+                    price: item.unitPrice,
+                    itemTaxRate: item.taxRate || 0,
+                    itemTaxAmount: calculateItemTax(item)
                 })),
                 discount: totalDiscount,
+                taxAmount: taxTotal,
                 paymentMethod,
                 totalAmount: subtotal,
                 netAmount: total,
@@ -308,6 +320,7 @@ export default function BillingPage() {
                     items: cart,
                     subtotal,
                     discount: totalDiscount,
+                    taxAmount: taxTotal,
                     total
                 });
                 setIsReceiptOpen(true);
@@ -496,26 +509,26 @@ export default function BillingPage() {
                                             <UserPlus className="h-4 w-4" />
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="max-w-md rounded-[2.5rem] p-0 overflow-hidden border-none shadow-4xl">
-                                        <div className="bg-slate-900 p-8 text-white">
+                                    <DialogContent className="max-w-sm rounded-2xl p-0 overflow-hidden border-none shadow-4xl">
+                                        <div className="bg-slate-900 p-4 text-white">
                                             <DialogHeader>
-                                                <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter">Select Customer</DialogTitle>
-                                                <DialogDescription className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.3em] opacity-80 mt-1">Link sale to regular profile</DialogDescription>
+                                                <DialogTitle className="text-lg font-black uppercase italic tracking-tighter">Select Customer</DialogTitle>
+                                                <DialogDescription className="text-slate-400 font-bold uppercase text-[8px] tracking-[0.3em] opacity-80 mt-1">Link sale to regular profile</DialogDescription>
                                             </DialogHeader>
                                         </div>
-                                        <div className="p-6 space-y-4 bg-white">
+                                        <div className="p-4 space-y-3 bg-white">
                                             <div className="relative">
                                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                                 <Input
                                                     placeholder="Search database..."
-                                                    className="pl-11 h-12 bg-slate-50 border-none rounded-2xl font-bold"
+                                                    className="pl-11 h-10 bg-slate-50 border-none rounded-xl font-bold text-xs"
                                                     value={customerSearch}
                                                     onChange={(e) => setCustomerSearch(e.target.value)}
                                                 />
                                             </div>
-                                            <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                                            <div className="max-h-[250px] overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
                                                 <div
-                                                    className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-indigo-50 hover:border-indigo-100 transition-all group"
+                                                    className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-indigo-50 hover:border-indigo-100 transition-all group"
                                                     onClick={() => {
                                                         setCustomerId(null);
                                                         setCustomerName("Walk-in Customer");
@@ -524,13 +537,13 @@ export default function BillingPage() {
                                                         setIsSelectingCustomer(false);
                                                     }}
                                                 >
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-indigo-600 transition-colors">
-                                                            <XCircle className="h-5 w-5" />
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center text-slate-400 group-hover:text-indigo-600 transition-colors">
+                                                            <XCircle className="h-4 w-4" />
                                                         </div>
-                                                        <span className="font-black text-sm uppercase italic tracking-tight">Walk-in Customer</span>
+                                                        <span className="font-black text-[13px] uppercase italic tracking-tight">Walk-in Customer</span>
                                                     </div>
-                                                    <Badge className="bg-slate-200 text-slate-500 border-none rounded-lg text-[10px] font-black uppercase">Default</Badge>
+                                                    <Badge className="bg-slate-200 text-slate-500 border-none rounded-lg text-[8px] font-black uppercase">Default</Badge>
                                                 </div>
 
                                                 {customers
@@ -538,7 +551,7 @@ export default function BillingPage() {
                                                     .map(c => (
                                                         <div
                                                             key={c.id}
-                                                            className="p-4 rounded-2xl bg-white border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-indigo-50 hover:border-indigo-100 transition-all group"
+                                                            className="p-3 rounded-xl bg-white border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-indigo-50 hover:border-indigo-100 transition-all group"
                                                             onClick={() => {
                                                                 setCustomerId(c.id);
                                                                 setCustomerName(c.name);
@@ -548,25 +561,25 @@ export default function BillingPage() {
                                                                 toast({ title: "Customer Linked", description: `${c.name} selected for this terminal.` });
                                                             }}
                                                         >
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600 group-hover:bg-white group-hover:text-indigo-600 transition-all font-black uppercase italic">
+                                                            <div className="flex items-center gap-2.5">
+                                                                <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-600 group-hover:bg-white group-hover:text-indigo-600 transition-all font-black uppercase italic text-xs">
                                                                     {c.name.charAt(0)}
                                                                 </div>
                                                                 <div className="flex flex-col">
-                                                                    <span className="font-black text-sm uppercase italic tracking-tight">{c.name}</span>
-                                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{c.phone || 'No Contact'}</span>
+                                                                    <span className="font-black text-[13px] uppercase italic tracking-tight">{c.name}</span>
+                                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{c.phone || 'No Contact'}</span>
                                                                 </div>
                                                             </div>
-                                                            {c.totalDue > 0 && <Badge className="bg-rose-50 text-rose-600 border-none rounded-lg text-[9px] font-black uppercase">Due: {c.totalDue}</Badge>}
+                                                            {c.totalDue > 0 && <Badge className="bg-rose-50 text-rose-600 border-none rounded-lg text-[8px] font-black uppercase">Due: {c.totalDue}</Badge>}
                                                         </div>
                                                     ))}
                                             </div>
                                             <Button
                                                 variant="ghost"
-                                                className="w-full h-12 rounded-2xl text-indigo-600 font-black uppercase italic tracking-tighter gap-2"
+                                                className="w-full h-10 rounded-xl text-indigo-600 font-black uppercase italic tracking-tighter gap-2 text-xs"
                                                 onClick={() => setIsSelectingCustomer(false)}
                                             >
-                                                <ExternalLink className="h-4 w-4" /> Manage Customer Database
+                                                <ExternalLink className="h-3.5 w-3.5" /> Manage Customer Database
                                             </Button>
                                         </div>
                                     </DialogContent>
@@ -774,6 +787,13 @@ export default function BillingPage() {
                                 <span className="text-xl font-black italic tracking-tighter">Rs. {(subtotal || 0).toLocaleString()}</span>
                             </div>
 
+                            {taxTotal > 0 && (
+                                <div className="flex justify-between items-center bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">GST / Tax</span>
+                                    <span className="text-amber-300 font-black">+ Rs. {taxTotal.toFixed(2)}</span>
+                                </div>
+                            )}
+
                             <div className="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/5">
                                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Fixed Discount (PKR)</span>
                                 <Input
@@ -848,55 +868,50 @@ export default function BillingPage() {
 
             {/* Receipt Modal (Elite Design) */}
             <Dialog open={isReceiptOpen} onOpenChange={setIsReceiptOpen}>
-                <DialogContent className="max-w-sm rounded-[3rem] p-0 border-none shadow-5xl overflow-hidden bg-white">
-                    <div id="receipt-content" className="p-8">
-                        <div className="text-center space-y-2 mb-8">
+                <DialogContent className="max-w-sm rounded-[1.5rem] p-0 border-none shadow-5xl overflow-hidden bg-white max-h-[90vh] overflow-y-auto">
+                    <div id="receipt-content" className="p-5">
+                        <div className="text-center space-y-1 mb-4">
                             {pmsSettings?.showPharmacyLogo !== false && (
-                                <div className="h-12 w-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mx-auto mb-4">
-                                    <Receipt className="h-6 w-6" />
+                                <div className="h-9 w-9 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 mx-auto mb-2">
+                                    <Receipt className="h-4 w-4" />
                                 </div>
                             )}
-                            <h2 className="text-2xl font-black italic tracking-tighter uppercase text-slate-900">{pharmacyInfo?.name || pharmacyName}</h2>
-                            <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-2">{pmsSettings?.billHeader || "Quality Healthcare Services"}</p>
+                            <h2 className="text-lg font-black italic tracking-tighter uppercase text-slate-900 leading-tight">{pharmacyInfo?.name || pharmacyName}</h2>
+                            <p className="text-[9px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-1">{pmsSettings?.billHeader || "Quality Healthcare Services"}</p>
                             <div className="flex flex-col items-center gap-0.5">
                                 {pmsSettings?.showLicense && pharmacyInfo?.pharmacyLicense && (
-                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Lic No: {pharmacyInfo.pharmacyLicense}</p>
+                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">Lic No: {pharmacyInfo.pharmacyLicense}</p>
                                 )}
                                 {pmsSettings?.showTaxId && pharmacyInfo?.ntn && (
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">NTN: {pharmacyInfo.ntn}</p>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">NTN: {pharmacyInfo.ntn}</p>
                                 )}
                                 {pharmacyInfo?.location && (
-                                    <p className="text-[9px] font-medium text-slate-400">{pharmacyInfo.location}</p>
+                                    <p className="text-[8px] font-medium text-slate-400 capitalize">{pharmacyInfo.location}</p>
                                 )}
                             </div>
                         </div>
 
-                        <div className="border-t border-b border-dashed border-slate-200 py-3 my-4 space-y-2">
-                            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        <div className="border-t border-b border-dashed border-slate-200 py-2.5 my-3 space-y-1.5">
+                            <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-slate-500">
                                 <span>{lastSale?.invoiceNo || 'INV-TEMP'}</span>
-                                <span>{new Date().toLocaleString()}</span>
+                                <span>{new Date().toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}</span>
                             </div>
-                            <div className="flex justify-between text-[10px] font-bold text-slate-700">
-                                <span>Customer: {lastSale?.manualCustomerName || lastSale?.customer?.name || "Walk-in"}</span>
+                            <div className="flex justify-between text-[9px] font-bold text-slate-700">
+                                <span className="truncate max-w-[150px]">Customer: {lastSale?.manualCustomerName || lastSale?.customer?.name || "Walk-in"}</span>
                                 <span>Mode: {lastSale?.paymentMethod || "CASH"}</span>
                             </div>
-                            {lastSale?.manualCustomerAddress && (
-                                <div className="text-[10px] font-bold text-slate-500 text-left">
-                                    Address: {lastSale.manualCustomerAddress}
-                                </div>
-                            )}
                         </div>
 
-                        <div className="space-y-4 mb-6">
-                            <div className="flex justify-between border-b pb-2 text-[9px] font-black text-slate-400 uppercase">
+                        <div className="space-y-2.5 mb-4">
+                            <div className="flex justify-between border-b pb-1.5 text-[8px] font-black text-slate-400 uppercase">
                                 <span className="flex-[2]">Item Description</span>
                                 <span className="flex-1 text-center">Qty</span>
                                 <span className="flex-1 text-right">Price</span>
                                 <span className="flex-1 text-right">Total</span>
                             </div>
                             {lastSale?.items?.map((item: any, idx: number) => (
-                                <div key={idx} className="flex justify-between text-[11px] font-bold text-slate-700">
-                                    <span className="flex-[2] uppercase">{item.name} <br /><span className="text-[8px] text-slate-400 opacity-60">Batch: {item.batchNo}</span></span>
+                                <div key={idx} className="flex justify-between text-[10px] font-bold text-slate-700 leading-tight">
+                                    <span className="flex-[2] uppercase">{item.name} <br /><span className="text-[7px] text-slate-400 opacity-60">Batch: {item.batchNo}</span></span>
                                     <span className="flex-1 text-center text-slate-500">{item.qty}</span>
                                     <span className="flex-1 text-right">{item.unitPrice.toFixed(2)}</span>
                                     <span className="flex-1 text-right text-slate-900">{(item.qty * item.unitPrice).toFixed(2)}</span>
@@ -904,28 +919,34 @@ export default function BillingPage() {
                             ))}
                         </div>
 
-                        <div className="space-y-2 border-t border-dashed border-slate-200 pt-4">
-                            <div className="flex justify-between text-[11px] font-bold text-slate-500">
+                        <div className="space-y-1.5 border-t border-dashed border-slate-200 pt-3">
+                            <div className="flex justify-between text-[10px] font-bold text-slate-500">
                                 <span>Subtotal</span>
                                 <span>Rs. {lastSale?.subtotal?.toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between text-[11px] font-bold text-rose-600 print-color-exact">
+                            <div className="flex justify-between text-[10px] font-bold text-rose-600 print-color-exact">
                                 <span>Discount</span>
                                 <span>- Rs. {lastSale?.discount?.toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between text-lg font-black italic pt-2 border-t border-slate-100 text-indigo-700 print-color-exact">
+                            {lastSale?.taxAmount > 0 && (
+                                <div className="flex justify-between text-[10px] font-bold text-slate-500">
+                                    <span>GST / Tax</span>
+                                    <span>+ Rs. {lastSale.taxAmount.toLocaleString()}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between text-base font-black italic pt-1.5 border-t border-slate-100 text-indigo-700 print-color-exact">
                                 <span className="uppercase tracking-tighter">Net Total</span>
                                 <span>Rs. {lastSale?.total?.toLocaleString()}</span>
                             </div>
                         </div>
 
-                        <div className="mt-8 text-center space-y-2">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Terminal: {sessionId}-ADMIN</p>
-                            <p className="text-[10px] font-black uppercase tracking-tight text-slate-500">{pmsSettings?.billFooter || "**** Non-Refundable if Seal Broken ****"}</p>
-                            <p className="text-[12px] font-black italic tracking-tighter text-indigo-500 print-color-exact">Thank You for Choosing MediCore PMS</p>
+                        <div className="mt-5 text-center space-y-1.5">
+                            <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">Terminal: {sessionId}-ADMIN</p>
+                            <p className="text-[9px] font-black uppercase tracking-tight text-slate-500">{pmsSettings?.billFooter || "**** Non-Refundable if Seal Broken ****"}</p>
+                            <p className="text-[11px] font-black italic tracking-tighter text-indigo-500 print-color-exact">Thank You for Choosing MediCore PMS</p>
                         </div>
-                        <Button className="w-full mt-6 h-12 rounded-2xl bg-slate-900 text-white font-black uppercase italic tracking-tighter" onClick={() => window.print()}>
-                            <Printer className="h-4 w-4 mr-2" /> Print Receipt
+                        <Button className="w-full mt-4 h-10 rounded-xl bg-slate-900 text-white font-black uppercase italic tracking-tighter text-xs print:hidden" onClick={() => window.print()}>
+                            <Printer className="h-3.5 w-3.5 mr-2" /> Print Receipt
                         </Button>
                     </div>
                 </DialogContent>

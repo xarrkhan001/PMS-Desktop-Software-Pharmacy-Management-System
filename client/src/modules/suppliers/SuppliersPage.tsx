@@ -278,69 +278,72 @@ export default function SuppliersPage() {
                                 Add New Supplier
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[550px] rounded-[2.5rem] border-none shadow-3xl bg-white p-8 overflow-hidden">
+                        <DialogContent className="sm:max-w-[480px] rounded-2xl border-none shadow-3xl bg-white p-4 overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 blur-2xl opacity-50" />
-                            <DialogHeader className="mb-8">
-                                <DialogTitle className="text-3xl font-black italic tracking-tighter uppercase text-slate-900">
+                            <DialogHeader className="mb-4">
+                                <DialogTitle className="text-lg font-black italic tracking-tighter uppercase text-slate-900 flex items-center gap-2">
+                                    <div className="h-7 w-7 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600">
+                                        <Truck className="h-4 w-4" />
+                                    </div>
                                     {editingSupplier ? 'Update' : 'Register'} <span className="text-indigo-600">Supplier</span>
                                 </DialogTitle>
-                                <DialogDescription className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                                <DialogDescription className="text-[9px] font-bold uppercase tracking-widest text-slate-400 ml-9 -mt-1">
                                     Fill in the vendor details for official records
                                 </DialogDescription>
                             </DialogHeader>
-                            <div className="grid gap-6">
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Company / Brand Name</Label>
+                            <div className="grid gap-3">
+                                <div className="space-y-1">
+                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-1">Company / Brand Name</Label>
                                     <Input
-                                        className="h-12 bg-slate-50 border-none rounded-xl focus-visible:ring-2 focus-visible:ring-indigo-500 text-sm font-bold placeholder:text-slate-300"
+                                        className="h-8 bg-slate-50 border-none rounded-lg focus-visible:ring-2 focus-visible:ring-indigo-500 text-xs font-bold placeholder:text-slate-300"
                                         placeholder="e.g. Getz Pharma"
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Representative</Label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-1">Representative</Label>
                                         <Input
-                                            className="h-12 bg-slate-50 border-none rounded-xl text-sm font-bold"
+                                            className="h-8 bg-slate-50 border-none rounded-lg text-xs font-bold"
                                             placeholder="Ali Khan"
                                             value={formData.contactPerson}
                                             onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Direct Contact No.</Label>
+                                    <div className="space-y-1">
+                                        <Label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-1">Direct Contact No.</Label>
                                         <Input
-                                            className="h-12 bg-slate-50 border-none rounded-xl text-sm font-bold"
+                                            className="h-8 bg-slate-50 border-none rounded-lg text-xs font-bold"
                                             placeholder="021-344..."
                                             value={formData.contact}
                                             onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
                                         />
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Official Email</Label>
+                                <div className="space-y-1">
+                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-1">Official Email</Label>
                                     <Input
-                                        className="h-12 bg-slate-50 border-none rounded-xl text-sm font-bold"
+                                        className="h-8 bg-slate-50 border-none rounded-lg text-xs font-bold"
                                         type="email"
                                         placeholder="sales@vendor.pk"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Warehouse Address</Label>
+                                <div className="space-y-1">
+                                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-1">Warehouse Address</Label>
                                     <Input
-                                        className="h-12 bg-slate-50 border-none rounded-xl text-sm font-bold"
+                                        className="h-8 bg-slate-50 border-none rounded-lg text-xs font-bold"
                                         placeholder="Plot #45, Korangi Industrial Area, Karachi"
                                         value={formData.address}
                                         onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                                     />
                                 </div>
                             </div>
-                            <DialogFooter className="mt-10">
+                            <DialogFooter className="mt-6">
                                 <Button
-                                    className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-indigo-600 text-white font-black uppercase italic tracking-tighter transition-all shadow-xl"
+                                    className="w-full h-8 rounded-lg bg-slate-900 hover:bg-indigo-600 text-white font-black uppercase italic tracking-tighter transition-all shadow-xl text-xs"
                                     onClick={handleSave}
                                 >
                                     {editingSupplier ? 'Save Changes' : 'Confirm Registration'}

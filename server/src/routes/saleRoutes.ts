@@ -63,6 +63,7 @@ router.post("/process", authenticateToken, async (req: any, res) => {
             customerId,
             items,
             discount,
+            taxAmount, // Total tax passed from frontend
             paymentMethod,
             totalAmount,
             netAmount,
@@ -103,6 +104,7 @@ router.post("/process", authenticateToken, async (req: any, res) => {
                     customer: finalCustomerId ? { connect: { id: finalCustomerId } } : undefined,
                     totalAmount: totalAmount || 0,
                     discount: discount || 0,
+                    taxAmount: taxAmount || 0,
                     netAmount: netAmount || 0,
                     paidAmount: paidAmount || 0,
                     dueAmount: Math.max(0, (netAmount || 0) - (paidAmount || 0)),
@@ -115,7 +117,7 @@ router.post("/process", authenticateToken, async (req: any, res) => {
 
             // 2. Process Each Item
             for (const item of items) {
-                const { medicineId, batchId, quantity, price } = item;
+                const { medicineId, batchId, quantity, price, itemTaxRate, itemTaxAmount } = item;
 
                 // Create SaleItem
                 await tx.saleItem.create({
@@ -124,7 +126,9 @@ router.post("/process", authenticateToken, async (req: any, res) => {
                         medicineId,
                         quantity,
                         price,
-                        total: price * quantity
+                        taxRate: itemTaxRate || 0,
+                        taxAmount: itemTaxAmount || 0,
+                        total: (price * quantity) + (itemTaxAmount || 0)
                     }
                 });
 
