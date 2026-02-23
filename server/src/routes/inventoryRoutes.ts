@@ -18,6 +18,7 @@ router.get("/medicines", authenticateToken, async (req: any, res) => {
 
         const where: any = {
             pharmacyId,
+            isDeleted: false,
             AND: [
                 {
                     OR: [
@@ -308,48 +309,224 @@ router.put("/medicines/:id", authenticateToken, async (req: any, res) => {
     }
 });
 
-// Delete medicine
+// Soft Delete medicine
 router.delete("/medicines/:id", authenticateToken, async (req: any, res) => {
     try {
         const { id } = req.params;
         const medicineId = Number(id);
         const pharmacyId = req.user.pharmacyId;
 
-        await prisma.$transaction(async (tx) => {
-            // 1. Delete associated stock batches
-            await tx.stockBatch.deleteMany({
-                where: { medicineId }
-            });
-
-            // 2. Delete associated sale items
-            await tx.saleItem.deleteMany({
-                where: { medicineId }
-            });
-
-            // 3. Delete associated purchase items
-            await tx.purchaseItem.deleteMany({
-                where: { medicineId }
-            });
-
-            // 4. Finally delete the medicine
-            await tx.medicine.delete({
-                where: { id: medicineId, pharmacyId }
-            });
+        await prisma.medicine.update({
+            where: { id: medicineId, pharmacyId },
+            data: {
+                isDeleted: true,
+                deletedAt: new Date()
+            }
         });
 
         // Log medicine deletion
         await logActivity({
             type: "inventory",
-            action: "Medicine Deleted",
-            detail: `Item ID ${medicineId} and all related records were permanently removed from the system.`,
+            action: "Medicine Moved to Trash",
+            detail: `Item ID ${medicineId} was moved to recycle bin.`,
+            status: "warning",
+            userId: req.user.userId,
+            pharmacyId: req.user.pharmacyId
+        });
+
+        res.json({ message: "Medicine moved to recycle bin successfully" });
+    } catch (error: any) {
+        console.error("Delete medicine error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Bulk Soft Delete medicines
+router.post("/medicines/bulk-delete", authenticateToken, async (req: any, res) => {
+    try {
+        const { ids } = req.body;
+        const pharmacyId = req.user.pharmacyId;
+
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ error: "No medicines selected for deletion." });
+        }
+
+        const medicineIds = ids.map(id => Number(id));
+
+        await prisma.medicine.updateMany({
+            where: {
+                id: { in: medicineIds },
+                pharmacyId
+            },
+            data: {
+                isDeleted: true,
+                deletedAt: new Date()
+            }
+        });
+
+        // Log bulk deletion
+        await logActivity({
+            type: "inventory",
+            action: "Bulk Medicines Moved to Trash",
+            detail: `${medicineIds.length} items were moved to recycle bin.`,
+            status: "warning",
+            userId: req.user.userId,
+            pharmacyId: req.user.pharmacyId
+        });
+
+        res.json({ message: `${medicineIds.length} medicines moved to recycle bin successfully` });
+    } catch (error: any) {
+        console.error("Bulk delete medicine error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get deleted medicines (Recycle Bin)
+router.get("/medicines/deleted", authenticateToken, async (req: any, res) => {
+    try {
+        const pharmacyId = req.user.pharmacyId;
+        const medicines = await prisma.medicine.findMany({
+            where: { pharmacyId, isDeleted: true },
+            orderBy: { deletedAt: 'desc' }
+        });
+        res.json(medicines);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Restore medicine
+router.post("/medicines/restore/:id", authenticateToken, async (req: any, res) => {
+    try {
+        const { id } = req.params;
+        const medicineId = Number(id);
+        const pharmacyId = req.user.pharmacyId;
+
+        await prisma.medicine.update({
+            where: { id: medicineId, pharmacyId },
+            data: {
+                isDeleted: false,
+                deletedAt: null
+            }
+        });
+
+        await logActivity({
+            type: "inventory",
+            action: "Medicine Restored",
+            detail: `Item ID ${medicineId} was restored from recycle bin.`,
+            status: "success",
+            userId: req.user.userId,
+            pharmacyId: req.user.pharmacyId
+        });
+
+        res.json({ message: "Medicine restored successfully" });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Bulk Restore medicines
+router.post("/medicines/bulk-restore", authenticateToken, async (req: any, res) => {
+    try {
+        const { ids } = req.body;
+        const pharmacyId = req.user.pharmacyId;
+
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ error: "No medicines selected for restoration." });
+        }
+
+        const medicineIds = ids.map(id => Number(id));
+
+        await prisma.medicine.updateMany({
+            where: {
+                id: { in: medicineIds },
+                pharmacyId
+            },
+            data: {
+                isDeleted: false,
+                deletedAt: null
+            }
+        });
+
+        await logActivity({
+            type: "inventory",
+            action: "Bulk Medicines Restored",
+            detail: `${medicineIds.length} items were restored from recycle bin.`,
+            status: "success",
+            userId: req.user.userId,
+            pharmacyId: req.user.pharmacyId
+        });
+
+        res.json({ message: "Medicines restored successfully" });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Permanent Delete (Hard Delete)
+router.delete("/medicines/permanent/:id", authenticateToken, async (req: any, res) => {
+    try {
+        const { id } = req.params;
+        const medicineId = Number(id);
+        const pharmacyId = req.user.pharmacyId;
+
+        await prisma.$transaction(async (tx) => {
+            // Delete all related records
+            await tx.stockBatch.deleteMany({ where: { medicineId } });
+            await tx.saleItem.deleteMany({ where: { medicineId } });
+            await tx.purchaseItem.deleteMany({ where: { medicineId } });
+            await tx.medicine.delete({ where: { id: medicineId, pharmacyId } });
+        });
+
+        await logActivity({
+            type: "inventory",
+            action: "Medicine Permanently Deleted",
+            detail: `Item ID ${medicineId} was permanently removed from the system.`,
             status: "error",
             userId: req.user.userId,
             pharmacyId: req.user.pharmacyId
         });
 
-        res.json({ message: "Medicine and all related records deleted successfully" });
+        res.json({ message: "Medicine permanently deleted" });
     } catch (error: any) {
-        console.error("Delete medicine error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Clear Trash (Empty Recycle Bin)
+router.post("/medicines/clear-trash", authenticateToken, async (req: any, res) => {
+    try {
+        const pharmacyId = req.user.pharmacyId;
+
+        const deletedMedicines = await prisma.medicine.findMany({
+            where: { pharmacyId, isDeleted: true },
+            select: { id: true }
+        });
+
+        const medicineIds = deletedMedicines.map(m => m.id);
+
+        if (medicineIds.length === 0) {
+            return res.json({ message: "Recycle bin is already empty." });
+        }
+
+        await prisma.$transaction(async (tx) => {
+            await tx.stockBatch.deleteMany({ where: { medicineId: { in: medicineIds } } });
+            await tx.saleItem.deleteMany({ where: { medicineId: { in: medicineIds } } });
+            await tx.purchaseItem.deleteMany({ where: { medicineId: { in: medicineIds } } });
+            await tx.medicine.deleteMany({ where: { id: { in: medicineIds }, pharmacyId } });
+        });
+
+        await logActivity({
+            type: "inventory",
+            action: "Recycle Bin Cleared",
+            detail: `All ${medicineIds.length} items in the recycle bin were permanently deleted.`,
+            status: "error",
+            userId: req.user.userId,
+            pharmacyId: req.user.pharmacyId
+        });
+
+        res.json({ message: "Recycle bin cleared successfully" });
+    } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
 });
@@ -502,7 +679,7 @@ router.get("/analytics", authenticateToken, async (req: any, res) => {
         const pharmacyId = req.user.pharmacyId;
 
         const medicines = await prisma.medicine.findMany({
-            where: { pharmacyId },
+            where: { pharmacyId, isDeleted: false },
             include: { batches: true }
         });
 
@@ -511,7 +688,12 @@ router.get("/analytics", authenticateToken, async (req: any, res) => {
         const lowStockCount = medicines.filter(m => m.stock < m.reorderLevel).length;
 
         const batches = await prisma.stockBatch.findMany({
-            where: { medicine: { pharmacyId } }
+            where: {
+                medicine: {
+                    pharmacyId,
+                    isDeleted: false
+                }
+            }
         });
 
         const nearExpiryCount = batches.filter(b => {
