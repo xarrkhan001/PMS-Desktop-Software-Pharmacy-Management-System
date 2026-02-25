@@ -17,7 +17,7 @@ router.use(authenticateToken);
 router.use(isSuperAdmin);
 
 // Get All Pharmacies
-router.get('/pharmacies', async (req, res) => {
+router.get('/pharmacies', async (req: any, res) => {
     try {
         const pharmacies = await prisma.pharmacy.findMany({
             include: { users: { where: { role: 'ADMIN' }, select: { id: true, name: true, email: true } } }
@@ -29,7 +29,7 @@ router.get('/pharmacies', async (req, res) => {
 });
 
 // Get Pharmacy Analytics & Activity Data
-router.get('/pharmacy-analytics', async (req, res) => {
+router.get('/pharmacy-analytics', async (req: any, res) => {
     try {
         const pharmacies = await prisma.pharmacy.findMany({
             include: {
@@ -141,7 +141,7 @@ router.get('/pharmacy-analytics', async (req, res) => {
 
 
 // Create Pharmacy
-router.post('/create-pharmacy', async (req, res) => {
+router.post('/create-pharmacy', async (req: any, res) => {
     const { pharmacyName, ownerEmail, ownerPassword, ownerName, licenseMonths, paidAmount } = req.body;
 
     // Comprehensive Validation
@@ -223,15 +223,29 @@ router.post('/create-pharmacy', async (req, res) => {
         }
 
         const result = await prisma.$transaction(async (tx) => {
+            // Generate a temporary first-time activation key
+            // Note: We'll calculate expiry here and use it for the key
+            const firstTimeKey = generateLicenseKey(9999, expiryDate, 'OPEN'); // Temp ID, will replace below
+
             const pharmacy = await tx.pharmacy.create({
                 data: {
                     name: pharmacyName.trim(),
                     licenseStartedAt: startDate,
                     licenseExpiresAt: expiryDate,
                     isActive: false, // Must be activated with the key
+                    licenseNo: firstTimeKey, // Store it initially so Admin can retrieve it
                     subscriptionFee: Number(paidAmount) || 0,
                     totalPaid: Number(paidAmount) || 0
                 },
+            });
+
+            // Regenerate key with ACTUAL pharmacy ID for security
+            const finalKey = generateLicenseKey(pharmacy.id, expiryDate, 'OPEN');
+
+            // Update with the final ID-linked key
+            const updatedPharmacy = await tx.pharmacy.update({
+                where: { id: pharmacy.id },
+                data: { licenseNo: finalKey }
             });
 
             const hashedPassword = await bcrypt.hash(ownerPassword, 10);
@@ -245,10 +259,19 @@ router.post('/create-pharmacy', async (req, res) => {
                 },
             });
 
-            // Generate the first-time activation key (Machine independent initially)
-            const firstTimeKey = generateLicenseKey(pharmacy.id, expiryDate, 'OPEN');
+            // Log the creation in Audit Logs for Super Admin history
+            await tx.auditLog.create({
+                data: {
+                    type: 'system',
+                    action: 'Pharmacy Created',
+                    detail: `New pharmacy "${pharmacyName}" created with key: ${finalKey}`,
+                    status: 'success',
+                    pharmacyId: pharmacy.id,
+                    userId: req.user.id // The Super Admin who created it
+                }
+            });
 
-            return { pharmacy, activationKey: firstTimeKey };
+            return { pharmacy: updatedPharmacy, activationKey: finalKey };
         });
 
         res.json({
@@ -267,7 +290,7 @@ router.post('/create-pharmacy', async (req, res) => {
 import { generateLicenseKey } from '../utils/license';
 
 // Generate License Key for a Machine
-router.post('/generate-license', async (req, res) => {
+router.post('/generate-license', async (req: any, res) => {
     const { pharmacyId, extraMonths, machineId } = req.body;
 
     try {
@@ -290,7 +313,7 @@ router.post('/generate-license', async (req, res) => {
 });
 
 // Renew/Manage License
-router.post('/renew-license', async (req, res) => {
+router.post('/renew-license', async (req: any, res) => {
     const { pharmacyId, extraMonths, isActive, paidAmount, machineId } = req.body;
 
     try {
@@ -338,7 +361,7 @@ router.post('/renew-license', async (req, res) => {
 });
 
 // Update Pharmacy Credentials (Name, Email, Password)
-router.put('/update-pharmacy-credentials', async (req, res) => {
+router.put('/update-pharmacy-credentials', async (req: any, res) => {
     const { pharmacyId, pharmacyName, ownerEmail, ownerPassword, ownerName } = req.body;
 
     try {
@@ -381,7 +404,7 @@ router.put('/update-pharmacy-credentials', async (req, res) => {
 });
 
 // Permanent Delete
-router.delete('/pharmacy/:id', async (req, res) => {
+router.delete('/pharmacy/:id', async (req: any, res) => {
     const { id } = req.params;
     const pharmacyId = Number(id);
 

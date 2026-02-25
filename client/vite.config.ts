@@ -15,6 +15,11 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    sourcemap: false,
+    chunkSizeWarningLimit: 1000,
+    minify: 'esbuild',
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

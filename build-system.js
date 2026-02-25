@@ -59,8 +59,21 @@ async function build() {
     // 1.1 Cleanup Server node_modules to reduce size
     console.log('🧹 Optimizing Backend size...');
     runCommand('npm prune --production', serverDir);
+
+    // Remove Prisma junk junk files (tmp files that often stay behind)
+    console.log('🧹 Cleaning Prisma temporary files...');
+    const prismaClientDir = path.join(serverDir, 'node_modules', '.prisma', 'client');
+    if (fs.existsSync(prismaClientDir)) {
+        const files = fs.readdirSync(prismaClientDir);
+        files.forEach(file => {
+            if (file.includes('.tmp')) {
+                fs.unlinkSync(path.join(prismaClientDir, file));
+            }
+        });
+    }
+
     // Remove unwanted heavy folders if they exist
-    const heavyFolders = ['node_modules/.cache', 'node_modules/typescript', 'node_modules/ts-node'];
+    const heavyFolders = ['node_modules/.cache', 'node_modules/typescript', 'node_modules/ts-node', 'node_modules/@types'];
     heavyFolders.forEach(folder => {
         const p = path.join(serverDir, folder);
         if (fs.existsSync(p)) {
@@ -68,6 +81,31 @@ async function build() {
             fs.rmSync(p, { recursive: true, force: true });
         }
     });
+
+    // Aggressive cleanup of documentation and junk in node_modules
+    console.log('🧹 Removing documentation and tests from node_modules...');
+    const junkPatterns = ['README.md', 'CHANGELOG.md', 'LICENSE.md', 'test', 'tests', 'example', 'examples', '.github', '.npmignore'];
+
+    function removeJunk(dir) {
+        if (!fs.existsSync(dir)) return;
+        const files = fs.readdirSync(dir);
+        files.forEach(file => {
+            const fullPath = path.join(dir, file);
+            if (fs.statSync(fullPath).isDirectory()) {
+                if (junkPatterns.includes(file.toLowerCase())) {
+                    fs.rmSync(fullPath, { recursive: true, force: true });
+                } else {
+                    removeJunk(fullPath);
+                }
+            } else {
+                if (junkPatterns.some(pattern => file.toLowerCase().includes(pattern.toLowerCase()))) {
+                    fs.unlinkSync(fullPath);
+                }
+            }
+        });
+    }
+    // Only run on server/node_modules because client/node_modules is mostly used for building dist
+    removeJunk(path.join(serverDir, 'node_modules'));
 
     // 2. Build Client (Frontend)
     console.log('\n📦 Step 2: Building Frontend (Vite)...');
