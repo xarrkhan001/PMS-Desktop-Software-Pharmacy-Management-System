@@ -169,9 +169,19 @@ const LicenseLockPage: React.FC<LicenseLockPageProps> = ({ reason, onActivated }
                     </button>
                 </div>
 
-                <div className="border-t border-zinc-800 pt-6 text-center">
+                <div className="border-t border-zinc-800 pt-6 text-center space-y-4">
+                    <button
+                        onClick={() => {
+                            localStorage.clear();
+                            window.location.href = "#/login";
+                            window.location.reload();
+                        }}
+                        className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+                    >
+                        ← Back to Landing Page
+                    </button>
                     <p className="text-sm text-zinc-500">
-                        Need help? Contact support at <span className="text-blue-400 font-medium">+92 3XX XXXXXXX</span>
+                        Need help? Contact support at <span className="text-blue-400 font-medium">+92 342 9752032</span>
                     </p>
                 </div>
             </div>

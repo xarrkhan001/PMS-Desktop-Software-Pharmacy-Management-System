@@ -9,9 +9,13 @@ import {
     Search,
     RefreshCw,
     FilePenLine,
+    Key,
+    Copy,
+    Check
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/use-toast";
 
 interface Pharmacy {
     id: number;
@@ -19,6 +23,7 @@ interface Pharmacy {
     licenseStartedAt: string;
     licenseExpiresAt: string;
     isActive: boolean;
+    licenseNo?: string;
     subscriptionFee?: number;
     totalPaid?: number;
     users: { id: number; name: string; email: string }[];
@@ -916,6 +921,7 @@ export default function ManagedPharmacies() {
                                 <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Financials</TableHead>
                                 <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Protocol Status</TableHead>
                                 <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">License Span</TableHead>
+                                <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Keys / History</TableHead>
                                 <TableHead className="py-6 text-[10px] font-black uppercase tracking-[0.2em] pr-10 text-right text-slate-400">Management</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -977,6 +983,32 @@ export default function ManagedPharmacies() {
                                                 <div className={`flex items-center gap-2 font-black ${isExpired ? 'text-red-600' : 'text-slate-900'}`}>
                                                     <ShieldCheck className="h-4 w-4 text-purple-500" />
                                                     Expires: {expiryDate}
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex flex-col gap-1.5">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Subscription Key</p>
+                                                <div className="flex items-center gap-2 group/key relative">
+                                                    <div className="bg-slate-100 px-2 py-1 rounded border border-slate-200 text-[10px] font-mono text-slate-600 max-w-[120px] truncate">
+                                                        {p.licenseNo || "No Key Issued"}
+                                                    </div>
+                                                    {p.licenseNo && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6 rounded-md hover:bg-purple-100 text-purple-600"
+                                                            onClick={() => {
+                                                                navigator.clipboard.writeText(p.licenseNo || "");
+                                                                toast({
+                                                                    title: "Key Copied!",
+                                                                    description: "License key copied for " + p.name,
+                                                                });
+                                                            }}
+                                                        >
+                                                            <Copy className="h-3 w-3" />
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </div>
                                         </TableCell>

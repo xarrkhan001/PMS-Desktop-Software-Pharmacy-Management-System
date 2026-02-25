@@ -18,6 +18,8 @@
   "build": {
     "appId": "com.medicore.pms",
     "productName": "MediCore PMS",
+    "compression": "maximum",
+    "asar": true,
     "directories": {
       "output": "dist_electron"
     },
@@ -56,7 +58,16 @@
       "shortcutName": "MediCore PMS",
       "installerIcon": "public/medicore_icon.ico",
       "uninstallerIcon": "public/medicore_icon.ico"
-    }
+    },
+    "extraFiles": [
+      {
+        "from": "node_modules/electron/dist/locales",
+        "to": "locales",
+        "filter": [
+          "en-US.*"
+        ]
+      }
+    ]
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -105,6 +116,7 @@
     "electron-is-dev": "^3.0.1",
     "electron-packager": "^17.1.2",
     "electron-winstaller": "^5.4.0",
+    "esbuild": "^0.25.12",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
